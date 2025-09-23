@@ -72,13 +72,13 @@ export default function ChatClient({
   const [lastActive, setLastActive] = useState<string | null>(null);
   const [isOtherTyping, setIsOtherTyping] = useState(false);
 
-  const chatRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
-
   const notificationCtx = useContext(NotificationContext);
-
-  // Use the custom hook for auto-scrolling
-  useChatScroll({ chatRef, count: messages.length });
+  // Use the new hook pattern for auto-scrolling
+  const { containerRef, scrollToBottom } = useChatScroll();
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const otherUser =
     user?.id === connection.seller?.id ? connection.requester : connection.seller;
@@ -227,7 +227,7 @@ export default function ChatClient({
         </header>
 
         {/* Scrollable Messages */}
-        <div ref={chatRef} className="space-y-4 overflow-y-auto p-4 pb-28 md:pb-24">
+  <div ref={containerRef} className="space-y-4 overflow-y-auto p-4 pb-28 md:pb-24">
           {messages.map((message) => (
             <div
               key={message.id}

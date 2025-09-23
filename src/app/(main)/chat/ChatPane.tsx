@@ -43,13 +43,11 @@ export default function ChatPane({ connection, initialMessages, user, onBack }: 
   const [messages, setMessages] = useState(initialMessages);
   const supabase = useMemo(() => createClient(), []);
   const formRef = useRef<HTMLFormElement>(null);
-  const chatRef = useRef<HTMLDivElement>(null);
-  
-  // Custom hook to auto-scroll when new messages arrive
-  useChatScroll({
-    chatRef,
-    count: messages.length,
-  });
+  const { containerRef, scrollToBottom } = useChatScroll();
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   // Real-time subscription for new messages
   useEffect(() => {
@@ -90,10 +88,10 @@ export default function ChatPane({ connection, initialMessages, user, onBack }: 
   }, [supabase, connection.id]);
 
   if (!user) {
-    return <div>Loading...</div>;
+            const { containerRef, scrollToBottom } = useChatScroll();
   }
 
-  const otherUser = user.id === connection.seller_id ? connection.requester : connection.seller;
+  const otherUser = user?.id === connection.seller_id ? connection.requester : connection.seller;
 
   return (
     <div className="flex flex-col h-full">
@@ -113,13 +111,13 @@ export default function ChatPane({ connection, initialMessages, user, onBack }: 
       </div>
 
       {/* Messages Area */}
-      <div ref={chatRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+  <div ref={containerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex items-end gap-2 ${message.sender_id === user.id ? 'justify-end' : 'justify-start'}`}
+             className={`flex items-end gap-2 ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
           >
-            {message.sender_id !== user.id && (
+             {message.sender_id !== user?.id && (
               <Image
                 src={message.sender?.profile_picture_url || 'https://placehold.co/32x32'}
                 alt={message.sender?.name || 'Sender'}
@@ -129,11 +127,11 @@ export default function ChatPane({ connection, initialMessages, user, onBack }: 
               />
             )}
             <div
-              className={`max-w-xs md:max-w-md p-3 rounded-2xl ${
-                message.sender_id === user.id
-                  ? 'bg-blue-600 text-white rounded-br-none'
-                  : 'bg-slate-200 text-slate-800 rounded-bl-none'
-              }`}
+               className={`max-w-xs md:max-w-md p-3 rounded-2xl ${
+                 message.sender_id === user?.id
+                   ? 'bg-blue-600 text-white rounded-br-none'
+                   : 'bg-slate-200 text-slate-800 rounded-bl-none'
+               }`}
             >
               <p className="text-sm">{message.content}</p>
             </div>
