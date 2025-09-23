@@ -1,0 +1,17 @@
+/* app/chat/chat-layout.css */
+
+/* Important: This targets the root elements of your page */
+html,
+body,
+body > div:first-child, /* This targets the direct wrapper of your app */
+main {
+  height: 100vh !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Ensure the main content area inside the chat page is scrollable */
+.chat-messages-container {
+  overflow-y: auto !important;
+}

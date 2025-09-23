@@ -1,0 +1,15 @@
+{
+  // Silence generic CSS warnings for Tailwind directives
+  "css.lint.unknownAtRules": "ignore",
+  // Improve PostCSS/Tailwind recognition
+  "editor.quickSuggestions": {
+    "strings": true
+  },
+  // Optional: ensure tailwind classes are sorted only if extension installed
+  "tailwindCSS.experimental.classRegex": [
+    "tw`([^`]*)",
+    "tw\\.\\w+`([^`]*)`",
+    "clsx\\(([^)]*)\\)",
+    "cx\\(([^)]*)\\)"
+  ]
+}

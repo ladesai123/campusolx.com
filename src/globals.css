@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+  --radius: 0.5rem;
+  --brand-color: #160ffc; /* Primary brand blue for Olx part of logo */
+  }
+
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* ===== 1. General Page Layout & Background (FIXED) ===== */
+/* This class is on the <body> tag. The old, problematic styles like `height` and
+   `padding-top` have been REMOVED. This class now only sets the background color
+   for the area *behind* your chat window.
+*/
+.chat-page-container {
+  background-color: #f0f2f5; /* A subtle, modern background color */
+}
+
+/* ===== 2. Chat Window Styling ===== */
+/* This class is on your ChatClient component. It centers it on desktop. */
+.chat-window {
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ===== 3. Animated Typing Indicator (No Changes) ===== */
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: #e5e7eb;
+  border-radius: 18px;
+  width: fit-content;
+}
+
+.typing-indicator span {
+  height: 8px;
+  width: 8px;
+  margin: 0 2px;
+  background-color: #9E9EA1;
+  border-radius: 50%;
+  display: inline-block;
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.typing-indicator span:nth-of-type(1) {
+  animation-delay: -0.32s;
+}
+
+.typing-indicator span:nth-of-type(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1.0);
+  }
+}
+
+@layer utilities {
+  /* Keep custom gradient helper. Reintroduce fallback brand utilities so logo
+     stays blue even if Tailwind config changes haven't recompiled yet. Once
+     you're sure the generated `text-brand` class exists, these can be removed. */
+  .text-brand { color: var(--brand-color); }
+  .bg-brand { background-color: var(--brand-color); }
+  .brand-gradient { background-image: linear-gradient(90deg,var(--brand-color),#4f46e5); }
+}
+
