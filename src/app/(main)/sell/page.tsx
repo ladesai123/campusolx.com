@@ -37,6 +37,7 @@ export default function SellPage() {
   const [showReserveTip, setShowReserveTip] = useState(false);
   const [showSharePopup, setShowSharePopup] = useState(false);
   const [listedProduct, setListedProduct] = useState<{ id: number; title: string } | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const router = useRouter();
 
   // --- All your existing functions (handleFileChange, generateTitleAndDescription, handleSubmit) remain the same ---
@@ -97,11 +98,16 @@ export default function SellPage() {
     compressedFiles.forEach(file => {
       formData.append('images', file, file.name);
     });
+    setSubmitError(null);
     startTransition(async () => {
       const result = await sellItemAction(formData);
       if (result?.success && result.product) {
         setListedProduct(result.product);
         setShowSharePopup(true);
+      } else if (result?.error) {
+        setSubmitError(result.error);
+      } else {
+        setSubmitError('Something went wrong. Please try again.');
       }
     });
   };
@@ -145,7 +151,13 @@ export default function SellPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Your existing sell form JSX */}
+      {/* Show error if product listing fails */}
+      {submitError && (
+        <div className="mb-4 flex items-center text-sm text-red-600 p-3 bg-red-50 border border-red-200 rounded-md">
+          <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+          <span>{submitError}</span>
+        </div>
+      )}
       <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
         <Card className="w-full max-w-lg">
           <CardHeader>

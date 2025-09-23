@@ -75,6 +75,11 @@ export async function sellItemAction(formData: FormData) {
     availableFromValue = availableDate;
   }
 
+  // --- IMAGE VALIDATION: Ensure at least one image was uploaded ---
+  if (!imageUrls.length) {
+    return { success: false, error: 'At least one image is required to list a product. Please upload a valid image.' };
+  }
+
   // --- 4. UPGRADED: Insert product data with the new dynamic fields ---
   const { data: newProduct, error: insertError } = await supabase.from('products').insert({
     seller_id: user.id,
@@ -98,5 +103,6 @@ export async function sellItemAction(formData: FormData) {
   revalidatePath('/profile');
   
   return { success: true, product: newProduct };
+
 };
 
