@@ -15,9 +15,5 @@ export function useChatScroll() {
     }
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, []);
-
   return { containerRef, scrollToBottom };
 }
