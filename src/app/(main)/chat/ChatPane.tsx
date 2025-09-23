@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { createClient } from '@/lib/client'; // Correct, modern client
+import { createClient } from '@/lib/client';
 import Image from 'next/image';
 import { ArrowLeft, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -43,11 +43,13 @@ export default function ChatPane({ connection, initialMessages, user, onBack }: 
   const [messages, setMessages] = useState(initialMessages);
   const supabase = useMemo(() => createClient(), []);
   const formRef = useRef<HTMLFormElement>(null);
+  
+  // Correctly destructure the values from the hook at the top level
   const { containerRef, scrollToBottom } = useChatScroll();
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, scrollToBottom]);
 
   // Real-time subscription for new messages
   useEffect(() => {
@@ -87,9 +89,8 @@ export default function ChatPane({ connection, initialMessages, user, onBack }: 
     };
   }, [supabase, connection.id]);
 
-  if (!user) {
-            const { containerRef, scrollToBottom } = useChatScroll();
-  }
+  // The problematic if-statement has been removed. 
+  // The hook is already called at the top of the component.
 
   const otherUser = user?.id === connection.seller_id ? connection.requester : connection.seller;
 
@@ -111,13 +112,13 @@ export default function ChatPane({ connection, initialMessages, user, onBack }: 
       </div>
 
       {/* Messages Area */}
-  <div ref={containerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div ref={containerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((message) => (
           <div
             key={message.id}
-             className={`flex items-end gap-2 ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
+            className={`flex items-end gap-2 ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
           >
-             {message.sender_id !== user?.id && (
+            {message.sender_id !== user?.id && (
               <Image
                 src={message.sender?.profile_picture_url || 'https://placehold.co/32x32'}
                 alt={message.sender?.name || 'Sender'}
@@ -127,11 +128,11 @@ export default function ChatPane({ connection, initialMessages, user, onBack }: 
               />
             )}
             <div
-               className={`max-w-xs md:max-w-md p-3 rounded-2xl ${
-                 message.sender_id === user?.id
-                   ? 'bg-blue-600 text-white rounded-br-none'
-                   : 'bg-slate-200 text-slate-800 rounded-bl-none'
-               }`}
+              className={`max-w-xs md:max-w-md p-3 rounded-2xl ${
+                message.sender_id === user?.id
+                  ? 'bg-blue-600 text-white rounded-br-none'
+                  : 'bg-slate-200 text-slate-800 rounded-bl-none'
+              }`}
             >
               <p className="text-sm">{message.content}</p>
             </div>
