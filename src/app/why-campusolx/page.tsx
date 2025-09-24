@@ -33,7 +33,7 @@ export default function WhyCampusOlxPage() {
       </div>
       <div className="bg-white rounded-xl shadow p-6 text-left text-gray-700">
         <p className="mb-4">
-          Every year when seniors packed up and left, I’d see through the hostels and see piles of useful things—books, lamps, cycles—just left behind or tossed away. Honestly, it hurt to watch so much get wasted, knowing that someone right here on campus could have used it. I kept thinking, “Why does this keep happening? Why isn’t there a simple way for us to help each other out?”
+          Every year, when seniors packed up and left, I’d walk through the hostels and see piles of useful things—books, lamps, cycles—just left behind or tossed away. Honestly, it hurt to watch so much go to waste, knowing that someone right here on campus could have used it. I kept thinking, “Why does this keep happening? Why isn’t there a simple way for us to help each other out?”
         </p>
         <p className="mb-4">
           That’s when I decided to do something about it. CampusOlx was born from that feeling—a hope that even if I could help just one thing find a new home instead of a dustbin, it would make a difference.
