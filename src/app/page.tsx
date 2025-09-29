@@ -396,9 +396,9 @@ export default function LandingPage() {
               </p>
             </div>
             {/* Timeline/Stepper */}
-            <div className="relative flex flex-col md:flex-row items-center justify-between gap-10 md:gap-0 max-w-5xl mx-auto">
+            <div className="relative flex flex-col md:flex-row items-center md:justify-center gap-10 md:gap-x-12 max-w-6xl mx-auto">
               {/* Step 1 */}
-              <div className="flex flex-col items-center text-center flex-1 min-w-[180px]">
+              <div className="flex flex-col items-center text-center max-w-xs min-w-[180px]">
                 <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 shadow-lg">
                   <Camera className="h-8 w-8 text-blue-600" />
                 </div>
@@ -408,7 +408,7 @@ export default function LandingPage() {
               {/* Arrow */}
               <div className="hidden md:block flex-shrink-0 w-12 h-1 bg-gradient-to-r from-blue-200 to-blue-400 rounded-full mx-2" />
               {/* Step 2 */}
-              <div className="flex flex-col items-center text-center flex-1 min-w-[180px]">
+              <div className="flex flex-col items-center text-center max-w-xs min-w-[180px]">
                 <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 shadow-lg">
                   <CalendarClock className="h-8 w-8 text-blue-600" />
                 </div>
@@ -417,7 +417,7 @@ export default function LandingPage() {
               </div>
               <div className="hidden md:block flex-shrink-0 w-12 h-1 bg-gradient-to-r from-blue-200 to-blue-400 rounded-full mx-2" />
               {/* Step 3 */}
-              <div className="flex flex-col items-center text-center flex-1 min-w-[180px]">
+              <div className="flex flex-col items-center text-center max-w-xs min-w-[180px]">
                 <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 shadow-lg">
                   <Tag className="h-8 w-8 text-blue-600" />
                 </div>
@@ -426,7 +426,7 @@ export default function LandingPage() {
               </div>
               <div className="hidden md:block flex-shrink-0 w-12 h-1 bg-gradient-to-r from-blue-200 to-blue-400 rounded-full mx-2" />
               {/* Step 4 */}
-              <div className="flex flex-col items-center text-center flex-1 min-w-[180px]">
+              <div className="flex flex-col items-center text-center max-w-xs min-w-[180px]">
                 <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 shadow-lg">
                   <Share2 className="h-8 w-8 text-blue-600" />
                 </div>
@@ -435,7 +435,7 @@ export default function LandingPage() {
               </div>
               <div className="hidden md:block flex-shrink-0 w-12 h-1 bg-gradient-to-r from-blue-200 to-blue-400 rounded-full mx-2" />
               {/* Step 5 */}
-              <div className="flex flex-col items-center text-center flex-1 min-w-[180px]">
+              <div className="flex flex-col items-center text-center max-w-xs min-w-[180px]">
                 <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 shadow-lg">
                   <MessageCircle className="h-8 w-8 text-blue-600" />
                 </div>
@@ -444,7 +444,7 @@ export default function LandingPage() {
               </div>
               <div className="hidden md:block flex-shrink-0 w-12 h-1 bg-gradient-to-r from-blue-200 to-blue-400 rounded-full mx-2" />
               {/* Step 6 */}
-              <div className="flex flex-col items-center text-center flex-1 min-w-[180px]">
+              <div className="flex flex-col items-center text-center max-w-xs min-w-[180px]">
                 <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 shadow-lg">
                   <Handshake className="h-8 w-8 text-blue-600" />
                 </div>
