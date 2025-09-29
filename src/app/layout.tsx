@@ -3,6 +3,7 @@ import { Nunito } from 'next/font/google';
 import './globals.css';
 import React from 'react';
 import OneSignalInit from '@/components/OneSignalInit';
+import OneSignalTagUser from '@/components/OneSignalTagUser';
 import { createClient } from '@/lib/server';
 import MainLayoutClient from './MainLayoutClient';
 
@@ -37,11 +38,16 @@ export default async function RootLayout({
     <html lang="en">
       <head>
         <meta name="theme-color" content="#ffffff" />
+        <link rel="icon" href="/logo.png" type="image/png" />
+        {/* OneSignal v16 SDK */}
+        <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
       </head>
       <body
         className={`${nunito.variable} font-sans bg-gray-50 antialiased min-h-screen`}
       >
         {process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID && <OneSignalInit />}
+        {/* Tag user globally for push notifications */}
+        {user?.id && <OneSignalTagUser userId={user.id} />}
         <MainLayoutClient user={user}>
           {children}
         </MainLayoutClient>

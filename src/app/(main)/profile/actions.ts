@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+
+// (Removed updateDisplayName and all display_name logic)
 // --- THIS IS THE FIX (Part 1) ---
 // We now import our new, modern, and correct server-side helper.
 import { createClient } from "@/lib/server";
@@ -41,7 +43,7 @@ export async function acceptConnection(connectionId: number) {
 
   // 3. Send the automatic first message FROM THE BUYER, as you designed.
   const productTitle = connection.products?.title || "this item";
-  const defaultMessage = `Hi! I'm interested in buying your product: "${productTitle}"`;
+  const defaultMessage = `Hi! I'm interested in buying your product "${productTitle}"`;
 
   const { data: messageData, error: messageError } = await supabase
     .from("messages")

@@ -1,3 +1,14 @@
+import type { Database } from "@/lib/database.types";
+
+// For joined product + profile queries
+export type ProductWithProfile = Database["public"]["Tables"]["products"]["Row"] & {
+  profiles: {
+    id: string;
+    name: string;
+    university: string | null;
+    profile_picture_url: string | null;
+  } | null;
+};
 // This file defines the shape of the data used throughout your application.
 
 // Defines the new, more specific statuses a product can have.
@@ -16,19 +27,16 @@ export type Profile = {
 // Defines the structure of a product listing.
 export type Product = {
   id: number;
-  created_at: string;
+  created_at: string | null;
   title: string;
   description: string | null;
-  price: number;
+  price: number | null;
   mrp: number | null;
   category: string;
   image_urls: string[];
   status: ProductStatus;
   seller_id: string;
   available_from: string | null;
-  // --- THIS IS THE FIX (Part 2) ---
-  // We are updating the nested profiles object to include all the fields
-  // that you are fetching and using in your components.
   profiles: {
     id: string;
     name: string;

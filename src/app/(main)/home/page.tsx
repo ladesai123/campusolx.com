@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/server";
 import { ProductCard } from "@/components/ProductCard";
-import { Profile, Product } from "@/lib/types";
+import { Profile, ProductWithProfile } from "@/lib/types";
 import CategoryFilter from "@/components/shared/CategoryFilter";
 import AppLoader from "@/components/shared/AppLoader";
 import React, { Suspense } from "react";
@@ -55,7 +55,9 @@ export default async function HomePage({
   ]);
 
   const profile = profileRes.data as Profile | null;
-  const products = (productsRes.data as Product[]) || [];
+  let products = (productsRes.data as ProductWithProfile[]) || [];
+  // Filter out hidden products
+  products = products.filter((p) => !p.is_hidden);
 
   // Derive counts (only iterate once over small projected result set).
   interface CategoryRow {

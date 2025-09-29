@@ -29,7 +29,7 @@ export default function SharePopup({ product, onClose }: SharePopupProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+  <div className="fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-2xl max-w-sm w-full mx-auto shadow-xl p-6 text-center">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
           <Check className="h-6 w-6 text-green-600" />

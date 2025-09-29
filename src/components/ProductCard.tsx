@@ -8,14 +8,14 @@ import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFoo
 import { Edit, Trash2, Tag, Undo2, CalendarClock, Share2 } from 'lucide-react';
 import { toggleProductStatus } from '@/app/(main)/profile/actions'; 
 import { SubmitButton } from '@/components/shared/SubmitButton'; 
-import { Product } from '@/lib/types'; 
+import type { ProductWithProfile } from '@/lib/types';
 import ShareButton from '@/components/shared/ShareButton';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppLoader from '@/components/shared/AppLoader';
 
 interface ProductCardProps {
-  product: Product;
+  product: ProductWithProfile;
   showAdminActions?: boolean;
   deleteAction?: (id: number) => Promise<void>;
 }
@@ -29,21 +29,23 @@ const formatDate = (dateString: string | null) => {
 };
 
 // Helper function to calculate the discount percentage.
-const calculateDiscount = (price: number, mrp: number | null) => {
-  if (!mrp || mrp <= price) return null;
+const calculateDiscount = (price: number | null, mrp: number | null) => {
+  if (price === null || !mrp || mrp <= price) return null;
   const discount = ((mrp - price) / mrp) * 100;
   return Math.round(discount);
 };
 
 export function ProductCard({ product, showAdminActions = false, deleteAction }: ProductCardProps) {
   const discount = calculateDiscount(product.price, product.mrp);
-  const isReservable = product.status === 'pending_reservation' && product.available_from;
+  const isReservable = product.status === 'pending_reservation' && !!product.available_from;
   const isReserved = product.status === 'reserved';
-  const formattedPrice = new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 0,
-  }).format(product.price);
+  const formattedPrice = typeof product.price === 'number'
+    ? new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        minimumFractionDigits: 0,
+      }).format(product.price)
+    : 'Free';
 
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -63,28 +65,29 @@ export function ProductCard({ product, showAdminActions = false, deleteAction }:
       )}
       <div className="relative">
         <a href={`/product/${product.id}`} className="block" onClick={handleProductClick} tabIndex={0} role="button">
-          <div className="aspect-square w-full overflow-hidden">
+          <div className="aspect-square w-full overflow-hidden relative flex items-end justify-end bg-slate-100">
             <Image
-              src={product.image_urls?.[0] || 'https://placehold.co/400x400'}
+              src={product.image_urls?.[0] && product.image_urls[0].length > 0 ? product.image_urls[0] : '/placeholder.png'}
               alt={product.title}
               width={400}
               height={400}
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/placeholder.png'; }}
             />
+            {/* Share button: bottom right of image, always visible */}
+            <div className="absolute bottom-2 right-2 z-10 bg-white rounded-full shadow-sm p-0.5 flex items-center justify-center">
+              <ShareButton 
+                productId={product.id} 
+                title={product.title} 
+                imageUrl={product.image_urls?.[0]} 
+                variant="outline" 
+                size="icon"
+                attachImage={false}
+                message={`Check out \"${product.title}\" on CampusOlx – the marketplace for SASTRA students! {url}`}
+              />
+            </div>
           </div>
         </a>
-        {/* Share button: always visible for mobile users */}
-        <div className="absolute top-2 right-2 z-10">
-          <ShareButton 
-            productId={product.id} 
-            title={product.title} 
-            imageUrl={product.image_urls?.[0]} 
-            variant="outline" 
-            size="icon"
-            attachImage={false}
-            message={`Check out "${product.title}" on CampusOlx – the marketplace for SASTRA students! {url}`}
-          />
-        </div>
         {isReservable && (
           <div className="absolute top-2 left-2 max-w-[90vw] sm:max-w-xs">
             <Badge className="bg-yellow-400 text-black shadow text-xs font-semibold px-2 py-1 whitespace-normal break-words">
@@ -109,9 +112,9 @@ export function ProductCard({ product, showAdminActions = false, deleteAction }:
         </h3>
         <div className="mt-2 flex flex-wrap items-baseline gap-x-2">
           <p className="text-lg font-bold text-gray-900">
-             {product.price > 0 ? formattedPrice : 'Free'}
+            {typeof product.price === 'number' && product.price > 0 ? formattedPrice : 'Free'}
           </p>
-          {product.mrp && product.mrp > product.price && (
+          {typeof product.mrp === 'number' && typeof product.price === 'number' && product.mrp > product.price && (
             <p className="text-sm text-gray-500 line-through">
               MRP: {product.mrp.toLocaleString('en-IN')}
             </p>
@@ -124,7 +127,7 @@ export function ProductCard({ product, showAdminActions = false, deleteAction }:
         )}
         {showAdminActions && (
           <div className="flex w-full gap-2 mt-4 border-t pt-4">
-            <form action={toggleProductStatus.bind(null, product.id, product.status)} className="flex-1">
+            <form action={toggleProductStatus.bind(null, product.id, product.status ?? 'available')} className="flex-1">
               <SubmitButton variant="outline" size="sm" className="w-full">
                 {product.status === 'available' ? <Tag className="mr-2 h-4 w-4"/> : <Undo2 className="mr-2 h-4 w-4"/>}
                 {product.status === 'available' ? 'Mark Sold' : 'Relist'}

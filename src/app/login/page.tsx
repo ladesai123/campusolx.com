@@ -19,6 +19,7 @@ import LegalModal from '@/components/shared/LegalModal';
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [showLegal, setShowLegal] = useState<null | 'terms' | 'privacy'>(null);
+  const [loading, setLoading] = useState(false);
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -30,16 +31,23 @@ export default function LoginPage() {
   }, [searchParams]);
 
   const handleGoogleLogin = async () => {
-    // --- THIS IS THE FIX (Part 2) ---
-    // We now use our new `createClient` function.
+    setLoading(true);
     const supabase = createClient();
+    // If feedback=1, pass it through the callback
+    const feedbackParam = searchParams.get('feedback');
+    const redirectParam = searchParams.get('redirect') || '/';
+    let redirectTo = `${location.origin}/auth/callback`;
+    if (feedbackParam === '1') {
+      redirectTo += `?feedback=1&redirect=${encodeURIComponent(redirectParam)}`;
+    }
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        // The callback URL points to our secure backend route.
-        redirectTo: `${location.origin}/auth/callback`,
+        redirectTo,
+        queryParams: { prompt: 'select_account' },
       },
     });
+    setLoading(false);
   };
 
   return (
@@ -52,7 +60,11 @@ export default function LoginPage() {
         <CardHeader className="text-center">
           <Logo className="mx-auto text-3xl mb-2" />
           <CardTitle className="flex items-center justify-center gap-1">Welcome to <BrandName inline /></CardTitle>
-          <CardDescription>The marketplace for your campus</CardDescription>
+          <CardDescription>
+            <span className="block font-bold text-base sm:text-lg mt-2">
+              You must use your <span className="text-blue-700 bg-blue-100 px-2 py-0.5 rounded">@sastra.ac.in</span> email to sign in
+            </span>
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {error && (
@@ -60,7 +72,13 @@ export default function LoginPage() {
               {error}
             </div>
           )}
-          <Button onClick={handleGoogleLogin} className="w-full">
+          <Button onClick={handleGoogleLogin} className="w-full flex items-center justify-center" disabled={loading}>
+            {loading ? (
+              <svg className="animate-spin h-4 w-4 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+              </svg>
+            ) : null}
             Sign in with Google
           </Button>
           <p className="mt-4 text-center text-xs text-gray-500">
@@ -68,11 +86,6 @@ export default function LoginPage() {
             <button type="button" onClick={() => setShowLegal('terms')} className="text-blue-600 hover:underline font-medium">Terms of Service</button> 
             {' '}and{' '} 
             <button type="button" onClick={() => setShowLegal('privacy')} className="text-blue-600 hover:underline font-medium">Privacy Policy</button>.
-          </p>
-          <p className="mt-2 text-center text-[10px] text-gray-400">
-            You must use your official university email (
-            <span className="text-blue-600 font-semibold">@sastra.ac.in</span>
-            ).
           </p>
         </CardContent>
       </Card>

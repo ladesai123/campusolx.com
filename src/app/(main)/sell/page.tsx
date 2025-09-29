@@ -51,18 +51,21 @@ export default function SellPage() {
     try {
       const compressedFile = await imageCompression(imageFile, options);
       setCompressedFiles([compressedFile]);
+      setFileError("");
       const reader = new FileReader();
       reader.readAsDataURL(compressedFile);
       reader.onloadend = () => {
         const base64data = reader.result?.toString().split(',')[1];
         if (base64data) {
           setBase64ImageData(base64data);
-          generateTitleAndDescription(base64data);
+          // Do NOT auto-generate title/desc. Only on sparkle click.
         }
       };
     } catch (error) {
       console.error('Image compression error:', error);
-      setFileError('There was an error processing your image. Please try another one.');
+      setFileError('Image upload failed. Please try a different image or try again later.');
+      setCompressedFiles([]);
+      setBase64ImageData(null);
     }
   };
 
@@ -155,7 +158,11 @@ export default function SellPage() {
       {submitError && (
         <div className="mb-4 flex items-center text-sm text-red-600 p-3 bg-red-50 border border-red-200 rounded-md">
           <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" />
-          <span>{submitError}</span>
+          <span>
+            {submitError.includes('image')
+              ? 'Image upload failed. Please try a different image or try again later.'
+              : 'There was a problem listing your item. Please try again later.'}
+          </span>
         </div>
       )}
       <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
@@ -169,6 +176,13 @@ export default function SellPage() {
               {/* All your form fields (image, title, price, availability, etc.) */}
               {/* Step 1: Image Upload */}
 
+              {/* Show file/image errors near the image upload field */}
+              {fileError && (
+                <div className="mb-2 flex items-center text-sm text-red-600 p-2 bg-red-50 border border-red-200 rounded-md">
+                  <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                  <span>{fileError}</span>
+                </div>
+              )}
               <div className="grid w-full items-center gap-1.5">
                 <Label>1. Upload an Image</Label>
                 <div className="flex items-center gap-2">
@@ -189,6 +203,21 @@ export default function SellPage() {
                     />
                     <span className="text-xs text-gray-700 truncate max-w-[120px]">{compressedFiles[0].name}</span>
                     <span className="ml-2 text-xs text-green-600 font-medium">Uploaded!</span>
+                    <button
+                      type="button"
+                      aria-label="Remove image"
+                      className="ml-2 text-red-500 hover:text-red-700 text-lg font-bold px-2 rounded focus:outline-none"
+                      onClick={() => {
+                        setCompressedFiles([]);
+                        setBase64ImageData(null);
+                        setTitle("");
+                        setDescription("");
+                        setAiError(""); // This ensures placeholder resets
+                        setIsAiLoading(false);
+                      }}
+                    >
+                      ×
+                    </button>
                   </div>
                 )}
                 <input
@@ -217,19 +246,48 @@ export default function SellPage() {
 
 
               {/* Step 2 & 3: AI Fields */}
+
               <div className="grid w-full items-center gap-1.5">
                 <Label htmlFor="title">2. Item Title</Label>
                 <div className="relative">
-                  <Input id="title" name="title" type="text" placeholder="AI will generate this..." required value={title} onChange={(e) => setTitle(e.target.value)} />
-                  <Button type="button" size="sm" className="absolute right-1 top-1 h-7" disabled={isAiLoading || !base64ImageData} onClick={() => { if (base64ImageData) { generateTitleAndDescription(base64ImageData); }}}>
+                  <Input
+                    id="title"
+                    name="title"
+                    type="text"
+                    placeholder={aiError ? "Please write yourself..." : "AI will generate this..."}
+                    required
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="absolute right-1 top-1 h-7"
+                    disabled={isAiLoading || !base64ImageData}
+                    onClick={() => {
+                      // If no image, do nothing (button is disabled, but double check)
+                      if (!base64ImageData) {
+                        alert('Please upload an image first.');
+                        return;
+                      }
+                      generateTitleAndDescription(base64ImageData);
+                    }}
+                  >
                     {isAiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                   </Button>
                 </div>
+                <span className="text-xs text-gray-500 mt-1">Click <span className="inline-block align-middle"><Sparkles className="h-4 w-4 inline" /></span> to generate title, description, and category using AI.</span>
               </div>
 
               <div className="grid w-full items-center gap-1.5">
                 <Label htmlFor="description">3. Description</Label>
-                <Textarea id="description" name="description" placeholder="AI will generate this..." value={description} onChange={(e) => setDescription(e.target.value)} />
+                <Textarea
+                  id="description"
+                  name="description"
+                  placeholder={aiError ? "Please write yourself" : "AI will generate this..."}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                />
                 {aiError && (<div className="flex items-center text-sm text-amber-600 mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md"><AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" /><span>{aiError}</span></div>)}
               </div>
 
@@ -262,6 +320,7 @@ export default function SellPage() {
             <div className="grid w-full items-center gap-1.5"><Label htmlFor="mrp">MRP (Optional)</Label><Input id="mrp" name="mrp" type="number" placeholder="e.g., 1000" /></div>
           </div>
 
+
               {/* Step 5: Availability */}
               <div className="grid w-full items-center gap-2.5 rounded-lg border p-4">
                 <Label className="font-semibold">5. Availability</Label>
@@ -281,6 +340,23 @@ export default function SellPage() {
                     />
                   </div>
                 )}
+              </div>
+
+              {/* CampusOlx Disclaimer and Agreement */}
+              <div className="rounded-lg border border-yellow-300 bg-yellow-50 p-4 my-2 flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-yellow-800 font-semibold text-base">
+                  <span role="img" aria-label="warning">⚠️</span>
+                  CampusOlx is a trusted, student-only marketplace. Help us keep it safe for everyone—list honestly!
+                </div>
+                <label className="flex items-start gap-2 mt-2 text-sm text-yellow-900">
+                  <input
+                    type="checkbox"
+                    required
+                    className="mt-1 accent-yellow-500"
+                    style={{ width: 18, height: 18 }}
+                  />
+                  I understand and agree not to post fake or misleading listings. If I violate this, my account will be permanently banned and my listings removed.
+                </label>
               </div>
 
               {/* Submit Buttons */}

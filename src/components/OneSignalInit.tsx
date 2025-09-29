@@ -1,14 +1,26 @@
 // Safe, isolated OneSignal initialization React component
-'use client';
+
+"use client";
+// TypeScript declaration for window.OneSignalDeferred (OneSignal v16)
+declare global {
+  interface Window {
+    OneSignalDeferred?: Array<(OneSignal: any) => void | Promise<void>>;
+  }
+}
+
 import { useEffect } from 'react';
-import { initOneSignal } from '@/lib/onesignal';
 
 export default function OneSignalInit() {
   useEffect(() => {
     try {
-      initOneSignal();
+      // OneSignal v16 deferred initialization
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      window.OneSignalDeferred.push(async function(OneSignal: any) {
+        await OneSignal.init({
+          appId: "f64a7b92-a44f-49fd-ae38-3d6e788b179b",
+        });
+      });
     } catch (err) {
-      // Never throw, just log
       console.error('OneSignal failed to initialize:', err);
     }
   }, []);

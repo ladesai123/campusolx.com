@@ -319,7 +319,8 @@ export default function ProductDetailsClient({
                 </>
               )}
 
-              {/* Seller Information */}
+              {/*
+              Seller Information
               <div className="mt-6 flex items-center gap-4 rounded-lg border p-4">
                 <Avatar className="h-12 w-12">
                   <AvatarImage src={product.profiles?.profile_picture_url || ""} />
@@ -333,6 +334,7 @@ export default function ProductDetailsClient({
 
                 </div>
               </div>
+              */}
             </div>
           </div>
         </div>

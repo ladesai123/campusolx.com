@@ -24,14 +24,13 @@ export default function ShareButton({ productId, title, imageUrl, variant = "gho
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://campusolx.com';
   const shareUrl = `${origin}/product/${productId}`;
 
-  const defaultMessage = `Check out \"${title}\" on CampusOlx – the marketplace for SASTRA students.`;
-
   const shareMessage = (() => {
     if (message) {
       if (message.includes('{url}')) return message.replace('{url}', shareUrl);
       return `${message}\n${shareUrl}`;
     }
-    return `${defaultMessage}\n${shareUrl}`;
+    // Use the same message as in the user's production code
+    return `Hey! Check out this item: "${title}" on CampusOlx, a marketplace for SASTRA students to buy and sell second-hand things. ${shareUrl} 🚀`;
   })();
 
   const tryFileShare = async () => {
@@ -61,20 +60,28 @@ export default function ShareButton({ productId, title, imageUrl, variant = "gho
 
   const handleShare = async () => {
     try {
-      // If image attach requested, attempt it first.
+      // If image attach requested, attempt it first (Web Share Level 2)
       if (attachImage) {
         const fileShared = await tryFileShare();
         if (fileShared) return;
       }
 
-      if (navigator.share) {
-  await navigator.share({ title: `Buy ${title} on CampusOlx`, text: shareMessage, url: shareUrl });
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
+      if (navigator.userAgent.toLowerCase().includes('whatsapp')) {
+        window.open(whatsappUrl, '_blank');
         return;
+      } else if (/Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent)) {
+        window.open(whatsappUrl, '_blank');
+        return;
+      } else if (navigator.share) {
+        await navigator.share({ text: shareMessage, title: 'CampusOlx', url: shareUrl });
+        return;
+      } else {
+        await navigator.clipboard.writeText(shareMessage);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+        alert('Share message copied! You can now paste it in WhatsApp or anywhere.');
       }
-
-      await navigator.clipboard.writeText(shareMessage);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
     } catch (e) {
       console.warn("Share cancelled or failed", e);
     }

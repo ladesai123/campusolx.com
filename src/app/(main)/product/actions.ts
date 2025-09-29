@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 // We need the regular `createClient` to create our special admin client
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/server";
+import { sendOneSignalNotification } from '@/lib/sendOneSignalNotification';
 
 export async function connectWithSeller(formData: FormData) {
   const productId = parseInt(formData.get("productId") as string, 10);
@@ -57,6 +58,13 @@ export async function connectWithSeller(formData: FormData) {
     console.error("Error creating connection:", connectionError);
     return redirect(`/product/${productId}?error=Could not send request.`);
   }
+
+  // Send OneSignal notification to the seller
+  await sendOneSignalNotification({
+    userId: sellerId,
+    title: 'New Request Received',
+    message: `You have a new request for your product: "${product.title}"`,
+  });
 
   // 3. Insert the default message using a secure admin client.
   // This allows us to bypass the 'accepted' status check for this one initial message.

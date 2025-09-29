@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
 
 // --- THIS IS THE FIX ---
-// We've updated the model name from the outdated 'gemini-pro-vision'
-// to the latest recommended model, 'gemini-1.5-flash-latest'.
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${process.env.GOOGLE_GEMINI_API_KEY}`;
+// Use the most compatible model for v1beta and image input
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${process.env.GOOGLE_GEMINI_API_KEY}`;
 
 export async function POST(request: Request) {
   try {

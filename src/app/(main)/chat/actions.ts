@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/server";
+import { sendOneSignalNotification } from "@/lib/sendOneSignalNotification";
 
 export async function createConnectionAction(
   productId: number,
@@ -134,6 +135,13 @@ export async function sendMessage(receiverId: string, formData: FormData) {
     console.error("Error sending message:", messageError);
     return;
   }
+
+  // Send OneSignal notification to the receiver
+  await sendOneSignalNotification({
+    userId: receiverId,
+    title: "New Message",
+    message: `You have a new message: "${content}"`,
+  });
 
   const { error: notificationError } = await supabase
     .from("notifications")

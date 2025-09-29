@@ -138,7 +138,7 @@ export default async function ProfilePage() {
   // 7. Pass the clean, combined data to the client component for rendering.
   return (
     <ProfileClient
-      profile={profile as Profile | null}
+      profile={profile}
       userProducts={userProducts || []}
     />
   );
