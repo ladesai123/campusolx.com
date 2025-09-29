@@ -396,7 +396,7 @@ export default function LandingPage() {
               </p>
             </div>
             {/* Timeline/Stepper */}
-            <div className="relative flex flex-col md:flex-row items-center md:justify-center gap-10 md:gap-x-12 max-w-6xl mx-auto">
+            <div className="relative flex flex-col items-center gap-10 max-w-2xl mx-auto">
               {/* Step 1 */}
               <div className="flex flex-col items-center text-center max-w-xs min-w-[180px]">
                 <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 shadow-lg">
@@ -405,8 +405,8 @@ export default function LandingPage() {
                 <h3 className="text-lg font-bold text-slate-900 mb-1">Snap &amp; List</h3>
                 <p className="text-slate-600 text-sm">Just take a photo—our AI writes your title, description, and picks a category (if you are lucky). List in seconds!</p>
               </div>
-              {/* Arrow */}
-              <div className="hidden md:block flex-shrink-0 w-12 h-1 bg-gradient-to-r from-blue-200 to-blue-400 rounded-full mx-2" />
+              {/* Arrow (vertical for all screens) */}
+              <div className="w-1 h-8 bg-gradient-to-b from-blue-200 to-blue-400 rounded-full my-2" />
               {/* Step 2 */}
               <div className="flex flex-col items-center text-center max-w-xs min-w-[180px]">
                 <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 shadow-lg">
