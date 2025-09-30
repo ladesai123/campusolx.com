@@ -7,6 +7,7 @@ import { createClient } from '@/lib/client';
 import { Button } from '@/components/ui/button';
 import { LogOut, PlusCircle, User } from 'lucide-react';
 import { ProductCard } from '@/components/ProductCard';
+import { initOneSignal } from '@/lib/onesignal';
 
 // Define simple types for the data we're receiving from the server.
 // Using 'any' for now is okay, but you can make these more specific later for better type safety.
@@ -25,9 +26,31 @@ export default function HomePageClient({ profile, initialProducts }: HomePageCli
   const supabase = createClient();
   const router = useRouter();
 
-  // This `useEffect` hook sets up a real-time listener.
-  // It "subscribes" to any changes in your 'products' table in Supabase.
   useEffect(() => {
+    // OneSignal prompt only on /home, only if not already subscribed
+    initOneSignal();
+    // v16: Use Promise-based API and correct methods
+    const checkAndPrompt = async () => {
+      const OneSignal = (window as any).OneSignal;
+      if (!OneSignal || typeof OneSignal.User === 'undefined') return;
+      try {
+        const isSubscribed = await OneSignal.User.PushSubscription.optedIn();
+        if (!isSubscribed && typeof OneSignal.Prompt === 'object' && typeof OneSignal.Prompt.show === 'function') {
+          OneSignal.Prompt.show();
+        }
+      } catch (e) {
+        // fail silently
+      }
+    };
+    // Wait for OneSignal to be ready
+    if ((window as any).OneSignal && typeof (window as any).OneSignal.User !== 'undefined') {
+      checkAndPrompt();
+    } else {
+      setTimeout(checkAndPrompt, 2000); // fallback if not ready
+    }
+
+    // This `useEffect` hook sets up a real-time listener.
+    // It "subscribes" to any changes in your 'products' table in Supabase.
     const channel = supabase
       .channel('realtime products')
       .on(
