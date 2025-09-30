@@ -6,6 +6,7 @@ import OneSignalInit from '@/components/OneSignalInit';
 import OneSignalTagUser from '@/components/OneSignalTagUser';
 import { createClient } from '@/lib/server';
 import MainLayoutClient from './MainLayoutClient';
+import { Analytics } from '@vercel/analytics/next';
 
 const nunito = Nunito({
   subsets: ['latin'],
@@ -51,6 +52,7 @@ export default async function RootLayout({
         <MainLayoutClient user={user}>
           {children}
         </MainLayoutClient>
+        <Analytics />
       </body>
     </html>
   );
