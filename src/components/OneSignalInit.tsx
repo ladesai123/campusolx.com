@@ -18,6 +18,7 @@ export default function OneSignalInit() {
       window.OneSignalDeferred.push(async function(OneSignal: any) {
         await OneSignal.init({
           appId: "f64a7b92-a44f-49fd-ae38-3d6e788b179b",
+          autoPrompt: false,
         });
       });
     } catch (err) {
