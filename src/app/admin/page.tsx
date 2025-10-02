@@ -7,10 +7,23 @@ import { getFeedbacks } from "./getFeedbacks";
 // Change this to your founder/admin email
 const ADMIN_EMAIL = "126156075@sastra.ac.in";
 
+import { createClient } from "@/lib/server";
+
 export default async function AdminDashboard() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || user.email !== ADMIN_EMAIL) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">You are not allowed to see this</h1>
+          <p className="text-gray-600">This page is restricted to the admin only.</p>
+        </div>
+      </div>
+    );
+  }
   // Server-side fetch for feedbacks
   const feedbacks = await getFeedbacks();
-
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <h1 className="text-3xl font-extrabold text-blue-700 mb-8">CampusOlx Admin Dashboard</h1>
