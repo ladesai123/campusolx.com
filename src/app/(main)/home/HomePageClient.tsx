@@ -21,32 +21,28 @@ interface HomePageClientProps {
 }
 
 export default function HomePageClient({ profile, initialProducts }: HomePageClientProps) {
+  const [showSubscribeBanner, setShowSubscribeBanner] = useState(false);
   // We use `useState` to manage the list of products on the client-side.
   const [products, setProducts] = useState(initialProducts);
   const supabase = createClient();
   const router = useRouter();
 
   useEffect(() => {
-    // OneSignal prompt only on /home, only if not already subscribed
     initOneSignal();
-    // v16: Use Promise-based API and correct methods
-    const checkAndPrompt = async () => {
+    const checkAndBanner = async () => {
       const OneSignal = (window as any).OneSignal;
       if (!OneSignal || typeof OneSignal.User === 'undefined') return;
       try {
         const isSubscribed = await OneSignal.User.PushSubscription.optedIn();
-        if (!isSubscribed && typeof OneSignal.Prompt === 'object' && typeof OneSignal.Prompt.show === 'function') {
-          OneSignal.Prompt.show();
+        if (!isSubscribed) {
+          setShowSubscribeBanner(true);
         }
-      } catch (e) {
-        // fail silently
-      }
+      } catch (e) {}
     };
-    // Wait for OneSignal to be ready
     if ((window as any).OneSignal && typeof (window as any).OneSignal.User !== 'undefined') {
-      checkAndPrompt();
+      checkAndBanner();
     } else {
-      setTimeout(checkAndPrompt, 2000); // fallback if not ready
+      setTimeout(checkAndBanner, 2000);
     }
 
     // This `useEffect` hook sets up a real-time listener.
@@ -80,6 +76,25 @@ export default function HomePageClient({ profile, initialProducts }: HomePageCli
   
   return (
     <div className="p-4 sm:p-6">
+      {showSubscribeBanner && (
+        <div className="mb-4 flex items-center justify-between rounded-lg bg-blue-50 px-4 py-3 text-blue-900 shadow">
+          <div>
+            <span className="font-semibold">Enable notifications</span> to get instant alerts for new messages, requests, and deals!
+          </div>
+          <Button
+            variant="default"
+            onClick={() => {
+              setShowSubscribeBanner(false);
+              const OneSignal = (window as any).OneSignal;
+              if (OneSignal && typeof OneSignal.Prompt === 'object' && typeof OneSignal.Prompt.show === 'function') {
+                OneSignal.Prompt.show();
+              }
+            }}
+          >
+            Subscribe
+          </Button>
+        </div>
+      )}
       <div className="container mx-auto">
         <header className="flex flex-wrap gap-4 justify-between items-center pb-4 border-b">
             <div>
