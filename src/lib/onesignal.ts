@@ -17,7 +17,6 @@ export function initOneSignal() {
             appId: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID,
             notifyButton: { enable: true },
             allowLocalhostAsSecureOrigin: true,
-            autoPrompt: false,
           });
         });
       };
