@@ -62,7 +62,7 @@ export default function SellPage() {
         }
       };
     } catch (error) {
-      console.error('Image compression error:', error);
+      console.error('Image compression/upload error:', error);
       setFileError('Image upload failed. Please try a different image or try again later.');
       setCompressedFiles([]);
       setBase64ImageData(null);
@@ -178,9 +178,22 @@ export default function SellPage() {
 
               {/* Show file/image errors near the image upload field */}
               {fileError && (
-                <div className="mb-2 flex items-center text-sm text-red-600 p-2 bg-red-50 border border-red-200 rounded-md">
-                  <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" />
-                  <span>{fileError}</span>
+                <div className="mb-2 flex flex-col items-center text-sm text-red-600 p-2 bg-red-50 border border-red-200 rounded-md">
+                  <div className="flex items-center">
+                    <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span>{fileError}</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="mt-2 px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-xs"
+                    onClick={() => {
+                      setFileError(null);
+                      setCompressedFiles([]);
+                      setBase64ImageData(null);
+                    }}
+                  >
+                    Retry Upload
+                  </button>
                 </div>
               )}
               <div className="grid w-full items-center gap-1.5">
@@ -365,6 +378,31 @@ export default function SellPage() {
                 <Button type="submit" disabled={isPending || compressedFiles.length === 0}>
                   {isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Listing...</> : 'List Item'}
                 </Button>
+                {/* Robust error message below the List button */}
+                {submitError && (
+                  <div className="w-full flex flex-col items-center mt-4">
+                    <div className="flex items-center text-sm text-red-600 p-3 bg-red-50 border border-red-200 rounded-md">
+                      <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                      <span>
+                        {submitError.includes('image')
+                          ? 'Image upload failed. Please try a different image or try again later.'
+                          : 'There was a problem listing your item. Please try again later.'}
+                      </span>
+                    </div>
+                    <div className="text-xs text-center text-blue-700 mt-2">
+                      If this doesn’t resolve, please
+                      <a
+                        href="mailto:campusolx.connect@gmail.com"
+                        className="underline ml-1"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        reach us
+                      </a>
+                      . We’ll rectify it as soon as possible!
+                    </div>
+                  </div>
+                )}
               </div>
             </form>
           </CardContent>
