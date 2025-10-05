@@ -178,14 +178,19 @@ export default function SellPage() {
 
               {/* Show file/image errors near the image upload field */}
               {fileError && (
-                <div className="mb-2 flex flex-col items-center text-sm text-red-600 p-2 bg-red-50 border border-red-200 rounded-md">
-                  <div className="flex items-center">
-                    <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" />
-                    <span>{fileError}</span>
+                <div className="mb-2 flex flex-col items-center text-sm p-3 bg-red-50 border border-red-200 rounded-xl shadow-sm w-full max-w-xs mx-auto">
+                  <div className="flex items-center justify-center mb-1">
+                    <AlertCircle className="h-5 w-5 mr-2 text-red-500" />
+                    <span className="font-semibold text-red-700">Image upload failed</span>
                   </div>
+                  <span className="text-center text-red-600 mb-2">
+                    {fileError.includes('api_key')
+                      ? 'A technical issue occurred. Please try again later or contact us.'
+                      : 'Please check your internet connection, try a different image, or retry in a better network area.'}
+                  </span>
                   <button
                     type="button"
-                    className="mt-2 px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-xs"
+                    className="mt-2 px-4 py-1 bg-blue-600 text-white rounded-full shadow hover:bg-blue-700 text-xs font-medium"
                     onClick={() => {
                       setFileError(null);
                       setCompressedFiles([]);
@@ -194,6 +199,18 @@ export default function SellPage() {
                   >
                     Retry Upload
                   </button>
+                  <div className="text-xs text-center text-blue-700 mt-3">
+                    If this doesn’t resolve, please{' '}
+                    <a
+                      href="mailto:campusolx.connect@gmail.com"
+                      className="underline"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      reach us
+                    </a>
+                    . We’ll rectify it as soon as possible!
+                  </div>
                 </div>
               )}
               <div className="grid w-full items-center gap-1.5">
@@ -381,25 +398,32 @@ export default function SellPage() {
                 {/* Robust error message below the List button */}
                 {submitError && (
                   <div className="w-full flex flex-col items-center mt-4">
-                    <div className="flex items-center text-sm text-red-600 p-3 bg-red-50 border border-red-200 rounded-md">
-                      <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" />
-                      <span>
+                    <div className="flex flex-col items-center text-sm p-3 bg-red-50 border border-red-200 rounded-xl shadow-sm w-full max-w-xs mx-auto">
+                      <div className="flex items-center justify-center mb-1">
+                        <AlertCircle className="h-5 w-5 mr-2 text-red-500" />
+                        <span className="font-semibold text-red-700">
+                          {submitError.includes('image')
+                            ? 'Image upload failed'
+                            : 'Listing error'}
+                        </span>
+                      </div>
+                      <span className="text-center text-red-600 mb-2">
                         {submitError.includes('image')
-                          ? 'Image upload failed. Please try a different image or try again later.'
+                          ? 'Please try a different image or try again later.'
                           : 'There was a problem listing your item. Please try again later.'}
                       </span>
-                    </div>
-                    <div className="text-xs text-center text-blue-700 mt-2">
-                      If this doesn’t resolve, please
-                      <a
-                        href="mailto:campusolx.connect@gmail.com"
-                        className="underline ml-1"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        reach us
-                      </a>
-                      . We’ll rectify it as soon as possible!
+                      <div className="text-xs text-center text-blue-700 mt-3">
+                        If this doesn’t resolve, please{' '}
+                        <a
+                          href="mailto:campusolx.connect@gmail.com"
+                          className="underline"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          reach us
+                        </a>
+                        . We’ll rectify it as soon as possible!
+                      </div>
                     </div>
                   </div>
                 )}
