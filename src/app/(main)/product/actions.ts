@@ -59,11 +59,11 @@ export async function connectWithSeller(formData: FormData) {
     return redirect(`/product/${productId}?error=Could not send request.`);
   }
 
-  // Send OneSignal notification to the seller
+  // Send OneSignal notification to the seller with the real product name
   await sendOneSignalNotification({
     userId: sellerId,
-    title: 'New Request Received',
-    message: `You have a new request for your product: "${product.title}"`,
+    title: 'New Connection Request',
+    message: `You have a new connection request for your product: "${product.title}"`,
   });
 
   // 3. Insert the default message using a secure admin client.

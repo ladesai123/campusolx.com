@@ -72,26 +72,28 @@ export async function acceptConnectionAction(connectionId: number) {
 
   if (updateError) throw updateError;
 
-  // 3. Send the automatic first message from the BUYER.
+  // 3. Only insert the initial message if it does not already exist for this connection
   const productTitle = connection.products?.title || "this item";
   const defaultMessage = `Hi! I'm interested in buying your product: "${productTitle}"`;
+  const { data: existingMessage } = await supabase
+    .from("messages")
+    .select("id")
+    .eq("connection_id", connectionId)
+    .eq("sender_id", connection.requester_id)
+    .eq("content", defaultMessage)
+    .single();
 
-  const { error: messageError } = await supabase.from("messages").insert({
-    content: defaultMessage,
-    connection_id: connectionId,
-    sender_id: connection.requester_id, // The message is FROM the buyer.
-  });
+  if (!existingMessage) {
+    const { error: messageError } = await supabase.from("messages").insert({
+      content: defaultMessage,
+      connection_id: connectionId,
+      sender_id: connection.requester_id,
+    });
+    if (messageError) throw messageError;
+  }
 
-  if (messageError) throw messageError;
-
-  // 4. Create a notification for the buyer that their request was accepted.
-  const messageRecord = await supabase.from("messages").select("id").eq("connection_id", connectionId).single();
-  await supabase.from("notifications").insert({
-    message_id: messageRecord.data!.id,
-    receiver_id: connection.requester_id,
-    connection_id: connectionId,
-  });
-  // Send OneSignal notification to the buyer
+  // 4. Notify the buyer that their request was accepted
+  // (No duplicate message notification)
   await sendOneSignalNotification({
     userId: connection.requester_id,
     title: "Request Accepted!",

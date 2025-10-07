@@ -93,14 +93,23 @@ export default function ProductDetailsClient({
   const isOwner = user.id === product.seller_id;
 
 
-  // --- UPGRADED LOGIC: This now sends a REQUEST, it doesn't instantly connect ---
+  // --- NEW LOGIC: Use connectWithSeller to insert initial message and notify seller ---
   const handleSendRequest = () => {
     startTransition(async () => {
-      const result = await createConnectionAction(product.id, product.seller_id);
-      if (result.success) {
-        setNotification("Request sent! You can chat with the seller once they accept.");
-      } else {
-        setNotification(result.message || "An error occurred.");
+      // Prepare form data for connectWithSeller
+      const formData = new FormData();
+      formData.append("productId", String(product.id));
+      formData.append("sellerId", product.seller_id);
+
+      // Call the correct server action
+      try {
+        // Import connectWithSeller dynamically to avoid circular imports
+        const { connectWithSeller } = await import("../actions");
+        await connectWithSeller(formData);
+        setNotification("Request sent! The seller will be notified and the initial message will appear in chat.");
+      } catch (err) {
+        setNotification("Failed to send request. Please try again.");
+        console.error("connectWithSeller error:", err);
       }
       router.refresh();
     });
