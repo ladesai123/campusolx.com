@@ -212,11 +212,6 @@ export default function ChatClient({
               <ArrowLeft />
             </Link>
           </Button>
-          <Button asChild variant="outline" size="sm" className="ml-2">
-            <Link href="/home">
-              &larr; Back to Marketplace
-            </Link>
-          </Button>
           <Image
             src={otherUser.profile_picture_url || "https://placehold.co/40x40"}
             alt={otherUser.name || "User"}
