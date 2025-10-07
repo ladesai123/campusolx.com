@@ -1,4 +1,3 @@
-
 "use client";
 import {
   AlertDialog,
@@ -25,6 +24,9 @@ import { createClient } from "@/lib/client";
 import { useChatScroll } from "@/hooks/use-chat-scroll";
 import { NotificationContext } from '../../context/NotificationContext';
 import type { Profile, MessageWithSender } from "./page";
+// --- Import AppLoader ---
+import AppLoader from "@/components/shared/AppLoader"; 
+// ------------------------
 
 // --- Types ---
 type ConnectionWithProfiles = {
@@ -66,6 +68,9 @@ export default function ChatClient({
   const [showAcceptDialog, setShowAcceptDialog] = useState(false);
   const [showDeclineDialog, setShowDeclineDialog] = useState(false);
   const [pendingAction, setPendingAction] = useState<'accept'|'decline'|null>(null);
+  // --- Add isAccepting state ---
+  const [isAccepting, setIsAccepting] = useState(false);
+  // -----------------------------
   const supabase = useMemo(() => createClient(), []);
   const [messages, setMessages] = useState(initialMessages);
   const [otherUserStatus, setOtherUserStatus] = useState<'online' | 'offline'>('offline');
@@ -194,12 +199,22 @@ export default function ChatClient({
   // Layout wrapper for chat page
   return (
     <div className="chat-page-container">
+      {/* --- AppLoader component for loading state --- */}
+      {isAccepting && (
+        <AppLoader className="fixed inset-0 z-50 bg-white bg-opacity-80 flex items-center justify-center" />
+      )}
+      {/* --------------------------------------------- */}
       <div className="w-full max-w-md mx-auto bg-white shadow md:rounded-xl md:my-6 md:max-w-lg">
         {/* Header (not fixed) */}
         <header className="flex items-center gap-3 border-b bg-white p-3 shadow-sm">
           <Button asChild variant="ghost" size="icon">
             <Link href="/chat">
               <ArrowLeft />
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="sm" className="ml-2">
+            <Link href="/home">
+              &larr; Back to Marketplace
             </Link>
           </Button>
           <Image
@@ -271,15 +286,22 @@ export default function ChatClient({
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
+              {/* --- Updated onClick for Accept Dialog --- */}
               <AlertDialogAction
                 className="bg-blue-600 text-white hover:bg-blue-700"
                 onClick={async () => {
                   setShowAcceptDialog(false);
                   if (pendingAction === 'accept') {
-                    await sendMessage(otherUser.id, new FormData()); // Optionally trigger accept action here
+                    setIsAccepting(true);
+                    try {
+                      await sendMessage(otherUser.id, new FormData()); // Optionally trigger accept action here
+                    } finally {
+                      setIsAccepting(false);
+                    }
                   }
                 }}
               >Ok, got it</AlertDialogAction>
+              {/* ------------------------------------------ */}
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

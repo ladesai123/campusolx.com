@@ -85,12 +85,18 @@ export async function acceptConnectionAction(connectionId: number) {
   if (messageError) throw messageError;
 
   // 4. Create a notification for the buyer that their request was accepted.
+  const messageRecord = await supabase.from("messages").select("id").eq("connection_id", connectionId).single();
   await supabase.from("notifications").insert({
-    message_id: (
-      await supabase.from("messages").select("id").eq("connection_id", connectionId).single()
-    ).data!.id,
+    message_id: messageRecord.data!.id,
     receiver_id: connection.requester_id,
     connection_id: connectionId,
+  });
+  // Send OneSignal notification to the buyer
+  await sendOneSignalNotification({
+    userId: connection.requester_id,
+    title: "Request Accepted!",
+    message: `Your request for '${productTitle}' was accepted. You can now chat with the seller!`,
+    connectionId: connectionId,
   });
 
   // Revalidate paths to update UI for both users
@@ -141,6 +147,7 @@ export async function sendMessage(receiverId: string, formData: FormData) {
     userId: receiverId,
     title: "New Message",
     message: `You have a new message: "${content}"`,
+    connectionId: parseInt(connectionId),
   });
 
   const { error: notificationError } = await supabase

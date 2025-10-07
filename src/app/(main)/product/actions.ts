@@ -73,15 +73,23 @@ export async function connectWithSeller(formData: FormData) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
-  const { error: messageError } = await supabaseAdmin.from("messages").insert({
+  const { data: messageData, error: messageError } = await supabaseAdmin.from("messages").insert({
     connection_id: newConnection.id,
     sender_id: user.id,
     content: defaultMessage,
-  });
+  }).select().single();
 
   if (messageError) {
     console.error("Error creating default message:", messageError);
     // Even if the message fails, the connection request was successful, so we continue.
+  } else if (messageData) {
+    // Step 2: Send notification to seller about the new message
+    await sendOneSignalNotification({
+      userId: sellerId,
+      title: 'New Message from Buyer',
+      message: defaultMessage,
+      connectionId: newConnection.id,
+    });
   }
 
   revalidatePath(`/product/${productId}`);
