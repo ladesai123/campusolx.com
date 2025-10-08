@@ -34,10 +34,15 @@ export default function HomePageClient({ profile, initialProducts }: HomePageCli
     const maxTries = 10;
     const interval = setInterval(async () => {
       const OneSignal = (window as any).OneSignal;
-      if (OneSignal && OneSignal.Notifications && typeof OneSignal.Notifications.isPushEnabled === 'function') {
+      if (
+        OneSignal &&
+        OneSignal.User &&
+        OneSignal.User.PushSubscription &&
+        typeof OneSignal.User.PushSubscription.optedIn === 'function'
+      ) {
         try {
-          const isSubscribed = await OneSignal.Notifications.isPushEnabled();
-          console.log('OneSignal v16 subscription status:', isSubscribed);
+          const isSubscribed = await OneSignal.User.PushSubscription.optedIn();
+          console.log('OneSignal subscription status:', isSubscribed);
           if (!isSubscribed) {
             setShowSubscribeBanner(true);
           }
@@ -49,7 +54,7 @@ export default function HomePageClient({ profile, initialProducts }: HomePageCli
       } else {
         tries++;
         if (tries >= maxTries) {
-          console.error('OneSignal SDK/Notifications not available after max retries');
+          console.error('OneSignal SDK/User.PushSubscription not available after max retries');
           clearInterval(interval);
         }
       }
