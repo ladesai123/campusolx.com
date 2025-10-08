@@ -33,6 +33,7 @@ type ConnectionWithProfiles = {
   id: number;
   seller: Profile | null;
   requester: Profile | null;
+  status?: string;
 };
 
 // --- Client-side Time Component ---
@@ -68,9 +69,7 @@ export default function ChatClient({
   const [showAcceptDialog, setShowAcceptDialog] = useState(false);
   const [showDeclineDialog, setShowDeclineDialog] = useState(false);
   const [pendingAction, setPendingAction] = useState<'accept'|'decline'|null>(null);
-  // --- Add isAccepting state ---
   const [isAccepting, setIsAccepting] = useState(false);
-  // -----------------------------
   const supabase = useMemo(() => createClient(), []);
   const [messages, setMessages] = useState(initialMessages);
   const [otherUserStatus, setOtherUserStatus] = useState<'online' | 'offline'>('offline');
@@ -79,14 +78,16 @@ export default function ChatClient({
 
   const formRef = useRef<HTMLFormElement>(null);
   const notificationCtx = useContext(NotificationContext);
-  // Use the new hook pattern for auto-scrolling
   const { containerRef, scrollToBottom } = useChatScroll();
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  const otherUser =
-    user?.id === connection.seller?.id ? connection.requester : connection.seller;
+  const otherUser = user?.id === connection.seller?.id ? connection.requester : connection.seller;
+
+  // Helper: Is buyer and chat not accepted?
+  const isBuyer = user?.id === connection.requester?.id;
+  const isPending = connection.status !== 'accepted';
 
   // --- Real-time Logic ---
   useEffect(() => {
@@ -97,7 +98,7 @@ export default function ChatClient({
         notificationCtx?.refetchUnreadCount && notificationCtx.refetchUnreadCount();
         console.log('Notifications marked as read in DB');
       })
-      .catch((err) => {
+      .catch((err: any) => {
         console.error('Error marking notifications as read:', err);
       });
 

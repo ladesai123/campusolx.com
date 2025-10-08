@@ -167,9 +167,15 @@ export default function ChatClient({ connections, user, unreadCounts }: ChatClie
                               variant="default"
                               className="w-full sm:w-auto"
                               disabled={loadingChatId === conv.id}
-                              onClick={e => {
+                              onClick={async e => {
                                 e.stopPropagation();
-                                setAcceptDialogOpen(conv.id);
+                                setLoadingChatId(conv.id);
+                                setLoading(true);
+                                await acceptConnection(conv.id);
+                                setLoading(false);
+                                setLoadingChatId(null);
+                                // Automatically navigate to the accepted chat
+                                window.location.href = `/chat/${conv.id}`;
                               }}
                             >Accept</Button>
                             <Button
@@ -183,28 +189,7 @@ export default function ChatClient({ connections, user, unreadCounts }: ChatClie
                               }}
                             >Decline</Button>
                           </div>
-                          {/* Accept/Decline Dialogs */}
-                          <AlertDialog open={acceptDialogOpen === conv.id} onOpenChange={open => !open && setAcceptDialogOpen(null)}>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Accept Request?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to accept this request?
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogAction
-                                  onClick={async () => {
-                                    setLoading(true);
-                                    await acceptConnection(conv.id);
-                                    setLoading(false);
-                                    setAcceptDialogOpen(null);
-                                  }}
-                                >Yes, Accept</AlertDialogAction>
-                                <AlertDialogCancel>No, Go Back</AlertDialogCancel>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                          {/* Only show confirmation dialog for Decline */}
                           <AlertDialog open={declineDialogOpen === conv.id} onOpenChange={open => !open && setDeclineDialogOpen(null)}>
                             <AlertDialogContent>
                               <AlertDialogHeader>

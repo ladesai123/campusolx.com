@@ -18,12 +18,12 @@ export async function createConnectionAction(
     return { success: false, message: "You cannot start a chat about your own item." };
 
   try {
-    const { error } = await supabase.from("connections").insert({
+    const { data: connectionInsert, error } = await supabase.from("connections").insert({
       product_id: productId,
       requester_id: user.id,
       seller_id: sellerId,
       status: "pending",
-    });
+    }).select().single();
 
     if (error) {
       // Handles cases where a request already exists
@@ -33,6 +33,29 @@ export async function createConnectionAction(
       }
       throw error;
     }
+
+    // Store the default message in the messages table
+    // Optionally fetch product title if needed
+    let productTitle = "your product";
+    if (connectionInsert?.product_id) {
+      // You can fetch the product title from DB if you want, for now use placeholder
+      productTitle = "your product";
+    }
+    const defaultMessage = `Hi! I'm interested in buying your product: "${productTitle}"`;
+    const { error: messageError } = await supabase.from("messages").insert({
+      content: defaultMessage,
+      connection_id: connectionInsert.id,
+      sender_id: user.id,
+    });
+    if (messageError) throw messageError;
+
+    // Send notification to seller with the default message
+    await sendOneSignalNotification({
+      userId: sellerId,
+      title: "New Message",
+      message: defaultMessage,
+      connectionId: connectionInsert?.id ?? productId,
+    });
 
     revalidatePath(`/product/${productId}`);
     return { success: true, message: "Request sent successfully!" };
@@ -74,7 +97,7 @@ export async function acceptConnectionAction(connectionId: number) {
 
   // 3. Only insert the initial message if it does not already exist for this connection
   const productTitle = connection.products?.title || "this item";
-  const defaultMessage = `Hi! I'm interested in buying your product: "${productTitle}"`;
+  const defaultMessage = `Hi! I'm interested in buying your product: \"${productTitle}\"`;
   const { data: existingMessage } = await supabase
     .from("messages")
     .select("id")
@@ -93,7 +116,6 @@ export async function acceptConnectionAction(connectionId: number) {
   }
 
   // 4. Notify the buyer that their request was accepted
-  // (No duplicate message notification)
   await sendOneSignalNotification({
     userId: connection.requester_id,
     title: "Request Accepted!",
@@ -104,12 +126,11 @@ export async function acceptConnectionAction(connectionId: number) {
   // Revalidate paths to update UI for both users
   revalidatePath(`/profile`);
   revalidatePath(`/chat/${connectionId}`);
-  // Also revalidate the product page so approval is shown
   if (connection?.product_id) {
     revalidatePath(`/product/${connection.product_id}`);
   }
 
-  return { success: true, connectionId: connection.id };
+  return { success: true, message: "Connection accepted." };
 }
 
 export async function sendMessage(receiverId: string, formData: FormData) {
@@ -127,7 +148,31 @@ export async function sendMessage(receiverId: string, formData: FormData) {
     throw new Error("Missing required form data to send message and notify.");
   }
 
-  // (Optional but recommended: Add a check here to only allow messages if connection status is 'accepted')
+
+  // Fetch connection status
+  const { data: connection, error: connError } = await supabase
+    .from("connections")
+    .select("status, requester_id")
+    .eq("id", parseInt(connectionId))
+    .single();
+
+  if (connError || !connection) {
+    throw new Error("Connection not found.");
+  }
+
+  // If requester is sending and status is not 'accepted', only allow the initial message
+  if (user.id === connection.requester_id && connection.status !== "accepted") {
+    // Only allow the default initial message
+    const defaultMessage = `Hi! I'm interested in buying your product:`;
+    if (!content.startsWith(defaultMessage)) {
+      throw new Error("You cannot send more messages until the seller accepts your request.");
+    }
+  }
+
+  // If not accepted and not requester, block
+  if (user.id !== connection.requester_id && connection.status !== "accepted") {
+    throw new Error("Chat is not available until the seller accepts the request.");
+  }
 
   const { data: messageData, error: messageError } = await supabase
     .from("messages")

@@ -86,8 +86,9 @@ export default function HomePageClient({ profile, initialProducts }: HomePageCli
             onClick={() => {
               setShowSubscribeBanner(false);
               const OneSignal = (window as any).OneSignal;
-              if (OneSignal && typeof OneSignal.Prompt === 'object' && typeof OneSignal.Prompt.show === 'function') {
-                OneSignal.Prompt.show();
+              if (OneSignal && typeof OneSignal.showSlidedownPrompt === 'function') {
+                console.log('Attempting to show OneSignal subscribe prompt');
+                OneSignal.showSlidedownPrompt();
               }
             }}
           >
