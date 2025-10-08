@@ -29,41 +29,47 @@ export default function HomePageClient({ profile, initialProducts }: HomePageCli
 
   useEffect(() => {
     initOneSignal();
-    const checkAndBanner = async () => {
-      const OneSignal = (window as any).OneSignal;
-      if (!OneSignal || typeof OneSignal.User === 'undefined') return;
-      try {
-        const isSubscribed = await OneSignal.User.PushSubscription.optedIn();
-        if (!isSubscribed) {
-          setShowSubscribeBanner(true);
-        }
-      } catch (e) {}
-    };
-    if ((window as any).OneSignal && typeof (window as any).OneSignal.User !== 'undefined') {
-      checkAndBanner();
-    } else {
-      setTimeout(checkAndBanner, 2000);
-    }
 
-    // This `useEffect` hook sets up a real-time listener.
-    // It "subscribes" to any changes in your 'products' table in Supabase.
+    let tries = 0;
+    const maxTries = 10;
+    const interval = setInterval(async () => {
+      const OneSignal = (window as any).OneSignal;
+      if (OneSignal && OneSignal.Notifications && typeof OneSignal.Notifications.isPushEnabled === 'function') {
+        try {
+          const isSubscribed = await OneSignal.Notifications.isPushEnabled();
+          console.log('OneSignal v16 subscription status:', isSubscribed);
+          if (!isSubscribed) {
+            setShowSubscribeBanner(true);
+          }
+          clearInterval(interval);
+        } catch (e) {
+          console.error('OneSignal subscription check failed:', e);
+          clearInterval(interval);
+        }
+      } else {
+        tries++;
+        if (tries >= maxTries) {
+          console.error('OneSignal SDK/Notifications not available after max retries');
+          clearInterval(interval);
+        }
+      }
+    }, 1000); // Check every second, up to 10 seconds
+
+    // Supabase realtime listener (unchanged)
     const channel = supabase
       .channel('realtime products')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'products' },
         (payload) => {
-          // When a change is detected (like a new item being added),
-          // we simply refresh the page to get the latest data.
           router.refresh(); 
         }
       )
       .subscribe();
 
-    // This is a cleanup function that runs when the component is unmounted
-    // to prevent memory leaks.
     return () => {
       supabase.removeChannel(channel);
+      clearInterval(interval);
     };
   }, [supabase, router]);
 
