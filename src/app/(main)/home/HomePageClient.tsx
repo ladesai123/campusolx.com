@@ -30,36 +30,6 @@ export default function HomePageClient({ profile, initialProducts }: HomePageCli
   useEffect(() => {
     initOneSignal();
 
-    let tries = 0;
-    const maxTries = 10;
-    const interval = setInterval(async () => {
-      const OneSignal = (window as any).OneSignal;
-      if (
-        OneSignal &&
-        OneSignal.User &&
-        OneSignal.User.PushSubscription &&
-        typeof OneSignal.User.PushSubscription.optedIn === 'function'
-      ) {
-        try {
-          const isSubscribed = await OneSignal.User.PushSubscription.optedIn();
-          console.log('OneSignal subscription status:', isSubscribed);
-          if (!isSubscribed) {
-            setShowSubscribeBanner(true);
-          }
-          clearInterval(interval);
-        } catch (e) {
-          console.error('OneSignal subscription check failed:', e);
-          clearInterval(interval);
-        }
-      } else {
-        tries++;
-        if (tries >= maxTries) {
-          console.error('OneSignal SDK/User.PushSubscription not available after max retries');
-          clearInterval(interval);
-        }
-      }
-    }, 1000); // Check every second, up to 10 seconds
-
     // Supabase realtime listener (unchanged)
     const channel = supabase
       .channel('realtime products')
@@ -72,9 +42,11 @@ export default function HomePageClient({ profile, initialProducts }: HomePageCli
       )
       .subscribe();
 
+    // Always show the subscribe banner for all users
+    setShowSubscribeBanner(true);
+
     return () => {
       supabase.removeChannel(channel);
-      clearInterval(interval);
     };
   }, [supabase, router]);
 
