@@ -25,19 +25,60 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, AlertCircle } from "lucide-react";
 import { updateProductAction } from "./actions";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export default function EditProductForm({ product }: { product: any }) {
   const [availability, setAvailability] = useState(product.available_from ? "future" : "now");
   const [availableDate, setAvailableDate] = useState(product.available_from ? product.available_from.split("T")[0] : "");
   const [showSuccess, setShowSuccess] = useState(false);
+  const [price, setPrice] = useState(product.price?.toString() || '');
+  const [mrp, setMrp] = useState(product.mrp?.toString() || '');
+  const [priceError, setPriceError] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
+
+  const validatePrice = (priceValue: string, mrpValue: string) => {
+    setPriceError(null);
+    
+    if (!priceValue) return true; // Price is required, but we let form validation handle that
+    
+    const priceNum = parseFloat(priceValue);
+    const mrpNum = parseFloat(mrpValue);
+    
+    // Only validate if MRP is provided and both values are valid numbers
+    if (mrpValue && !isNaN(mrpNum) && !isNaN(priceNum)) {
+      if (priceNum >= mrpNum) {
+        setPriceError('Your Price must be less than MRP');
+        return false;
+      }
+    }
+    
+    return true;
+  };
+
+  const handlePriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setPrice(value);
+    validatePrice(value, mrp);
+  };
+
+  const handleMrpChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setMrp(value);
+    validatePrice(price, value);
+  };
 
   // Intercept form submit to show toast
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    
+    // Validate price before submission
+    if (!validatePrice(price, mrp)) {
+      return; // Don't submit if price validation fails
+    }
+    
     const form = e.currentTarget;
     const formData = new FormData(form);
     // Use the server action
@@ -93,17 +134,31 @@ export default function EditProductForm({ product }: { product: any }) {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid w-full items-center gap-1.5">
-                <Label htmlFor="mrp">MRP (Optional)</Label>
-                <Input id="mrp" name="mrp" type="number" defaultValue={product.mrp || ""} />
-              </div>
-              <div className="grid w-full items-center gap-1.5">
                 <Label htmlFor="price">Your Price (₹)</Label>
                 <Input
                   id="price"
                   name="price"
                   type="number"
-                  defaultValue={product.price || ""}
+                  value={price}
+                  onChange={handlePriceChange}
                   required
+                  className={priceError ? 'border-red-500' : ''}
+                />
+                {priceError && (
+                  <span className="text-xs text-red-500 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {priceError}
+                  </span>
+                )}
+              </div>
+              <div className="grid w-full items-center gap-1.5">
+                <Label htmlFor="mrp">MRP (Optional)</Label>
+                <Input 
+                  id="mrp" 
+                  name="mrp" 
+                  type="number" 
+                  value={mrp}
+                  onChange={handleMrpChange}
                 />
               </div>
             </div>
@@ -135,7 +190,7 @@ export default function EditProductForm({ product }: { product: any }) {
               </div>
               {availability === "future" && (
                 <div className="mt-2">
-                  <Label htmlFor="available_date">Available From:</Label>
+                  <Label htmlFor="available_date" className="mb-2 block">Available From:</Label>
                   <Input
                     id="available_date"
                     name="available_date"
@@ -146,6 +201,14 @@ export default function EditProductForm({ product }: { product: any }) {
                   />
                 </div>
               )}
+            </div>
+            {/* New negotiable option section */}
+            <div className="grid w-full items-center gap-2.5 rounded-lg border p-4">
+              <Label className="font-semibold">Is the price negotiable?</Label>
+              <RadioGroup name="is_negotiable" defaultValue={String(product.is_negotiable)} className="flex gap-4">
+                  <div className="flex items-center space-x-2"><RadioGroupItem value="true" id="negotiable-yes" /><Label htmlFor="negotiable-yes">Yes, negotiable</Label></div>
+                  <div className="flex items-center space-x-2"><RadioGroupItem value="false" id="negotiable-no" /><Label htmlFor="negotiable-no">No, fixed price</Label></div>
+              </RadioGroup>
             </div>
             <p className="text-xs text-slate-500">Note: Image editing is not yet supported.</p>
             <div className="flex justify-end gap-2 mt-2">

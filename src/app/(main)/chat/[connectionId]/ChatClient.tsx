@@ -1,4 +1,5 @@
 "use client";
+import { Hourglass } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -24,8 +25,7 @@ import { createClient } from "@/lib/client";
 import { useChatScroll } from "@/hooks/use-chat-scroll";
 import { NotificationContext } from '../../context/NotificationContext';
 import type { Profile, MessageWithSender } from "./page";
-// --- Import AppLoader ---
-import AppLoader from "@/components/shared/AppLoader"; 
+import SimpleSpinner from "@/components/shared/SimpleSpinner"; 
 // ------------------------
 
 // --- Types ---
@@ -78,6 +78,7 @@ export default function ChatClient({
 
   const formRef = useRef<HTMLFormElement>(null);
   const notificationCtx = useContext(NotificationContext);
+  const [chatError, setChatError] = useState<string | null>(null);
   const { containerRef, scrollToBottom } = useChatScroll();
   useEffect(() => {
     scrollToBottom();
@@ -198,11 +199,28 @@ export default function ChatClient({
   }
 
   // Layout wrapper for chat page
+  // If buyer and connection is not accepted, show info and hide chat UI
+  if (isBuyer && isPending) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] p-8">
+        <h2 className="text-xl font-semibold mb-4 text-slate-700">Your request has been sent!</h2>
+        <p className="text-base text-red-500 mb-6 font-semibold">Waiting for seller to accept.</p>
+        <Hourglass className="h-10 w-10 text-amber-500 animate-pulse mb-4" />
+        <Button asChild variant="outline">
+          <Link href="/home">Back to Marketplace</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  // Otherwise, show normal chat UI
   return (
     <div className="chat-page-container">
-      {/* --- AppLoader component for loading state --- */}
+      {/* --- Simple Spinner for loading state --- */}
       {isAccepting && (
-        <AppLoader className="fixed inset-0 z-50 bg-white bg-opacity-80 flex items-center justify-center" />
+        <div className="fixed inset-0 z-50 bg-white bg-opacity-80 flex items-center justify-center">
+          <SimpleSpinner size="lg" text="Processing request..." />
+        </div>
       )}
       {/* --------------------------------------------- */}
       <div className="w-full max-w-md mx-auto bg-white shadow md:rounded-xl md:my-6 md:max-w-lg">
@@ -238,7 +256,7 @@ export default function ChatClient({
         </header>
 
         {/* Scrollable Messages */}
-  <div ref={containerRef} className="space-y-4 overflow-y-auto p-4 pb-28 md:pb-24">
+        <div ref={containerRef} className="space-y-4 overflow-y-auto p-4 pb-28 md:pb-24">
           {messages.map((message) => (
             <div
               key={message.id}
@@ -327,29 +345,49 @@ export default function ChatClient({
         </AlertDialog>
 
         {/* Input Bar (not fixed) */}
-        <footer className="border-t bg-white p-3 shadow-sm">
-          <form
-            ref={formRef}
-            action={async (formData: FormData) => {
-              if (!otherUser?.id) return;
-              formRef.current?.reset();
-              await sendMessage(otherUser.id, formData);
-            }}
-            className="flex items-center gap-2"
-          >
-            <Input
-              name="content"
-              placeholder="Type a message..."
-              autoComplete="off"
-              required
-              onChange={handleInputChange}
-            />
-            <Input type="hidden" name="connectionId" value={connection.id} />
-            <Button type="submit" size="icon">
-              <Send />
-            </Button>
-          </form>
-        </footer>
+        {/* Only show input if buyer and connection is accepted, or if seller */}
+        {(!isBuyer || !isPending) && (
+          <footer className="border-t bg-white p-3 shadow-sm">
+            <form
+              ref={formRef}
+              action={async (formData: FormData) => {
+                if (!otherUser?.id) return;
+                formRef.current?.reset();
+                try {
+                  await sendMessage(otherUser.id, formData);
+                } catch (err: any) {
+                  setChatError("Failed to send message. Please try again later.");
+                }
+              }}
+              className="flex items-center gap-2"
+            >
+              <Input
+                name="content"
+                placeholder="Type a message..."
+                autoComplete="off"
+                required
+                onChange={handleInputChange}
+              />
+              <Input type="hidden" name="connectionId" value={connection.id} />
+              <Button type="submit" size="icon">
+                <Send />
+              </Button>
+            </form>
+            {chatError && (
+              <AlertDialog open={!!chatError} onOpenChange={() => setChatError(null)}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Error</AlertDialogTitle>
+                    <AlertDialogDescription>{chatError}</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogAction onClick={() => setChatError(null)}>OK</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </footer>
+        )}
       </div>
     </div>
   );

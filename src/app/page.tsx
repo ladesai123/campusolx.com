@@ -1,4 +1,17 @@
 "use client";
+
+import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/client';
+import { Button } from "@/components/ui/button";
+import { LogIn, Leaf, Users, IndianRupee, MessageCircle, Handshake, Download, ArrowRight, Camera, CalendarClock, Tag, Share2, Bell, Zap, Loader2 } from 'lucide-react'; 
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import LandingNavbar from '@/components/layout/LandingNavbar';
+import MarketplaceStats from '@/components/landing/MarketplaceStats';
+import FounderStoryCard from '@/components/landing/FounderStory';
+import LandingProductCarousel from '@/components/landing/ProductCarousel';
+import FeedbackCarousel from '@/components/landing/TestimonialsSection';
+
 // Helper Components
 function ValuePropCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string; }) {
   return (
@@ -44,20 +57,6 @@ function HowItWorksStep({ icon, title, description }: { icon: React.ReactNode; t
   );
 }
 
-
-
-import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/client';
-import { Button } from "@/components/ui/button";
-import { LogIn, Leaf, Users, IndianRupee, MessageCircle, Handshake, Download, ArrowRight, Camera, CalendarClock, Tag, Share2 } from 'lucide-react'; 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import Logo from '@/components/shared/Logo';
-import 'keen-slider/keen-slider.min.css';
-import { useKeenSlider } from 'keen-slider/react';
-import { ProductCard } from '@/components/ProductCard';
-
-
 // UserCountSection: Shows live user count from Supabase profiles table
 function UserCountSection() {
   const [count, setCount] = useState<number | null>(null);
@@ -75,141 +74,9 @@ function UserCountSection() {
 }
 
 
-// Feedback Carousel Component
-function FeedbackCarousel() {
-  const [feedbacks, setFeedbacks] = useState<any[]>([]);
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [sliderRef, instanceRef] = useKeenSlider({
-    loop: true,
-    mode: 'snap',
-    slides: { perView: 1.15, spacing: 16 }, // show a peek of next card on mobile
-    breakpoints: {
-      '(min-width: 640px)': { slides: { perView: 2, spacing: 24 } },
-      '(min-width: 1024px)': { slides: { perView: 3, spacing: 32 } },
-    },
-    drag: true,
-    renderMode: 'performance',
-    slideChanged(s) {
-      setCurrentSlide(s.track.details.rel);
-    },
-  });
-
-  useEffect(() => {
-    const fetchFeedbacks = async () => {
-      const supabase = createClient();
-      const { data } = await supabase
-        .from('feedback')
-        .select('id,name,year,experience')
-        .eq('status', 'approved')
-        .order('created_at', { ascending: false });
-      setFeedbacks(data || []);
-    };
-    fetchFeedbacks();
-  }, []);
-
-  if (!feedbacks.length) return null;
-
-  return (
-    <>
-      <div ref={sliderRef} className="keen-slider mt-4 sm:mt-8">
-        {feedbacks.map((fb) => (
-          <div key={fb.id} className="keen-slider__slide px-1 sm:px-4">
-            <div className="rounded-2xl bg-white shadow-xl p-4 sm:p-6 h-full flex flex-col justify-between border border-blue-200 transition-transform duration-300 hover:scale-105 w-[90vw] max-w-sm mx-auto">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg">
-                  {fb.name?.[0] || '?'}
-                </div>
-                <span className="text-blue-600 font-semibold text-base sm:text-lg">{fb.name}</span>
-              </div>
-              <div className="text-slate-700 text-base sm:text-lg mb-4 italic">{fb.experience}</div>
-              <div className="text-xs text-slate-400 mt-auto">{fb.year}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-      {/* Pagination dots */}
-      <div className="flex justify-center gap-2 mt-4">
-        {/* We use Math.ceil to correctly calculate the number of unique "slides" needed for pagination 
-            based on the number of items and the slides per view on mobile (1.15). 
-            However, with keen-slider's `rel` index on a loop, simple map often works fine too,
-            but we'll adjust the logic to only map for the actual number of items if we want a full set of dots.
-            For simplicity with `keen-slider`'s `rel` index and loop, using `feedbacks.length` is acceptable here.
-        */}
-        {feedbacks.map((_, idx) => (
-          <button
-            key={idx}
-            className={`w-2.5 h-2.5 rounded-full transition-colors duration-200 ${currentSlide === idx ? 'bg-blue-600' : 'bg-blue-100'}`}
-            onClick={() => instanceRef.current?.moveToIdx(idx)}
-            aria-label={`Go to slide ${idx + 1}`}
-          />
-        ))}
-      </div>
-    </>
-  );
-}
 
 
-// Product Carousel for Landing Page
-function LandingProductCarousel() {
-  const [products, setProducts] = useState<any[]>([]);
-  const [sliderRef, instanceRef] = useKeenSlider({
-    loop: true,
-    mode: 'snap',
-    slides: { perView: 2, spacing: 12 },
-    breakpoints: {
-      '(min-width: 640px)': { slides: { perView: 3, spacing: 16 } },
-      '(min-width: 1024px)': { slides: { perView: 4, spacing: 20 } },
-    },
-    drag: true,
-    renderMode: 'performance',
-  });
-  useEffect(() => {
-    fetch('/api/products/landing')
-      .then((res) => res.json())
-      .then((data) => setProducts(data.products || []));
-  }, []);
-  if (!products.length) return (
-    <div className="text-center text-slate-400 py-12">No products to show yet.</div>
-  );
-  return (
-    <div className="relative">
-      {/* Swipe/scroll hint */}
-      <div className="flex items-center justify-end mb-2 pr-2 text-blue-500 text-xs sm:text-sm select-none">
-        <span className="hidden sm:inline">Scroll to see more</span>
-        <span className="inline sm:hidden">Swipe to see more</span>
-        <svg className="ml-1 w-4 h-4 animate-bounce-x" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-        <style>{`.animate-bounce-x { animation: bounce-x 1s infinite; } @keyframes bounce-x { 0%,100%{transform:translateX(0);} 50%{transform:translateX(8px);} }`}</style>
-      </div>
-      {/* Carousel with fixed card size */}
-      <div ref={sliderRef} className="keen-slider mt-2">
-        {products.map((product) => (
-          <div
-            key={product.id}
-            className="keen-slider__slide flex justify-center px-1"
-          >
-            <div className="min-w-[170px] max-w-[170px] min-h-[290px] max-h-[290px] flex flex-col h-full overflow-hidden">
-              <ProductCard product={product} />
-            </div>
-          </div>
-        ))}
-      </div>
-      {/* Gradient overlays for carousel edges */}
-      <div className="pointer-events-none absolute top-0 left-0 h-full w-6 bg-gradient-to-r from-white/90 to-transparent z-10" />
-      <div className="pointer-events-none absolute top-0 right-0 h-full w-6 bg-gradient-to-l from-white/90 to-transparent z-10" />
-      {/* Pagination dots */}
-      <div className="flex justify-center gap-2 mt-4">
-        {products.map((_, idx) => (
-          <button
-            key={idx}
-            className={`w-2 h-2 rounded-full transition-colors duration-200 bg-blue-100`}
-            onClick={() => instanceRef.current?.moveToIdx(idx)}
-            aria-label={`Go to slide ${idx + 1}`}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
+
 
 // =================================================================================
 // Main Landing Page Component
@@ -218,6 +85,7 @@ export default function LandingPage() {
   const router = useRouter();
   // User count logic (fixes React hook order)
   const [userCount, setUserCount] = useState<number | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   useEffect(() => {
     const fetchCount = async () => {
       const supabase = createClient();
@@ -227,6 +95,25 @@ export default function LandingPage() {
       setUserCount(count || 0);
     };
     fetchCount();
+    
+    // Also check auth state on mount
+    const checkAuth = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsAuthenticated(!!user);
+    };
+    checkAuth();
+    
+    // Listen for auth changes
+    const supabase = createClient();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      const user = session?.user;
+      setIsAuthenticated(!!user);
+    });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Format the user count for display
@@ -266,41 +153,104 @@ export default function LandingPage() {
 
   // --- PWA Install Logic ---
   const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
+  const [showInstallButton, setShowInstallButton] = useState(false);
+
   useEffect(() => {
+    // Check if app is already installed
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    const isInAppBrowser = (window.navigator as any).standalone; // iOS PWA
+    
+    if (isStandalone || isInAppBrowser) {
+      console.log('App is already installed');
+      return; // Don't show install button if already installed
+    }
+
     const handler = (e: Event) => {
-      e.preventDefault();
+      // DON'T preventDefault here - let the browser show its native popup first
+      console.log('PWA install prompt intercepted');
       setInstallPrompt(e);
+      setShowInstallButton(true);
     };
+
     window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
+    
+    // Fallback: Show install button after 5 seconds if no native prompt
+    const timer = setTimeout(() => {
+      if (!installPrompt) {
+        console.log('No native install prompt, showing manual install button');
+        setShowInstallButton(true);
+      }
+    }, 5000);
+    
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+      clearTimeout(timer);
+    };
   }, []);
 
   const handleInstallClick = () => {
-    if (!installPrompt) return;
-    (installPrompt as any).prompt();
+    if (installPrompt) {
+      // Prevent the default behavior now and show our custom prompt
+      (installPrompt as any).preventDefault();
+      (installPrompt as any).prompt();
+      
+      // Log the user's choice
+      (installPrompt as any).userChoice.then((choiceResult: any) => {
+        console.log('PWA install choice:', choiceResult.outcome);
+        if (choiceResult.outcome === 'accepted') {
+          console.log('User accepted the install prompt');
+        } else {
+          console.log('User dismissed the install prompt');
+        }
+        setInstallPrompt(null); // Clear the prompt after use
+      });
+    } else {
+      // Fallback: show manual install instructions
+      alert('To install CampusOlx:\n\n1. Click the browser menu (⋮)\n2. Select "Install CampusOlx"\n3. Or add to home screen\n\nNote: Installation is available on mobile browsers and some desktop browsers.');
+    }
   };
 
-  // Helper to handle login/enter marketplace
+  // Enhanced helper to handle login/enter marketplace with loading state
+  const [authLoading, setAuthLoading] = useState(false);
   const handleAuthRedirect = async () => {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      router.replace('/home');
-    } else {
-      router.replace('/login');
+    setAuthLoading(true);
+    
+    // If we already know the auth state, use it
+    if (isAuthenticated !== null) {
+      if (isAuthenticated) {
+        router.push('/home');
+      } else {
+        router.push('/login');
+      }
+      setAuthLoading(false);
+      return;
     }
+    
+    // Otherwise, check fresh
+    try {
+      const supabase = createClient();
+      const { data: { user }, error } = await supabase.auth.getUser();
+      
+      if (user && !error) {
+        // User is already logged in, redirect to home
+        setIsAuthenticated(true);
+        router.push('/home');
+      } else {
+        // User needs to login, redirect to login page
+        setIsAuthenticated(false);
+        router.push('/login');
+      }
+    } catch (err) {
+      console.error('Landing page - Auth check error:', err);
+      setIsAuthenticated(false);
+      router.push('/login');
+    }
+    setAuthLoading(false);
   };
 
   return (
     <div className="flex flex-col min-h-screen bg-white text-slate-800">
-      <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Logo className="text-2xl" />
-          <Button onClick={handleAuthRedirect}>
-            <LogIn className="mr-2 h-4 w-4" /> Login
-          </Button>
-        </div>
-      </header>
+      <LandingNavbar />
       <main className="flex-grow">
         {/* Hero Section with User Count and Sign Up */}
         <section className="container mx-auto flex flex-col items-center justify-center px-4 py-24 text-center">
@@ -320,9 +270,25 @@ export default function LandingPage() {
             <div className="text-xl font-semibold text-slate-800 mb-1 tracking-tight mt-2">
               members are active and buying/selling right now
             </div>
-            <div className="text-base text-slate-600 mt-1">
+            <div className="text-base text-slate-600 mt-1 mb-6">
               <span className="font-medium">Sign up in <span className="text-blue-600 font-bold">30 seconds</span> and find your first deal today!</span>
             </div>
+            
+            {/* 3.5 Enter Marketplace Buttons - RIGHT AFTER SIGNUP MESSAGE */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+              <Button asChild size="lg">
+                <Link href="/home">
+                  Enter Marketplace <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+              {showInstallButton && (
+                <Button onClick={handleInstallClick} size="lg" variant="outline">
+                  <Download className="mr-2 h-5 w-5" />
+                  Install App
+                </Button>
+              )}
+            </div>
+            
             <style jsx>{`
               .dot-bounce {
                 display: inline-block;
@@ -337,17 +303,10 @@ export default function LandingPage() {
               }
             `}</style>
           </div>
-          {/* 4. Enter Marketplace Button */}
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <Button onClick={handleAuthRedirect} size="lg">
-              Enter Marketplace <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            {installPrompt && (
-              <Button onClick={handleInstallClick} size="lg" variant="outline">
-                <Download className="mr-2 h-5 w-5" />
-                Install App
-              </Button>
-            )}
+          
+          {/* 4. Marketplace Activity Stats - AFTER BUTTONS */}
+          <div className="mb-8">
+            <MarketplaceStats />
           </div>
         </section>
         {/* Value Props Section - UPDATED TEXT */}
@@ -373,7 +332,7 @@ export default function LandingPage() {
           </div>
         </section>
         {/* Product Preview Section */}
-        <section className="py-24">
+        <section id="products" className="py-24">
           <div className="container mx-auto px-4">
             <div className="text-center">
               <h2 className="text-4xl font-bold tracking-tight text-blue-600">Fresh on Campus</h2>
@@ -386,84 +345,257 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
-        {/* How It Works Section - NEW JOURNEY DESIGN */}
-        <section className="bg-slate-50 py-24">
+        {/* How It Works Section - REDESIGNED */}
+        <section id="howitworks" className="bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 py-24">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-extrabold tracking-tight text-blue-600 mb-2">Your Effortless CampusOlx Journey</h2>
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-extrabold tracking-tight text-blue-600 mb-4">How CampusOlx Works</h2>
               <p className="mx-auto max-w-2xl text-lg text-slate-600">
-                See how easy it is to buy, sell, and connect on campus—powered by smart features and a safe, student-first experience.
+                From listing to meeting, here's your complete journey on the safest campus marketplace
               </p>
             </div>
-            {/* Timeline/Stepper */}
-            <div className="relative flex flex-col items-center gap-10 max-w-2xl mx-auto">
-              {/* Step 1 */}
-              <div className="flex flex-col items-center text-center max-w-xs min-w-[180px]">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 shadow-lg">
-                  <Camera className="h-8 w-8 text-blue-600" />
+
+            {/* Desktop: Grid Layout, Mobile: Vertical Timeline */}
+            <div className="max-w-7xl mx-auto">
+              {/* Desktop Grid (hidden on mobile) */}
+              <div className="hidden lg:grid grid-cols-2 gap-12 mb-16">
+                {/* Left Column */}
+                <div className="space-y-8">
+                  {/* Step 1: List Item */}
+                  <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-300 relative">
+                    <div className="absolute -top-4 -left-4 w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
+                      1
+                    </div>
+                    <div className="flex items-start gap-6">
+                      <div className="flex-shrink-0 w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center">
+                        <Camera className="w-8 h-8 text-blue-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold text-slate-900 mb-3">List Your Item</h3>
+                        <p className="text-slate-600 mb-4">Take a photo, set your price, and let our AI write the description. List in under 30 seconds!</p>
+                        <div className="bg-blue-50 px-4 py-3 rounded-lg border-l-4 border-blue-400">
+                          <p className="text-sm text-blue-800"><strong>Smart Feature:</strong> AI auto-categorizes and describes your item</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Step 3: Get Notified */}
+                  <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-300 relative">
+                    <div className="absolute -top-4 -left-4 w-12 h-12 bg-blue-700 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
+                      3
+                    </div>
+                    <div className="flex items-start gap-6">
+                      <div className="flex-shrink-0 w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center">
+                        <Bell className="w-8 h-8 text-blue-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold text-slate-900 mb-3">Get Instant Notifications</h3>
+                        <p className="text-slate-600 mb-4">Receive push notifications when buyers show interest or message you. Never miss a potential sale!</p>
+                        <div className="bg-blue-50 px-4 py-3 rounded-lg border-l-4 border-blue-400">
+                          <p className="text-sm text-blue-800"><strong>Stay Updated:</strong> Real-time alerts for messages, offers, and interest</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-1">Snap &amp; List</h3>
-                <p className="text-slate-600 text-sm">Just take a photo—our AI writes your title, description, and picks a category (if you are lucky). List in seconds!</p>
-              </div>
-              {/* Arrow (vertical for all screens) */}
-              <div className="w-1 h-8 bg-gradient-to-b from-blue-200 to-blue-400 rounded-full my-2" />
-              {/* Step 2 */}
-              <div className="flex flex-col items-center text-center max-w-xs min-w-[180px]">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 shadow-lg">
-                  <CalendarClock className="h-8 w-8 text-blue-600" />
+
+                {/* Right Column */}
+                <div className="space-y-8">
+                  {/* Step 2: Buyers Connect */}
+                  <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-300 relative mt-12">
+                    <div className="absolute -top-4 -left-4 w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
+                      2
+                    </div>
+                    <div className="flex items-start gap-6">
+                      <div className="flex-shrink-0 w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center">
+                        <Users className="w-8 h-8 text-slate-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold text-slate-900 mb-3">Buyers Connect</h3>
+                        <p className="text-slate-600 mb-4">Students browse, find your item, and send a request. Only verified SASTRA students can contact you.</p>
+                        <div className="bg-slate-50 px-4 py-3 rounded-lg border-l-4 border-slate-400">
+                          <p className="text-sm text-slate-700"><strong>Safe & Secure:</strong> Verified student-only marketplace</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Step 4: Meet & Exchange */}
+                  <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-300 relative">
+                    <div className="absolute -top-4 -left-4 w-12 h-12 bg-blue-700 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
+                      4
+                    </div>
+                    <div className="flex items-start gap-6">
+                      <div className="flex-shrink-0 w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center">
+                        <Handshake className="w-8 h-8 text-slate-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold text-slate-900 mb-3">Meet & Exchange</h3>
+                        <p className="text-slate-600 mb-4">Chat securely, fix the price, choose a campus meetup spot, and complete your transaction safely.</p>
+                        <div className="bg-slate-50 px-4 py-3 rounded-lg border-l-4 border-slate-400">
+                          <p className="text-sm text-slate-700"><strong>On Campus:</strong> Meet in public campus areas for safe exchanges</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-1">Sell Now, Deliver Later</h3>
-                <p className="text-slate-600 text-sm">Outgoing? List now, fix a deal, and deliver when you leave. Pick your date, CampusOlx handles the rest.</p>
               </div>
-              <div className="hidden md:block flex-shrink-0 w-12 h-1 bg-gradient-to-r from-blue-200 to-blue-400 rounded-full mx-2" />
-              {/* Step 3 */}
-              <div className="flex flex-col items-center text-center max-w-xs min-w-[180px]">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 shadow-lg">
-                  <Tag className="h-8 w-8 text-blue-600" />
+
+              {/* Mobile Timeline (visible only on mobile) */}
+              <div className="lg:hidden space-y-8">
+                {/* Step 1 */}
+                <div className="relative">
+                  <div className="bg-white p-6 rounded-2xl shadow-lg border border-slate-200 ml-8">
+                    <div className="absolute -left-6 top-6 w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold shadow-lg">
+                      1
+                    </div>
+                    <div className="flex items-center gap-4 mb-4">
+                      <Camera className="w-8 h-8 text-blue-600" />
+                      <h3 className="text-lg font-bold text-slate-900">List Your Item</h3>
+                    </div>
+                    <p className="text-slate-600 text-sm mb-3">Take a photo, set your price, and let our AI write the description.</p>
+                    <div className="bg-blue-50 px-3 py-2 rounded-lg text-xs text-blue-800">
+                      <strong>Smart Feature:</strong> AI auto-categorizes your item
+                    </div>
+                  </div>
+                  <div className="absolute left-0 top-20 w-0.5 h-16 bg-gradient-to-b from-blue-400 to-blue-600"></div>
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-1">Flexible Selling</h3>
-                <p className="text-slate-600 text-sm">Sell now or schedule for later. Set your price, pick your date, and your listing is live.</p>
-              </div>
-              <div className="hidden md:block flex-shrink-0 w-12 h-1 bg-gradient-to-r from-blue-200 to-blue-400 rounded-full mx-2" />
-              {/* Step 4 */}
-              <div className="flex flex-col items-center text-center max-w-xs min-w-[180px]">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 shadow-lg">
-                  <Share2 className="h-8 w-8 text-blue-600" />
+
+                {/* Step 2 */}
+                <div className="relative">
+                  <div className="bg-white p-6 rounded-2xl shadow-lg border border-slate-200 ml-8">
+                    <div className="absolute -left-6 top-6 w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold shadow-lg">
+                      2
+                    </div>
+                    <div className="flex items-center gap-4 mb-4">
+                      <Users className="w-8 h-8 text-slate-600" />
+                      <h3 className="text-lg font-bold text-slate-900">Buyers Connect</h3>
+                    </div>
+                    <p className="text-slate-600 text-sm mb-3">Verified SASTRA students browse and send requests for your item.</p>
+                    <div className="bg-slate-50 px-3 py-2 rounded-lg text-xs text-slate-700">
+                      <strong>Safe & Secure:</strong> Student-only marketplace
+                    </div>
+                  </div>
+                  <div className="absolute left-0 top-20 w-0.5 h-16 bg-gradient-to-b from-blue-600 to-blue-700"></div>
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-1">Easy Sharing</h3>
-                <p className="text-slate-600 text-sm">Share your listing with friends, groups, or juniors—get more eyes on your deal instantly.</p>
-              </div>
-              <div className="hidden md:block flex-shrink-0 w-12 h-1 bg-gradient-to-r from-blue-200 to-blue-400 rounded-full mx-2" />
-              {/* Step 5 */}
-              <div className="flex flex-col items-center text-center max-w-xs min-w-[180px]">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 shadow-lg">
-                  <MessageCircle className="h-8 w-8 text-blue-600" />
+
+                {/* Step 3 */}
+                <div className="relative">
+                  <div className="bg-white p-6 rounded-2xl shadow-lg border border-slate-200 ml-8">
+                    <div className="absolute -left-6 top-6 w-12 h-12 bg-blue-700 text-white rounded-full flex items-center justify-center font-bold shadow-lg">
+                      3
+                    </div>
+                    <div className="flex items-center gap-4 mb-4">
+                      <Bell className="w-8 h-8 text-blue-600" />
+                      <h3 className="text-lg font-bold text-slate-900">Get Notified</h3>
+                    </div>
+                    <p className="text-slate-600 text-sm mb-3">Receive instant push notifications for messages and offers.</p>
+                    <div className="bg-blue-50 px-3 py-2 rounded-lg text-xs text-blue-800">
+                      <strong>Stay Updated:</strong> Real-time alerts
+                    </div>
+                  </div>
+                  <div className="absolute left-0 top-20 w-0.5 h-16 bg-gradient-to-b from-blue-700 to-blue-600"></div>
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-1">Safe Chat &amp; Deal</h3>
-                <p className="text-slate-600 text-sm">Buyers request, you accept, then chat securely to fix price and meeting spot. No spam, no hassle.</p>
-              </div>
-              <div className="hidden md:block flex-shrink-0 w-12 h-1 bg-gradient-to-r from-blue-200 to-blue-400 rounded-full mx-2" />
-              {/* Step 6 */}
-              <div className="flex flex-col items-center text-center max-w-xs min-w-[180px]">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 shadow-lg">
-                  <Handshake className="h-8 w-8 text-blue-600" />
+
+                {/* Step 4 */}
+                <div className="relative">
+                  <div className="bg-white p-6 rounded-2xl shadow-lg border border-slate-200 ml-8">
+                    <div className="absolute -left-6 top-6 w-12 h-12 bg-blue-700 text-white rounded-full flex items-center justify-center font-bold shadow-lg">
+                      4
+                    </div>
+                    <div className="flex items-center gap-4 mb-4">
+                      <Handshake className="w-8 h-8 text-slate-600" />
+                      <h3 className="text-lg font-bold text-slate-900">Meet & Exchange</h3>
+                    </div>
+                    <p className="text-slate-600 text-sm mb-3">Chat securely, fix price, and meet on campus for safe exchange.</p>
+                    <div className="bg-slate-50 px-3 py-2 rounded-lg text-xs text-slate-700">
+                      <strong>On Campus:</strong> Safe public meetups
+                    </div>
+                  </div>
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-1">On-campus Exchange</h3>
-                <p className="text-slate-600 text-sm">Meet on campus, hand over your item, and celebrate a deal done right. No shipping, no stress.</p>
               </div>
-            </div>
-            {/* CTA */}
-            <div className="text-center mt-16">
-              <Button asChild size="lg" className="bg-blue-600 text-white hover:bg-blue-700">
-                <Link href="/login">
-                  Start Your CampusOlx Journey
-                </Link>
-              </Button>
+
+              {/* Call to Action */}
+              <div className="text-center mt-16">
+                <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-200 max-w-md mx-auto">
+                  <div className="mb-6">
+                    <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Zap className="w-8 h-8 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">Ready to Start?</h3>
+                    <p className="text-slate-600 text-sm">Join thousands of SASTRA students buying and selling safely</p>
+                  </div>
+                  <Button asChild size="lg" className="bg-blue-600 text-white hover:bg-blue-700 w-full">
+                    <Link href="/home">
+                      Start Your Journey <ArrowRight className="ml-2 h-5 w-5" />
+                    </Link>
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </section>
+
+        {/* Safety Tips Section - NEW! */}
+        <section id="safety" className="bg-white py-20">
+          <div className="container mx-auto px-4 max-w-4xl">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-extrabold text-blue-600 mb-4">🛡️ Stay Safe While Trading</h2>
+              <p className="text-slate-600 text-lg">Your safety is our top priority. Follow these guidelines for secure campus transactions.</p>
+            </div>
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="bg-green-50 p-6 rounded-xl border border-green-200">
+                <h3 className="text-xl font-bold text-green-800 mb-4 flex items-center">
+                  ✅ Safe Trading Tips
+                </h3>
+                <ul className="space-y-3 text-green-700">
+                  <li className="flex items-start"><span className="mr-2">•</span>Meet in public campus areas (library, cafeteria, main entrance)</li>
+                  <li className="flex items-start"><span className="mr-2">•</span>Verify student ID before transactions</li>
+                  <li className="flex items-start"><span className="mr-2">•</span>Inspect items thoroughly before payment</li>
+                  <li className="flex items-start"><span className="mr-2">•</span>Use secure payment methods (UPI, bank transfer)</li>
+                  <li className="flex items-start"><span className="mr-2">•</span>Trust your instincts - if something feels wrong, walk away</li>
+                </ul>
+              </div>
+              <div className="bg-red-50 p-6 rounded-xl border border-red-200">
+                <h3 className="text-xl font-bold text-red-800 mb-4 flex items-center">
+                  ❌ Avoid These Red Flags
+                </h3>
+                <ul className="space-y-3 text-red-700">
+                  <li className="flex items-start"><span className="mr-2">•</span>Requests to meet in isolated or off-campus locations</li>
+                  <li className="flex items-start"><span className="mr-2">•</span>Sellers who won't show student ID</li>
+                  <li className="flex items-start"><span className="mr-2">•</span>Prices that seem too good to be true</li>
+                  <li className="flex items-start"><span className="mr-2">•</span>Pressure to pay immediately without inspection</li>
+                  <li className="flex items-start"><span className="mr-2">•</span>Cash-only transactions for expensive items</li>
+                </ul>
+              </div>
+            </div>
+            <div className="mt-12 grid md:grid-cols-2 gap-6">
+              <div className="text-center bg-blue-50 p-6 rounded-xl border border-blue-200">
+                <h3 className="text-xl font-bold text-blue-800 mb-3">🚨 Report Suspicious Activity</h3>
+                <p className="text-blue-700 mb-4">If you encounter any suspicious behavior or feel unsafe, contact us immediately.</p>
+                <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white">
+                  <Link href="mailto:campusolx.connect@gmail.com?subject=Safety%20Concern">Report Issue</Link>
+                </Button>
+              </div>
+              <div className="text-center bg-amber-50 p-6 rounded-xl border border-amber-200">
+                <h3 className="text-xl font-bold text-amber-800 mb-3">📋 Your Rights & Responsibilities</h3>
+                <p className="text-amber-700 mb-4">Know your rights as a student buyer/seller on our platform.</p>
+                <div className="flex gap-2 justify-center">
+                  <Button asChild variant="outline" className="text-xs">
+                    <Link href="/legal/privacy">Privacy Policy</Link>
+                  </Button>
+                  <Button asChild variant="outline" className="text-xs">
+                    <Link href="/legal/terms">Terms of Service</Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Feedback Carousel Section (moved just before CTA) */}
-        <section className="bg-[#f5f7ff] py-12 sm:py-20">
+        <section id="testimonials" className="bg-[#f5f7ff] py-12 sm:py-20">
           <div className="container mx-auto px-2 sm:px-4">
             <div className="text-center mb-6 sm:mb-8">
               <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-blue-600">See what the CampusOlx community is saying</h2>
@@ -472,7 +604,7 @@ export default function LandingPage() {
           </div>
         </section>
         {/* FAQ Section */}
-        <section className="bg-white py-20 border-t">
+        <section id="faqs" className="bg-white py-20 border-t">
           <div className="container mx-auto px-4 max-w-3xl">
             <h2 className="text-3xl font-extrabold text-blue-600 mb-8 text-center">Frequently Asked Questions</h2>
             <div className="space-y-4">
@@ -543,15 +675,45 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+
+        {/* About Us Section - Links to Personal Story */}
+        <section id="about" className="bg-slate-50 py-20">
+          <div className="container mx-auto px-4 max-w-4xl text-center">
+            <div className="mb-12">
+              <h2 className="text-3xl font-extrabold text-blue-600 mb-4">Meet the Founder</h2>
+              <p className="text-slate-600 text-lg">Built by a SASTRA student who saw a problem and decided to solve it</p>
+            </div>
+            <FounderStoryCard />
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="text-4xl mb-3">💰</div>
+                <h4 className="font-bold text-lg mb-2">Save Money</h4>
+                <p className="text-slate-600">Affordable campus essentials for every student</p>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl mb-3">🌱</div>
+                <h4 className="font-bold text-lg mb-2">Reduce Waste</h4>
+                <p className="text-slate-600">Give items a second life instead of throwing them away</p>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl mb-3">🤝</div>
+                <h4 className="font-bold text-lg mb-2">Build Community</h4>
+                <p className="text-slate-600">Connect with fellow SASTRA students safely</p>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
         {/* Call to Action Section */}
         <section className="bg-blue-600">
           <div className="container mx-auto px-4 py-16 text-center">
-            <h2 className="text-3xl font-bold text-white">Ready to Join Your Campus Marketplace?</h2>
+            <h2 className="text-3xl font-bold text-white">Join the CampusOLX Community</h2>
             <p className="mx-auto mt-4 max-w-2xl text-lg text-blue-100">
-              Sign up in seconds and start buying, selling, and reusing today.
+              Ready to be part of SASTRA's most trusted marketplace? Start saving money, reduce waste, and connect with your campus community today.
             </p>
             <Button asChild size="lg" variant="secondary" className="mt-8 bg-white text-blue-600 hover:bg-slate-100">
-              <Link href="/login">
+              <Link href="/home">
                 Get Started Now
               </Link>
             </Button>

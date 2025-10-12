@@ -26,6 +26,8 @@ export async function updateProductAction(formData: FormData) {
     }
   }
 
+  const isNegotiable = formData.get("is_negotiable") === "true";
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -45,6 +47,7 @@ export async function updateProductAction(formData: FormData) {
     category,
     status,
     available_from: availability === "future" ? available_from : null,
+    is_negotiable: isNegotiable,
   };
 
   const { error } = await supabase

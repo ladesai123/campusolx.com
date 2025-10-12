@@ -6,7 +6,7 @@ export async function GET() {
 	// Fetch products for landing page: show_on_landing = true (no status restriction)
 	const { data, error } = await supabase
 		.from('products')
-		.select('id, title, price, mrp, category, image_urls, status, description, available_from')
+		.select('id, title, price, mrp, category, image_urls, status, description, available_from, is_negotiable')
 		.eq('show_on_landing', true)
 		.order('created_at', { ascending: false })
 		.limit(20);

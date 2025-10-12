@@ -55,20 +55,7 @@ export default function Footer() {
                     <span>Share CampusOlx with a friend</span>
                     <Share2 className="w-5 h-5 inline flex-shrink-0 ml-2" />
               </button>
-              <Link
-                href="/why-campusolx"
-                className="flex items-center gap-2 mt-2 px-3 py-2 rounded-lg bg-white border border-blue-100 shadow hover:bg-blue-50 transition text-blue-700 font-semibold text-sm"
-                title="Why CampusOlx? Read the story behind CampusOlx"
-              >
-                <img
-                  src="/assets/profile.png"
-                  alt="Lade Sai Teja, Founder CampusOlx"
-                  className="w-8 h-8 rounded-full border-2 border-blue-200 shadow"
-                  style={{ objectFit: 'cover' }}
-                  loading="lazy"
-                />
-                Why CampusOlx?
-              </Link>
+
             </div>
             {/* Section 1: Brand Info */}
             <div>

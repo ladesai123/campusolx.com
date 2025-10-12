@@ -229,6 +229,38 @@ export default function ProfileClient({ profile, userProducts }: ProfileClientPr
                         onClose={() => { setShowSharePopup(false); setShareProduct(null); }} 
                     />
                 )}
+
+                {/* Delete Confirmation Dialog */}
+                <AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Product</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Are you sure you want to delete this product? This will also permanently delete all related chat conversations and connection requests. This action cannot be undone.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={() => deleteId && handleDeleteProduct(deleteId)}
+                                disabled={deleting}
+                                className="bg-red-600 hover:bg-red-700"
+                            >
+                                {deleting ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Deleting...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Delete
+                                    </>
+                                )}
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
                 
                 {/* Toast Messages */}
                 {showLogoutMsg && (

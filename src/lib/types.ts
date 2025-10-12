@@ -8,6 +8,7 @@ export type ProductWithProfile = Database["public"]["Tables"]["products"]["Row"]
     university: string | null;
     profile_picture_url: string | null;
   } | null;
+  is_negotiable: boolean;
 };
 // This file defines the shape of the data used throughout your application.
 
@@ -43,5 +44,6 @@ export type Product = {
     university: string | null;
     profile_picture_url: string | null;
   } | null;
+  is_negotiable: boolean;
 };
 

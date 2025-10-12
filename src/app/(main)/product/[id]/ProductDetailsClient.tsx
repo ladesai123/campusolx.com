@@ -5,10 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { User } from "@supabase/supabase-js";
+import { Handshake } from 'lucide-react';
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import SimpleSpinner from "@/components/shared/SimpleSpinner";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -33,6 +35,7 @@ interface Product {
   seller_id: string;
   status: string | null; // Allow null
   available_from: string | null;
+  is_negotiable: boolean;
   profiles: {
     id: string;
     name: string | null;
@@ -89,11 +92,9 @@ export default function ProductDetailsClient({
   }
 
   const discount = calculateDiscount(product.price || 0, product.mrp);
-  const isReservable = product.status === "pending_reservation";
-  const isOwner = user.id === product.seller_id;
-
-
-  // --- NEW LOGIC: Use connectWithSeller to insert initial message and notify seller ---
+    const isReservable = product.status === "pending_reservation";
+    const isOwner = user.id === product.seller_id;
+    const isNegotiable = product.is_negotiable && typeof product.price === 'number' && product.price > 0 && product.status !== 'sold' && product.status !== 'reserved';
   const handleSendRequest = () => {
     startTransition(async () => {
       // Prepare form data for connectWithSeller
@@ -105,10 +106,16 @@ export default function ProductDetailsClient({
       try {
         // Import connectWithSeller dynamically to avoid circular imports
         const { connectWithSeller } = await import("../actions");
-        await connectWithSeller(formData);
-        setNotification("Request sent! The seller will be notified and the initial message will appear in chat.");
-      } catch (err) {
-        setNotification("Failed to send request. Please try again.");
+        const result = await connectWithSeller(formData);
+        
+        if (result?.success) {
+          setNotification("✅ Request sent successfully! You can chat with the seller once they accept your request. Check your notifications for updates.");
+        } else {
+          setNotification("❌ Connection request failed. Please try again or contact support.");
+        }
+      } catch (err: any) {
+        const errorMessage = err?.message || "Connection request failed";
+        setNotification(`❌ ${errorMessage}. Please try again or contact support.`);
         console.error("connectWithSeller error:", err);
       }
       router.refresh();
@@ -170,8 +177,13 @@ export default function ProductDetailsClient({
                 setShowReserveTip(false);
               }}
               disabled={isPending}
+              className="flex items-center justify-center"
             >
-              {isPending ? "Sending Request..." : "Send Request"}
+              {isPending ? (
+                <SimpleSpinner size="sm" text="Sending Request..." />
+              ) : (
+                "Send Request"
+              )}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -256,6 +268,14 @@ export default function ProductDetailsClient({
               )}
             </div>
 
+            {/* Negotiable Status */}
+            {isNegotiable && (
+              <div className="mt-4 flex items-center text-green-600">
+                <Handshake className="mr-2 h-5 w-5" />
+                <span className="font-semibold">Price is negotiable</span>
+              </div>
+            )}
+
             <p className="mt-4 text-gray-600">{product.description}</p>
 
             <div className="mt-auto pt-6">
@@ -290,13 +310,18 @@ export default function ProductDetailsClient({
                   ) : (
                     <Button
                       size="lg"
-                      className="w-full"
+                      className="w-full flex items-center justify-center"
                       onClick={() => setShowBuyerTip(true)}
                       disabled={isPending || product.status !== "available"}
                     >
-                      <MessageSquare className="mr-2 h-5 w-5" />
-                      {isPending ? "Sending Request..." : "Connect with Seller"}
-                      {product.status && product.status !== "available" && ` (${product.status.toUpperCase()})`}
+                      {isPending ? (
+                        <SimpleSpinner size="sm" text="Sending Request..." />
+                      ) : (
+                        <>
+                          <MessageSquare className="mr-2 h-5 w-5" />Connect with Seller
+                          {product.status && product.status !== "available" && ` (${product.status.toUpperCase()})`}
+                        </>
+                      )}
                     </Button>
                   )}
       {/* Buyer Pro Tip Dialog for Connect with Seller */}
@@ -320,7 +345,11 @@ export default function ProductDetailsClient({
               }}
               disabled={isPending}
             >
-              {isPending ? "Connecting..." : "Ready to connect?"}
+{isPending ? (
+                <SimpleSpinner size="sm" text="Connecting..." />
+              ) : (
+                "Ready to connect?"
+              )}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

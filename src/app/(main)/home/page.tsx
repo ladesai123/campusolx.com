@@ -3,7 +3,7 @@ import { createClient } from "@/lib/server";
 import { ProductCard } from "@/components/ProductCard";
 import { Profile, ProductWithProfile } from "@/lib/types";
 import CategoryFilter from "@/components/shared/CategoryFilter";
-import AppLoader from "@/components/shared/AppLoader";
+import SimpleSpinner from "@/components/shared/SimpleSpinner";
 import React, { Suspense } from "react";
 
 /**
@@ -12,11 +12,10 @@ import React, { Suspense } from "react";
  * call (Supabase user fetch) to satisfy Next.js guidance and avoid the
  * dynamic API usage warning.
  */
-export default async function HomePage({
-  searchParams,
-}: {
-  searchParams?: { [key: string]: string | string[] | undefined };
+export default async function HomePage(props: {
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  const searchParams = await props.searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -32,7 +31,7 @@ export default async function HomePage({
     .select("*, profiles ( university )")
     .order("created_at", { ascending: false });
 
-  // Safely normalize selected categories AFTER the first await.
+  // Safely normalize selected categories
   let normalizedCategories: string[] | undefined;
   if (searchParams) {
     const raw = searchParams["category"]; // could be string | string[] | undefined
@@ -87,7 +86,7 @@ export default async function HomePage({
         )}
         <CategoryFilter categoryCounts={categoryCounts} />
 
-        <Suspense fallback={<AppLoader className="min-h-[40vh]" />}>
+        <Suspense fallback={<div className="min-h-[40vh] flex items-center justify-center"><SimpleSpinner size="lg" text="Loading products..." /></div>}>
           {products.length > 0 ? (
             <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
               {products.map((product) => (

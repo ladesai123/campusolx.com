@@ -16,15 +16,53 @@ const nunito = Nunito({
 });
 
 export const metadata: Metadata = {
-  title: 'CampusOlx',
-  description: 'Your on-campus marketplace',
+  title: 'CampusOlx - Buy, Sell & Reuse | SASTRA Student Marketplace',
+  description: 'The exclusive marketplace for SASTRA students. Buy, sell, and reuse textbooks, electronics, lab equipment and more. Save money and give your items a new home on campus.',
+  keywords: ['campus marketplace', 'student marketplace', 'SASTRA', 'buy sell', 'college marketplace', 'textbooks', 'electronics'],
+  authors: [{ name: 'CampusOlx Team' }],
+  creator: 'CampusOlx',
+  publisher: 'CampusOlx',
   manifest: '/manifest.json',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://campusolx.com',
+    title: 'CampusOlx - SASTRA Student Marketplace',
+    description: 'Buy, sell & reuse items on campus. The exclusive marketplace for SASTRA students.',
+    siteName: 'CampusOlx',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'CampusOlx - SASTRA Student Marketplace',
+    description: 'Buy, sell & reuse items on campus. The exclusive marketplace for SASTRA students.',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
     title: 'CampusOlx',
   },
 };
+
+export function generateViewport() {
+  return {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 5,
+    userScalable: true,
+    themeColor: '#2563eb',
+  }
+}
 
 export default async function RootLayout({
   children,
@@ -41,15 +79,10 @@ export default async function RootLayout({
       <head>
         <meta name="theme-color" content="#ffffff" />
         <link rel="icon" href="/logo.png" type="image/png" />
-        {/* OneSignal v16 SDK */}
-        <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
       </head>
       <body
         className={`${nunito.variable} font-sans bg-gray-50 antialiased min-h-screen`}
       >
-        {process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID && <OneSignalInit />}
-        {/* Tag user globally for push notifications */}
-        {user?.id && <OneSignalTagUser userId={user.id} />}
         <MainLayoutClient user={user}>
           {children}
         </MainLayoutClient>

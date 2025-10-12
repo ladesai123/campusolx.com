@@ -17,54 +17,76 @@ export async function createConnectionAction(
   if (user.id === sellerId)
     return { success: false, message: "You cannot start a chat about your own item." };
 
+  let connectionInsert = null;
+  let connectionError = null;
   try {
-    const { data: connectionInsert, error } = await supabase.from("connections").insert({
+    const { data, error } = await supabase.from("connections").insert({
       product_id: productId,
       requester_id: user.id,
       seller_id: sellerId,
       status: "pending",
     }).select().single();
-
+    connectionInsert = data;
     if (error) {
-      // Handles cases where a request already exists
       if (error.code === "23505") {
         console.warn("Connection request already exists.");
         return { success: true, message: "Request already sent." };
       }
-      throw error;
+      connectionError = error;
     }
+  } catch (error) {
+    connectionError = error;
+  }
 
-    // Store the default message in the messages table
-    // Optionally fetch product title if needed
-    let productTitle = "your product";
-    if (connectionInsert?.product_id) {
-      // You can fetch the product title from DB if you want, for now use placeholder
-      productTitle = "your product";
+  if (connectionError || !connectionInsert) {
+    let errorMessage = "Could not create connection. Please try again later.";
+    if (connectionError && typeof connectionError === "object" && "message" in connectionError) {
+      errorMessage = (connectionError as Error).message || errorMessage;
     }
-    const defaultMessage = `Hi! I'm interested in buying your product: "${productTitle}"`;
-    const { error: messageError } = await supabase.from("messages").insert({
+    console.error("Error creating connection:", errorMessage);
+    return { success: false, message: "Failed to send request. Please try again later." };
+  }
+
+  // If connection was created, proceed with message/notification, but don't fail the whole request if these fail
+  let productTitle = "your product";
+  if (connectionInsert?.product_id) {
+    productTitle = "your product";
+  }
+  const defaultMessage = `Hi! I'm interested in buying your product: \"${productTitle}\"`;
+  let messageError = null;
+  let notificationError = null;
+  try {
+    const { error } = await supabase.from("messages").insert({
       content: defaultMessage,
       connection_id: connectionInsert.id,
       sender_id: user.id,
     });
-    if (messageError) throw messageError;
-
-    // Send notification to seller with the default message
+    if (error) messageError = error;
+  } catch (err) {
+    messageError = err;
+  }
+  try {
     await sendOneSignalNotification({
       userId: sellerId,
       title: "New Message",
       message: defaultMessage,
       connectionId: connectionInsert?.id ?? productId,
     });
-
-    revalidatePath(`/product/${productId}`);
-    return { success: true, message: "Request sent successfully!" };
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "An unknown database error occurred.";
-    console.error("Error creating connection:", errorMessage);
-    return { success: false, message: "Failed to send request." };
+  } catch (err) {
+    notificationError = err;
   }
+  revalidatePath(`/product/${productId}`);
+  if (messageError && notificationError) {
+    console.warn("Connection created, but both message and notification failed:", messageError, notificationError);
+    return { success: true, message: "Connection sent, but there was a problem delivering your message and notification. Please check your chat or try again." };
+  } else if (messageError) {
+    console.warn("Connection created, but message failed:", messageError);
+    return { success: true, message: "Connection sent, but your initial message could not be delivered. Please try sending a message again." };
+  } else if (notificationError) {
+    console.warn("Connection created, but notification failed:", notificationError);
+    return { success: true, message: "Connection sent successfully. Once the seller accepts, you will be notified. (Notification delivery issue.)" };
+  }
+  return { success: true, message: "Connection sent successfully. Once the seller accepts, you will be notified." };
 }
 
 export async function acceptConnectionAction(connectionId: number) {
@@ -115,11 +137,11 @@ export async function acceptConnectionAction(connectionId: number) {
     if (messageError) throw messageError;
   }
 
-  // 4. Notify the buyer that their request was accepted
+  // 4. Send notification to buyer that seller accepted (do NOT insert into chat)
   await sendOneSignalNotification({
     userId: connection.requester_id,
-    title: "Request Accepted!",
-    message: `Your request for '${productTitle}' was accepted. You can now chat with the seller!`,
+    title: "Seller Accepted Your Request!",
+    message: `Seller accepted your request for '${productTitle}'. You can now chat and fix a deal!`,
     connectionId: connectionId,
   });
 

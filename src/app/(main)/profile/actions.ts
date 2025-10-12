@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 // We now import our new, modern, and correct server-side helper.
 import { createClient } from "@/lib/server";
 import { deleteCloudinaryImage } from '@/lib/cloudinary';
+import { sendOneSignalNotification } from '@/lib/sendOneSignalNotification';
 
 // This action updates a connection's status AND sends the automatic first message.
 export async function acceptConnection(connectionId: number) {
@@ -63,6 +64,14 @@ export async function acceptConnection(connectionId: number) {
     receiver_id: connection.requester_id,
   });
 
+  // 5. Send OneSignal notification to buyer that their request was accepted
+  await sendOneSignalNotification({
+    userId: connection.requester_id,
+    title: 'Request Accepted!',
+    message: `Your request for "${productTitle}" has been accepted. You can now chat with the seller.`,
+    connectionId: connectionId,
+  });
+
   revalidatePath("/profile");
   revalidatePath(`/chat/${connectionId}`);
   
@@ -109,7 +118,7 @@ export async function toggleProductStatus(productId: number, currentStatus: stri
   revalidatePath("/profile");
 }
 
-// This action permanently deletes a product.
+// This action permanently deletes a product and all related connections and messages.
 export async function deleteProduct(productId: number) {
   const supabase = await createClient();
   const {
@@ -125,6 +134,36 @@ export async function deleteProduct(productId: number) {
     .eq("seller_id", user.id)
     .single();
 
+  // Get all connections for this product to delete their messages first
+  const { data: connections } = await supabase
+    .from("connections")
+    .select("id")
+    .eq("product_id", productId);
+
+  if (connections && connections.length > 0) {
+    const connectionIds = connections.map(conn => conn.id);
+    
+    // Delete all messages for these connections
+    const { error: messagesError } = await supabase
+      .from("messages")
+      .delete()
+      .in("connection_id", connectionIds);
+    
+    if (messagesError) {
+      console.error("Error deleting messages:", messagesError);
+    }
+
+    // Delete all connections for this product
+    const { error: connectionsError } = await supabase
+      .from("connections")
+      .delete()
+      .eq("product_id", productId);
+    
+    if (connectionsError) {
+      console.error("Error deleting connections:", connectionsError);
+    }
+  }
+
   // Delete images from Cloudinary
   if (product?.image_urls && Array.isArray(product.image_urls)) {
     for (const url of product.image_urls) {
@@ -136,6 +175,7 @@ export async function deleteProduct(productId: number) {
     }
   }
 
+  // Finally, delete the product itself
   const { error } = await supabase
     .from("products")
     .delete()
@@ -143,5 +183,8 @@ export async function deleteProduct(productId: number) {
     .eq("seller_id", user.id);
 
   if (error) console.error("Error deleting product:", error);
+  
+  // Revalidate both profile and chat pages since chats will be affected
   revalidatePath("/profile");
+  revalidatePath("/chat");
 }

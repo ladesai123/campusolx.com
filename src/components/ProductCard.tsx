@@ -68,11 +68,13 @@ export function ProductCard({ product, showAdminActions = false, deleteAction }:
           <div className="aspect-square w-full overflow-hidden relative flex items-end justify-end bg-slate-100">
             <Image
               src={product.image_urls?.[0] && product.image_urls[0].length > 0 ? product.image_urls[0] : '/placeholder.png'}
-              alt={product.title}
+              alt={`${product.title} - ${product.category || 'Product'} for sale`}
               width={400}
               height={400}
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
               onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/placeholder.png'; }}
+              loading="lazy"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             />
             {/* Share button: bottom right of image, always visible */}
             <div className="absolute bottom-2 right-2 z-10 bg-white rounded-full shadow-sm p-0.5 flex items-center justify-center">
@@ -102,6 +104,13 @@ export function ProductCard({ product, showAdminActions = false, deleteAction }:
               className={`px-4 py-1 text-base font-bold tracking-wider ${isReserved ? 'bg-blue-600 text-white' : 'bg-red-600 text-white'}`}
             >
               {isReserved ? 'RESERVED' : 'SOLD'}
+            </Badge>
+          </div>
+        )}
+        {product.is_negotiable && typeof product.price === 'number' && product.price > 0 && product.status !== 'sold' && product.status !== 'reserved' && (
+          <div className="absolute bottom-2 left-2 z-10">
+            <Badge className="bg-green-600 text-white shadow-md text-xs font-semibold px-2 py-1">
+              Price Negotiable
             </Badge>
           </div>
         )}

@@ -25,6 +25,7 @@ export async function sellItemAction(formData: FormData) {
   // These are the new fields from your "Smart" Sell Form
   const availability = formData.get('availability') as string; // Will be 'now' or 'future'
   const availableDate = formData.get('available_date') as string; // The date string if 'future'
+  const isNegotiable = formData.get('is_negotiable') === 'true'; // Convert radio value to boolean
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -91,6 +92,7 @@ export async function sellItemAction(formData: FormData) {
     image_urls: imageUrls,
     status: itemStatus,             // <-- Using our new dynamic status
     available_from: availableFromValue, // <-- Using our new date value
+    is_negotiable: isNegotiable,     // <-- Save the negotiable status
   }).select('id, title').single();
 
   if (insertError) {

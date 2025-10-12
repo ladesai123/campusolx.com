@@ -16,8 +16,10 @@ By using our service, you're agreeing to these terms. Please read them carefully
 
 To ensure exclusivity and safety, CampusOlx is available only to current students of SASTRA.
 
+*   **You must be at least 18 years old** to use this service.
 *   **You must sign in using a valid Google account with a `@sastra.ac.in` email address.**
 *   By creating an account, you confirm that you are a current student and agree to use your official university identity on our platform.
+*   **Graduated students:** Your account will be deactivated 6 months after graduation. You can request data export before deactivation.
 
 ### 3. Your Responsibilities (The "Don'ts")
 
@@ -29,6 +31,12 @@ To keep our community safe, you agree **not** to post content or do anything tha
 *   Infringes on someone else's intellectual property (e.g., selling pirated software).
 
 We reserve the right to remove any listing or suspend any account that violates these rules, without warning.
+
+**Account Actions:**
+*   **First Violation:** Warning and listing removal
+*   **Repeated Violations:** Temporary suspension (7-30 days)  
+*   **Serious Violations:** Immediate permanent ban (fraud, harassment, illegal items)
+*   **Appeals:** Contact campusolx.connect@gmail.com within 7 days if you believe a suspension was made in error
 
 ### 4. Your Content (Your Listings)
 

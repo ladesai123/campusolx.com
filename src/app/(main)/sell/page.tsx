@@ -38,6 +38,9 @@ export default function SellPage() {
   const [showSharePopup, setShowSharePopup] = useState(false);
   const [listedProduct, setListedProduct] = useState<{ id: number; title: string } | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [price, setPrice] = useState('');
+  const [mrp, setMrp] = useState('');
+  const [priceError, setPriceError] = useState<string | null>(null);
   const router = useRouter();
 
   // --- All your existing functions (handleFileChange, generateTitleAndDescription, handleSubmit) remain the same ---
@@ -94,8 +97,45 @@ export default function SellPage() {
     }
   };
 
+  const validatePrice = (priceValue: string, mrpValue: string) => {
+    setPriceError(null);
+    
+    if (!priceValue) return true; // Price is required, but we let form validation handle that
+    
+    const priceNum = parseFloat(priceValue);
+    const mrpNum = parseFloat(mrpValue);
+    
+    // Only validate if MRP is provided and both values are valid numbers
+    if (mrpValue && !isNaN(mrpNum) && !isNaN(priceNum)) {
+      if (priceNum >= mrpNum) {
+        setPriceError('Your Price must be less than MRP');
+        return false;
+      }
+    }
+    
+    return true;
+  };
+
+  const handlePriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setPrice(value);
+    validatePrice(value, mrp);
+  };
+
+  const handleMrpChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setMrp(value);
+    validatePrice(price, value);
+  };
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    
+    // Validate price before submission
+    if (!validatePrice(price, mrp)) {
+      return; // Don't submit if price validation fails
+    }
+    
     const formData = new FormData(event.currentTarget);
     formData.delete('images');
     compressedFiles.forEach(file => {
@@ -346,8 +386,46 @@ export default function SellPage() {
               
               {/* Step 4: Pricing and Category */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="grid w-full items-center gap-1.5"><Label htmlFor="price">Your Price (₹)</Label><Input id="price" name="price" type="number" placeholder="Enter 0 for 'Free'" required /></div>
-            <div className="grid w-full items-center gap-1.5"><Label htmlFor="mrp">MRP (Optional)</Label><Input id="mrp" name="mrp" type="number" placeholder="e.g., 1000" /></div>
+            <div className="grid w-full items-center gap-1.5">
+              <Label htmlFor="price">Your Price (₹)</Label>
+              <Input 
+                id="price" 
+                name="price" 
+                type="number" 
+                placeholder="Enter 0 for 'Free'" 
+                value={price}
+                onChange={handlePriceChange}
+                required 
+                className={priceError ? 'border-red-500' : ''}
+              />
+              {priceError && (
+                <span className="text-xs text-red-500 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  {priceError}
+                </span>
+              )}
+            </div>
+            <div className="grid w-full items-center gap-1.5">
+              <Label htmlFor="mrp">MRP (Optional)</Label>
+              <Input 
+                id="mrp" 
+                name="mrp" 
+                type="number" 
+                placeholder="e.g., 1000"
+                value={mrp}
+                onChange={handleMrpChange}
+              />
+            </div>
+          </div>
+
+          {/* Step 4.5: Negotiable Price */}
+          <div className="grid w-full items-center gap-2.5 rounded-lg border p-4">
+            <Label className="font-semibold">Can the buyer negotiate the price?</Label>
+            <RadioGroup name="is_negotiable" defaultValue="true" className="flex gap-4">
+                <div className="flex items-center space-x-2"><RadioGroupItem value="true" id="negotiable-yes" /><Label htmlFor="negotiable-yes">Yes, it's negotiable</Label></div>
+                <div className="flex items-center space-x-2"><RadioGroupItem value="false" id="negotiable-no" /><Label htmlFor="negotiable-no">No, the price is fixed</Label></div>
+            </RadioGroup>
+            <p className="text-xs text-slate-500 mt-1">Defaulting to "Yes" is a good strategy to attract more buyers!</p>
           </div>
 
 
@@ -360,7 +438,7 @@ export default function SellPage() {
                 </RadioGroup>
                 {availability === 'future' && (
                   <div className="mt-2">
-                    <Label htmlFor="available_date">Available From:</Label>
+                    <Label htmlFor="available_date" className="mb-2 block">Available From:</Label>
                     <Input
                       id="available_date"
                       name="available_date"

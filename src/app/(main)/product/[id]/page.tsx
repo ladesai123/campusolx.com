@@ -2,6 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import ProductDetailsClient from "./ProductDetailsClient";
 import { createClient } from "@/lib/server";
 import type { Metadata } from "next";
+import { ProductWithProfile } from "@/lib/types";
 
 // Minimal subset for metadata fetch only
 interface ProductMetaRow {
@@ -83,6 +84,18 @@ export default async function ProductDetailsPage({ params }: { params: { id: str
     notFound();
   }
 
+  // Tell Supabase to expect a single `ProductWithProfile` object.
+  // This is more type-safe than casting to `any`.
+  const typedProduct = product as unknown as ProductWithProfile;
+
+  // Ensure the `profiles` field is a single object, not an array.
+  const transformedProduct: ProductWithProfile = {
+    ...typedProduct,
+    profiles: Array.isArray(typedProduct.profiles)
+      ? typedProduct.profiles[0]
+      : typedProduct.profiles,
+  };
+
   const { data: existingConnection } = await supabase
     .from("connections")
     .select("id, status")
@@ -90,5 +103,11 @@ export default async function ProductDetailsPage({ params }: { params: { id: str
     .eq("requester_id", user.id)
     .single();
 
-  return <ProductDetailsClient user={user} product={product} existingConnection={existingConnection} />;
+  return (
+    <ProductDetailsClient
+      user={user}
+      product={transformedProduct}
+      existingConnection={existingConnection}
+    />
+  );
 }

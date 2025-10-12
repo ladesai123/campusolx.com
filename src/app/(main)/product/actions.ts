@@ -29,7 +29,7 @@ export async function connectWithSeller(formData: FormData) {
     .single();
 
   if (existingConnection) {
-    return redirect(`/product/${productId}?message=Connection request already sent.`);
+    throw new Error("Connection request already sent.");
   }
 
   // --- AUTOMATE FIRST MESSAGE LOGIC ---
@@ -38,7 +38,7 @@ export async function connectWithSeller(formData: FormData) {
   const { data: product } = await supabase.from("products").select("title").eq("id", productId).single();
 
   if (!product) {
-    return redirect(`/product/${productId}?error=Product not found.`);
+    throw new Error("Product not found.");
   }
   const defaultMessage = `Hi! I'm interested in buying your product: "${product.title}".`;
 
@@ -56,7 +56,7 @@ export async function connectWithSeller(formData: FormData) {
 
   if (connectionError || !newConnection) {
     console.error("Error creating connection:", connectionError);
-    return redirect(`/product/${productId}?error=Could not send request.`);
+    throw new Error("Could not send request. Please try again.");
   }
 
   // Send OneSignal notification to the seller with the real product name
@@ -93,7 +93,10 @@ export async function connectWithSeller(formData: FormData) {
   }
 
   revalidatePath(`/product/${productId}`);
-  redirect(`/product/${productId}?message=Connection request sent successfully!`);
+  revalidatePath('/chat');
+  
+  // Return success instead of redirecting to chat
+  return { success: true, connectionId: newConnection.id };
 }
 
 

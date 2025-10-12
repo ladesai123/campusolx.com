@@ -36,6 +36,10 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '5mb', 
     },
   },
+  // Fix Turbopack configuration warnings
+  turbopack: {
+    root: 'C:\\Users\\LADE SAI TEJA\\OneDrive\\Desktop\\Campus-OLX\\campus-olx',
+  },
 };
 
 // We wrap your existing config with the withPWA function.
