@@ -50,7 +50,11 @@ export default function LoginPage() {
     // If feedback=1, pass it through the callback
     const feedbackParam = searchParams.get('feedback');
     const redirectParam = searchParams.get('redirect') || '/';
-    let redirectTo = `${location.origin}/auth/callback`;
+    
+    // Ensure we use the correct domain for production
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.campusolx.com';
+    let redirectTo = `${origin}/auth/callback`;
+    
     if (feedbackParam === '1') {
       redirectTo += `?feedback=1&redirect=${encodeURIComponent(redirectParam)}`;
     }
