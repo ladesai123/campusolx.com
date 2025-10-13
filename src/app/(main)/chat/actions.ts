@@ -50,7 +50,9 @@ export async function createConnectionAction(
   // If connection was created, proceed with message/notification, but don't fail the whole request if these fail
   let productTitle = "your product";
   if (connectionInsert?.product_id) {
-    productTitle = "your product";
+    // Fetch actual product title
+    const { data: product } = await supabase.from("products").select("title").eq("id", connectionInsert.product_id).single();
+    productTitle = product?.title || "your product";
   }
   const defaultMessage = `Hi! I'm interested in buying your product: \"${productTitle}\"`;
   let messageError = null;
@@ -70,7 +72,7 @@ export async function createConnectionAction(
       userId: sellerId,
       title: "New Message",
       message: defaultMessage,
-      connectionId: connectionInsert?.id ?? productId,
+      connectionId: connectionInsert.id,
     });
   } catch (err) {
     notificationError = err;
@@ -119,7 +121,7 @@ export async function acceptConnectionAction(connectionId: number) {
 
   // 3. Only insert the initial message if it does not already exist for this connection
   const productTitle = connection.products?.title || "this item";
-  const defaultMessage = `Hi! I'm interested in buying your product: "${productTitle}".`;
+  const defaultMessage = `Hi! I'm interested in buying your product: \"${productTitle}\".`;
   const { data: existingMessage } = await supabase
     .from("messages")
     .select("id")
