@@ -32,21 +32,29 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     setLoading(true);
-    const supabase = createClient();
-    // Get redirect parameter to preserve intended destination
-    const feedbackParam = searchParams.get('feedback');
-    const redirectParam = searchParams.get('redirect') || '/home';
-    let redirectTo = `${location.origin}/auth/callback`;
     
-    // Always pass the redirect parameter through the callback
-    const callbackParams = new URLSearchParams();
-    if (feedbackParam === '1') {
-      callbackParams.set('feedback', '1');
+    // Clear ALL auth-related localStorage/cookies to prevent PKCE conflicts
+    try {
+      // Clear all Supabase auth storage
+      Object.keys(localStorage).forEach(key => {
+        if (key.includes('auth') || key.includes('supabase')) {
+          localStorage.removeItem(key);
+        }
+      });
+    } catch (e) {
+      // Ignore if localStorage access fails
     }
-    callbackParams.set('redirect', redirectParam);
-    redirectTo += `?${callbackParams.toString()}`;
     
-    console.log('🔗 Login redirectTo:', redirectTo);
+    const supabase = createClient();
+    
+    // If feedback=1, pass it through the callback
+    const feedbackParam = searchParams.get('feedback');
+    const redirectParam = searchParams.get('redirect') || '/';
+    let redirectTo = `${location.origin}/auth/callback`;
+    if (feedbackParam === '1') {
+      redirectTo += `?feedback=1&redirect=${encodeURIComponent(redirectParam)}`;
+    }
+    
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
