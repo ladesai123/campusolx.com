@@ -119,7 +119,7 @@ export async function acceptConnectionAction(connectionId: number) {
 
   // 3. Only insert the initial message if it does not already exist for this connection
   const productTitle = connection.products?.title || "this item";
-  const defaultMessage = `Hi! I'm interested in buying your product: \"${productTitle}\"`;
+  const defaultMessage = `Hi! I'm interested in buying your product: "${productTitle}".`;
   const { data: existingMessage } = await supabase
     .from("messages")
     .select("id")
@@ -138,12 +138,14 @@ export async function acceptConnectionAction(connectionId: number) {
   }
 
   // 4. Send notification to buyer that seller accepted (do NOT insert into chat)
+  console.log('🚀 CHAT ACTIONS: Sending accept notification to buyer:', connection.requester_id);
   await sendOneSignalNotification({
     userId: connection.requester_id,
     title: "Seller Accepted Your Request!",
     message: `Seller accepted your request for '${productTitle}'. You can now chat and fix a deal!`,
     connectionId: connectionId,
   });
+  console.log('🚀 CHAT ACTIONS: Accept notification sent successfully');
 
   // Revalidate paths to update UI for both users
   revalidatePath(`/profile`);

@@ -20,6 +20,7 @@ import { ArrowLeft, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { sendMessage } from "../actions";
+import { acceptConnection, declineConnection } from "../../profile/actions";
 import { formatDistanceToNow } from "date-fns";
 import { createClient } from "@/lib/client";
 import { useChatScroll } from "@/hooks/use-chat-scroll";
@@ -88,6 +89,7 @@ export default function ChatClient({
 
   // Helper: Is buyer and chat not accepted?
   const isBuyer = user?.id === connection.requester?.id;
+  const isSeller = user?.id === connection.seller?.id;
   const isPending = connection.status !== 'accepted';
 
   // --- Real-time Logic ---
@@ -208,6 +210,57 @@ export default function ChatClient({
         <Hourglass className="h-10 w-10 text-amber-500 animate-pulse mb-4" />
         <Button asChild variant="outline">
           <Link href="/home">Back to Marketplace</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  // If seller and connection is pending, show accept/decline options
+  if (isSeller && isPending) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] p-8">
+        <h2 className="text-xl font-semibold mb-4 text-slate-700">New Request!</h2>
+        <p className="text-base text-slate-600 mb-6">
+          <span className="font-medium">{otherUser?.name}</span> wants to buy your item.
+        </p>
+        <div className="flex gap-4 mb-6">
+          <Button
+            onClick={async () => {
+              setIsAccepting(true);
+              try {
+                await acceptConnection(connection.id);
+                window.location.reload(); // Refresh to show accepted chat
+              } catch (error) {
+                console.error('Failed to accept connection:', error);
+                alert('Failed to accept request. Please try again.');
+              } finally {
+                setIsAccepting(false);
+              }
+            }}
+            disabled={isAccepting}
+            className="bg-green-600 hover:bg-green-700"
+          >
+            {isAccepting ? "Accepting..." : "Accept Request"}
+          </Button>
+          <Button
+            onClick={async () => {
+              if (confirm('Are you sure you want to decline this request?')) {
+                try {
+                  await declineConnection(connection.id);
+                  window.location.href = '/chat'; // Redirect to chat list
+                } catch (error) {
+                  console.error('Failed to decline connection:', error);
+                  alert('Failed to decline request. Please try again.');
+                }
+              }
+            }}
+            variant="destructive"
+          >
+            Decline Request
+          </Button>
+        </div>
+        <Button asChild variant="outline">
+          <Link href="/chat">Back to Requests</Link>
         </Button>
       </div>
     );

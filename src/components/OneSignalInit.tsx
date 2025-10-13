@@ -97,6 +97,17 @@ export default function OneSignalInit(): null {
               }
             }
           });
+
+          // ✅ NOTIFICATION CLICK HANDLER for deep linking
+          OneSignal.Notifications.addEventListener('click', async (event: any) => {
+            console.log('🔔 OneSignal notification clicked:', event);
+            const url = event.notification.url;
+            if (url) {
+              console.log('🔗 Opening notification URL:', url);
+              // Let OneSignal handle the URL opening automatically
+              // The URL from our notification should open correctly
+            }
+          });
         });
       } catch (err) {
         console.error("OneSignalInit error:", err);

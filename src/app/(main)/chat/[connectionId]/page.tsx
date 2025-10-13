@@ -25,7 +25,8 @@ export default async function ChatPage(context: { params: { connectionId: string
     data: { user: authUser },
   } = await supabase.auth.getUser();
   if (!authUser) {
-    redirect("/login");
+    // Preserve the chat URL for after login
+    redirect(`/login?redirect=${encodeURIComponent(`/chat/${connectionId}`)}`);
   }
 
   // 2. Fetch the connection details, including the seller and requester profiles

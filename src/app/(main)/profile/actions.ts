@@ -42,21 +42,38 @@ export async function acceptConnection(connectionId: number) {
 
   if (updateError) throw updateError;
 
-  // 3. Send the automatic first message FROM THE BUYER, as you designed.
+  // 3. Only insert the initial message if it does not already exist for this connection
   const productTitle = connection.products?.title || "this item";
-  const defaultMessage = `Hi! I'm interested in buying your product "${productTitle}"`;
-
-  const { data: messageData, error: messageError } = await supabase
+  const defaultMessage = `Hi! I'm interested in buying your product: "${productTitle}".`;
+  
+  // Check if the message already exists to prevent duplicates
+  const { data: existingMessage } = await supabase
     .from("messages")
-    .insert({
-      content: defaultMessage,
-      connection_id: connectionId,
-      sender_id: connection.requester_id, // The message is FROM the buyer (requester).
-    })
     .select("id")
+    .eq("connection_id", connectionId)
+    .eq("sender_id", connection.requester_id)
+    .eq("content", defaultMessage)
     .single();
 
-  if (messageError) throw messageError;
+  let messageData = null;
+  if (!existingMessage) {
+    // Only insert if message doesn't exist
+    const { data: newMessageData, error: messageError } = await supabase
+      .from("messages")
+      .insert({
+        content: defaultMessage,
+        connection_id: connectionId,
+        sender_id: connection.requester_id, // The message is FROM the buyer (requester).
+      })
+      .select("id")
+      .single();
+
+    if (messageError) throw messageError;
+    messageData = newMessageData;
+  } else {
+    // Use existing message for notification
+    messageData = existingMessage;
+  }
 
   // 4. Create a notification for the buyer that their request was accepted.
   await supabase.from("notifications").insert({
@@ -65,12 +82,14 @@ export async function acceptConnection(connectionId: number) {
   });
 
   // 5. Send OneSignal notification to buyer that their request was accepted
+  console.log('🚀 PROFILE ACTIONS: Sending accept notification to buyer:', connection.requester_id);
   await sendOneSignalNotification({
     userId: connection.requester_id,
     title: 'Request Accepted!',
     message: `Your request for "${productTitle}" has been accepted. You can now chat with the seller.`,
     connectionId: connectionId,
   });
+  console.log('🚀 PROFILE ACTIONS: Accept notification sent successfully');
 
   revalidatePath("/profile");
   revalidatePath(`/chat/${connectionId}`);

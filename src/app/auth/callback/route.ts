@@ -87,9 +87,17 @@ export async function GET(request: Request) {
     .single()
 
   if (!profile?.name || !profile?.university) {
-    return NextResponse.redirect(`${requestUrl.origin}/onboarding`)
+    // Preserve redirect parameter for after onboarding
+    const redirectParam = requestUrl.searchParams.get('redirect')
+    const onboardingUrl = redirectParam 
+      ? `/onboarding?redirect=${encodeURIComponent(redirectParam)}`
+      : '/onboarding'
+    return NextResponse.redirect(`${requestUrl.origin}${onboardingUrl}`)
   }
 
-  // 🎉 Success → go to home
-  return NextResponse.redirect(`${requestUrl.origin}/home`)
+  // 🎉 Success → go to intended destination or home
+  const redirectParam = requestUrl.searchParams.get('redirect')
+  const finalDestination = redirectParam || '/home'
+  console.log('🔗 Auth callback redirecting to:', finalDestination)
+  return NextResponse.redirect(`${requestUrl.origin}${finalDestination}`)
 }

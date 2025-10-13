@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,7 @@ import { createClient } from "@/lib/client";
 export default function OnboardingPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [user, setUser] = useState<any>(null);
 
   // Fetch user on mount (client-side)
@@ -56,7 +57,11 @@ export default function OnboardingPage() {
       alert("Failed to complete onboarding");
       return;
     }
-    router.replace("/home");
+    // Redirect to intended destination or home
+    const redirectParam = searchParams.get('redirect');
+    const finalDestination = redirectParam || '/home';
+    console.log('🔗 Onboarding redirecting to:', finalDestination);
+    router.replace(finalDestination);
   }
 
   if (!user) return null;
