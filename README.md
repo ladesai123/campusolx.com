@@ -13,7 +13,7 @@
   [![Supabase](https://img.shields.io/badge/Supabase-2.57.4-3ECF8E?style=for-the-badge&logo=supabase)](https://supabase.com/)
   [![TailwindCSS](https://img.shields.io/badge/Tailwind-4.0-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
   
-  [Live Demo](https://campusolx.com) • [Report Bug](https://github.com/ladesai123/campusolx.com/issues) • [Request Feature](https://github.com/ladesai123/campusolx.com/issues)
+  [Live Demo](https://drive.google.com/file/d/1CDbAncGNGCY-FELe4KduePT_eBTMzh_V/view?usp=drive_link) • [Report Bug](https://github.com/ladesai123/campusolx.com/issues) • [Request Feature](https://github.com/ladesai123/campusolx.com/issues)
   
 </div>
 
