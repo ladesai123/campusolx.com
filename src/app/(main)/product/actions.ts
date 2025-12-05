@@ -82,15 +82,15 @@ export async function connectWithSeller(formData: FormData) {
   if (messageError) {
     console.error("Error creating default message:", messageError);
     // Even if the message fails, the connection request was successful, so we continue.
+  } else if (messageData) {
+    // Step 2: Send notification to seller about the new message
+    await sendOneSignalNotification({
+      userId: sellerId,
+      title: 'New Message from Buyer',
+      message: defaultMessage,
+      connectionId: newConnection.id,
+    });
   }
-
-  // Always send notification to seller about the new message, regardless of DB insert success
-  await sendOneSignalNotification({
-    userId: sellerId,
-    title: 'New Message from Buyer',
-    message: defaultMessage,
-    connectionId: newConnection.id,
-  });
 
   revalidatePath(`/product/${productId}`);
   revalidatePath('/chat');
