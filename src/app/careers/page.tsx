@@ -127,6 +127,13 @@ export default function CareersPage() {
             </div>
           </section>
         </main>
+        <footer className="bg-white py-8 px-6 border-t border-slate-50">
+          <div className="max-w-[800px] mx-auto text-center">
+            <p className="text-slate-400 text-[12px] font-medium uppercase tracking-widest">
+              Made with <span className="text-[#2563EB]">💙</span> at SASTRA • 2025
+            </p>
+          </div>
+        </footer>
       </div>
     );
   }
@@ -349,6 +356,13 @@ export default function CareersPage() {
           </form>
         </div>
       </main>
+      <footer className="bg-[#F8F9FC] py-12 px-6 border-t border-slate-100">
+        <div className="max-w-[700px] mx-auto text-center">
+          <p className="text-slate-500 text-sm font-medium uppercase tracking-widest">
+            Made with <span className="text-[#2563EB]">💙</span> at SASTRA • 2025
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

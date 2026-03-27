@@ -220,8 +220,13 @@ export default function Footer() {
               <Link href="/legal/privacy" className="hover:text-[#2563EB] transition-colors hover:underline underline-offset-4">Privacy Policy</Link>
             </div>
             
-            <div className="text-[13px] md:text-[14px] font-[400] text-[#94A3B8]">
-               &copy; {new Date().getFullYear()} CampusOlx. All rights reserved.
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="text-[13px] md:text-[14px] font-[400] text-[#94A3B8]">
+                 &copy; {new Date().getFullYear()} CampusOlx. All rights reserved.
+              </div>
+              <div className="text-[#94A3B8] text-[12px] font-[600] uppercase tracking-widest">
+                Made with <span className="text-[#2563EB]">💙</span> at SASTRA • 2025
+              </div>
             </div>
           </div>
           

@@ -110,7 +110,7 @@ export default function AboutPage() {
       <footer className="bg-[#F8F9FC] py-12 px-6 border-t border-slate-100">
         <div className="max-w-[800px] mx-auto text-center">
           <p className="text-slate-500 text-sm font-medium uppercase tracking-widest">
-            Made with heart at SASTRA • 2024
+            Made with <span className="text-[#2563EB]">💙</span> at SASTRA • 2025
           </p>
         </div>
       </footer>

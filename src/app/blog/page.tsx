@@ -47,6 +47,13 @@ export default function BlogComingSoon() {
           </div>
         </section>
       </main>
+      <footer className="bg-white py-12 px-6 border-t border-slate-50">
+        <div className="max-w-[800px] mx-auto text-center">
+          <p className="text-slate-500 text-sm font-medium uppercase tracking-widest">
+            Made with <span className="text-[#2563EB]">💙</span> at SASTRA • 2025
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
