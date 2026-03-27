@@ -1,19 +1,14 @@
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from 'lucide-react';
+import LandingNavbar from '@/components/layout/LandingNavbar';
 
 export default function BlogComingSoon() {
   return (
     <div className="flex flex-col min-h-screen bg-white text-slate-800">
-      <header className="bg-white border-b border-transparent sticky top-0 z-50">
-        <div className="max-w-[800px] mx-auto w-full px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="font-bold text-xl tracking-tight text-[#0F172A]">
-            Campus<span className="text-[#2563EB]">Olx</span>
-          </Link>
-        </div>
-      </header>
+      <LandingNavbar />
 
-      <main className="flex-grow flex flex-col items-center justify-center">
+      <main className="flex-grow flex flex-col items-center justify-center pt-[100px]">
         <section 
           className="relative w-full flex-grow flex flex-col justify-center items-center px-[20px] lg:px-[80px] overflow-hidden"
           style={{

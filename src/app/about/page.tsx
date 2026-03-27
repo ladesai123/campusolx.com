@@ -23,10 +23,6 @@ export default function AboutPage() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,white_80%)] pointer-events-none"></div>
 
           <div className="max-w-[800px] w-full mx-auto relative z-10">
-            <Link href="/" className="inline-flex items-center text-slate-500 hover:text-blue-600 transition-colors mb-8 group">
-              <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-              Back to Home
-            </Link>
             
             <div className="flex flex-col md:flex-row md:items-end gap-6 mb-12">
               <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-3xl overflow-hidden border-4 border-white shadow-xl rotate-3 hover:rotate-0 transition-transform duration-500">

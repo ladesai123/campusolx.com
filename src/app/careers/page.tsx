@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import LandingNavbar from '@/components/layout/LandingNavbar';
 
 export default function CareersPage() {
   const [formData, setFormData] = useState({
@@ -88,15 +89,9 @@ export default function CareersPage() {
   if (success) {
     return (
       <div className="flex flex-col min-h-screen bg-white text-slate-800">
-        <header className="bg-white border-b border-transparent sticky top-0 z-50">
-          <div className="max-w-[800px] mx-auto w-full px-6 py-4 flex items-center justify-between">
-            <Link href="/" className="font-bold text-xl tracking-tight text-[#0F172A]">
-              Campus<span className="text-[#2563EB]">Olx</span>
-            </Link>
-          </div>
-        </header>
+        <LandingNavbar />
 
-        <main className="flex-grow flex flex-col items-center justify-center">
+        <main className="flex-grow flex flex-col items-center justify-center pt-[100px]">
           <section 
             className="relative w-full flex-grow flex flex-col justify-center items-center px-[20px] lg:px-[80px] overflow-hidden"
             style={{
@@ -140,20 +135,10 @@ export default function CareersPage() {
 
   return (
     <div className="min-h-screen bg-[#F8F9FC] flex flex-col text-slate-800">
-      {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div className="max-w-[800px] mx-auto w-full px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="font-bold text-xl tracking-tight text-[#0F172A]">
-            Campus<span className="text-[#2563EB]">Olx</span>
-          </Link>
-          <Link href="/" className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
-            Cancel
-          </Link>
-        </div>
-      </header>
+      <LandingNavbar />
 
       {/* Form Container */}
-      <main className="flex-grow py-12 px-4 sm:px-6">
+      <main className="flex-grow py-12 px-4 sm:px-6 pt-[120px]">
         <div className="max-w-[700px] mx-auto w-full bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
           
           {/* Form Hero */}
