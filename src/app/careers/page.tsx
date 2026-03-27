@@ -70,7 +70,8 @@ export default function CareersPage() {
 
     try {
       const supabase = createClient();
-      const { error: submitError } = await supabase
+      // Bypass strict TS typing since 'career_applications' was created manually in SQL
+      const { error: submitError } = await (supabase as any)
         .from('career_applications')
         .insert([formData]);
 
