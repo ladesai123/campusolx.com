@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { Nunito } from 'next/font/google';
 import './globals.css';
 import React from 'react';
 import OneSignalInit from '@/components/OneSignalInit';
@@ -8,12 +7,6 @@ import { createClient } from '@/lib/server';
 import MainLayoutClient from './MainLayoutClient';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
-
-const nunito = Nunito({
-  subsets: ['latin'],
-  weight: ['400', '600', '700', '800'],
-  variable: '--font-nunito',
-});
 
 export const metadata: Metadata = {
   title: 'CampusOlx - Buy, Sell & Reuse | SASTRA Student Marketplace',
@@ -79,9 +72,10 @@ export default async function RootLayout({
       <head>
         <meta name="theme-color" content="#ffffff" />
         <link rel="icon" href="/logo.png" type="image/png" />
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body
-        className={`${nunito.variable} font-sans bg-gray-50 antialiased min-h-screen`}
+        className={`font-sans bg-white antialiased min-h-screen`}
       >
         <MainLayoutClient user={user}>
           {children}

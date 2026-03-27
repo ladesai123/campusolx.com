@@ -15,12 +15,12 @@ import FeedbackCarousel from '@/components/landing/TestimonialsSection';
 // Helper Components
 function ValuePropCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string; }) {
   return (
-    <div className="flex flex-col items-center text-center">
-      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-blue-100">
+    <div className="flex flex-col items-start p-[24px] bg-white rounded-[16px] shadow-soft border border-transparent">
+      <div className="mb-6 flex h-[48px] w-[48px] items-center justify-center rounded-xl bg-[#F8F9FC] text-[#2563EB]">
         {icon}
       </div>
-      <h3 className="text-xl font-semibold text-slate-900">{title}</h3>
-      <p className="mt-2 text-slate-600">{description}</p>
+      <h3 className="text-[20px] font-[600] text-[#0F172A] mb-3">{title}</h3>
+      <p className="text-[16px] font-[400] text-[#64748B] leading-relaxed">{description}</p>
     </div>
   );
 }
@@ -57,35 +57,15 @@ function HowItWorksStep({ icon, title, description }: { icon: React.ReactNode; t
   );
 }
 
-// UserCountSection: Shows live user count from Supabase profiles table
-function UserCountSection() {
-  const [count, setCount] = useState<number | null>(null);
-  useEffect(() => {
-    const fetchCount = async () => {
-      const supabase = createClient();
-      const { count } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
-      setCount(count || 0);
-    };
-    fetchCount();
-  }, []);
-  return null; // No longer used as a standalone section
-}
-
-
-
-
-
-
 // =================================================================================
 // Main Landing Page Component
 // =================================================================================
 export default function LandingPage() {
   const router = useRouter();
-  // User count logic (fixes React hook order)
+  // User count logic
   const [userCount, setUserCount] = useState<number | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  
   useEffect(() => {
     const fetchCount = async () => {
       const supabase = createClient();
@@ -145,10 +125,9 @@ export default function LandingPage() {
       `}</style>
     </span>
   );
+  
   if (userCount !== null && userCount > 0) {
-    if (userCount >= 91 && userCount <= 99) displayUserCount = '100+';
-    else if (userCount > 100) displayUserCount = `${Math.ceil(userCount / 10) * 10}+`;
-    else displayUserCount = String(userCount);
+    displayUserCount = String(userCount);
   }
 
   // --- PWA Install Logic ---
@@ -162,11 +141,10 @@ export default function LandingPage() {
     
     if (isStandalone || isInAppBrowser) {
       console.log('App is already installed');
-      return; // Don't show install button if already installed
+      return; 
     }
 
     const handler = (e: Event) => {
-      // DON'T preventDefault here - let the browser show its native popup first
       console.log('PWA install prompt intercepted');
       setInstallPrompt(e);
       setShowInstallButton(true);
@@ -174,7 +152,6 @@ export default function LandingPage() {
 
     window.addEventListener('beforeinstallprompt', handler);
     
-    // Fallback: Show install button after 5 seconds if no native prompt
     const timer = setTimeout(() => {
       if (!installPrompt) {
         console.log('No native install prompt, showing manual install button');
@@ -190,22 +167,14 @@ export default function LandingPage() {
 
   const handleInstallClick = () => {
     if (installPrompt) {
-      // Prevent the default behavior now and show our custom prompt
       (installPrompt as any).preventDefault();
       (installPrompt as any).prompt();
       
-      // Log the user's choice
       (installPrompt as any).userChoice.then((choiceResult: any) => {
         console.log('PWA install choice:', choiceResult.outcome);
-        if (choiceResult.outcome === 'accepted') {
-          console.log('User accepted the install prompt');
-        } else {
-          console.log('User dismissed the install prompt');
-        }
-        setInstallPrompt(null); // Clear the prompt after use
+        setInstallPrompt(null);
       });
     } else {
-      // Fallback: show manual install instructions
       alert('To install CampusOlx:\n\n1. Click the browser menu (⋮)\n2. Select "Install CampusOlx"\n3. Or add to home screen\n\nNote: Installation is available on mobile browsers and some desktop browsers.');
     }
   };
@@ -215,7 +184,6 @@ export default function LandingPage() {
   const handleAuthRedirect = async () => {
     setAuthLoading(true);
     
-    // If we already know the auth state, use it
     if (isAuthenticated !== null) {
       if (isAuthenticated) {
         router.push('/home');
@@ -226,17 +194,14 @@ export default function LandingPage() {
       return;
     }
     
-    // Otherwise, check fresh
     try {
       const supabase = createClient();
       const { data: { user }, error } = await supabase.auth.getUser();
       
       if (user && !error) {
-        // User is already logged in, redirect to home
         setIsAuthenticated(true);
         router.push('/home');
       } else {
-        // User needs to login, redirect to login page
         setIsAuthenticated(false);
         router.push('/login');
       }
@@ -252,471 +217,272 @@ export default function LandingPage() {
     <div className="flex flex-col min-h-screen bg-white text-slate-800">
       <LandingNavbar />
       <main className="flex-grow">
-        {/* Hero Section with User Count and Sign Up */}
-        <section className="container mx-auto flex flex-col items-center justify-center px-4 py-24 text-center">
-          {/* 1. Main Heading */}
-          <h1 className="text-5xl font-bold tracking-tight text-slate-900 md:text-7xl mt-[-2.5rem]">
-            Buy. Sell. <span className="text-blue-600">Reuse.</span>
-          </h1>
-          {/* 2. Tagline */}
-          <p className="mt-6 max-w-2xl text-lg text-slate-600">
-            The exclusive marketplace for SASTRA students. Save money, find what you need, and give your old items a new home, right here on campus.
-          </p>
-          {/* 3. User Count and Sign Up Message */}
-          <div className="my-8">
-            <span className="text-5xl font-black text-blue-600 tracking-tight block">
-              {displayUserCount}
-            </span>
-            <div className="text-xl font-semibold text-slate-800 mb-1 tracking-tight mt-2">
-              members are active and buying/selling right now
-            </div>
-            <div className="text-base text-slate-600 mt-1 mb-6">
-              <span className="font-medium">Sign up in <span className="text-blue-600 font-bold">30 seconds</span> and find your first deal today!</span>
+        {/* Hero Section */}
+        <section 
+          className="relative bg-white px-[20px] lg:px-[80px] py-[96px] pt-[120px] lg:pt-[160px] flex flex-col justify-center items-center overflow-hidden"
+          style={{
+            backgroundImage: 'linear-gradient(to right, #f1f5f9 1px, transparent 1px), linear-gradient(to bottom, #f1f5f9 1px, transparent 1px)',
+            backgroundSize: '40px 40px',
+            backgroundPosition: 'center center'
+          }}
+        >
+          {/* Subtle radial gradient overlay to fade grid near edges */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,white_80%)] pointer-events-none"></div>
+
+          <div className="max-w-[1000px] w-full mx-auto relative z-10 flex flex-col items-center text-center">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#E0E7FF] border border-[#C7D2FE] mb-6">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#2563EB] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#2563EB]"></span>
+              </span>
+              <span className="text-[14px] font-[600] text-[#2563EB]">
+                {userCount !== null ? userCount : '1000+'} active users buying & selling right now
+              </span>
             </div>
             
-            {/* 3.5 Enter Marketplace Buttons - RIGHT AFTER SIGNUP MESSAGE */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
-              <Button asChild size="lg">
-                <Link href="/home">
-                  Enter Marketplace <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
+            <h1 className="text-[48px] lg:text-[72px] leading-[1.1] font-[700] text-[#0F172A] mb-6 tracking-tight">
+              Your campus. <span className="text-[#2563EB]">Your marketplace.</span>
+            </h1>
+            
+            <p className="max-w-[640px] mx-auto text-[18px] md:text-[20px] text-[#64748B] font-[400] leading-relaxed mb-10">
+              Buy, sell, and swap with students right on your campus — no strangers, no shipping, no hassle. Just your college community.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Button asChild className="rounded-[16px] px-8 py-6 text-[16px] font-[600] bg-[#2563EB] text-white hover:bg-[#1D4ED8] transition-colors border-0">
+                <Link href="/home">Start Selling Today</Link>
               </Button>
-              {showInstallButton && (
-                <Button onClick={handleInstallClick} size="lg" variant="outline">
-                  <Download className="mr-2 h-5 w-5" />
-                  Install App
-                </Button>
-              )}
+              <Button asChild variant="outline" className="rounded-[16px] px-8 py-6 text-[16px] font-[600] border border-[#E2E8F0] text-[#0F172A] hover:bg-[#F8F9FC] transition-colors bg-white">
+                <Link href="/home">Browse Listings</Link>
+              </Button>
             </div>
-            
-            <style jsx>{`
-              .dot-bounce {
-                display: inline-block;
-                animation: bounce 1s infinite;
-                font-size: 1.2em;
-              }
-              .dot-bounce.delay-150 { animation-delay: 0.15s; }
-              .dot-bounce.delay-300 { animation-delay: 0.3s; }
-              @keyframes bounce {
-                0%, 100% { transform: translateY(0); }
-                50% { transform: translateY(-0.5em); }
-              }
-            `}</style>
-          </div>
-          
-          {/* 4. Marketplace Activity Stats - AFTER BUTTONS */}
-          <div className="mb-8">
-            <MarketplaceStats />
           </div>
         </section>
-        {/* Value Props Section - UPDATED TEXT */}
-        <section className="bg-slate-50 py-20">
-          <div className="container mx-auto px-4">
-            <div className="grid gap-12 md:grid-cols-3">
+
+        {/* Value Props Section */}
+        <section className="bg-[#F8F9FC] px-[20px] lg:px-[80px] py-[96px]">
+          <div className="max-w-[1200px] w-full mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-[32px] md:text-[40px] font-[600] text-[#0F172A] mb-4">Trade smarter, save more, and build a greener campus</h2>
+              <p className="mx-auto max-w-[640px] text-[16px] md:text-[18px] font-[400] text-[#64748B] leading-relaxed">
+                Join thousands of students who are turning unused gear into cash and scoring unbelievable deals, just steps away from their dorms.
+              </p>
+            </div>
+            <div className="grid gap-6 md:grid-cols-3">
               <ValuePropCard
-                icon={<IndianRupee className="h-8 w-8 text-blue-600" />}
+                icon={<IndianRupee className="h-6 w-6 text-[#2563EB]" />}
                 title="Save big. Spend less."
                 description="Discover unbeatable student-friendly prices on everything from textbooks to tech. Keep cash in your pocket where it belongs."
               />
               <ValuePropCard
-                icon={<Users className="h-8 w-8 text-blue-600" />}
+                icon={<Users className="h-6 w-6 text-[#2563EB]" />}
                 title="Connect & transact safely"
                 description="Buy and sell directly with verified students right here on campus. Enjoy the convenience of secure, face-to-face transactions."
               />
               <ValuePropCard
-                icon={<Leaf className="h-8 w-8 text-blue-600" />}
+                icon={<Leaf className="h-6 w-6 text-[#2563EB]" />}
                 title="Give your gear a second life"
                 description="Help build a greener campus by recycling your items. Reduce waste and make a little money while supporting sustainability."
               />
             </div>
           </div>
         </section>
+        
         {/* Product Preview Section */}
-        <section id="products" className="py-24">
-          <div className="container mx-auto px-4">
-            <div className="text-center">
-              <h2 className="text-4xl font-bold tracking-tight text-blue-600">Fresh on Campus</h2>
-              <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-600">
-                Get a sneak peek at what your fellow students are selling right now.
+        <section id="products" className="bg-white px-[20px] lg:px-[80px] py-[96px]">
+          <div className="max-w-[1200px] w-full mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-[32px] md:text-[40px] font-[600] text-[#0F172A] mb-4">Discover exactly what your peers are passing on</h2>
+              <p className="mx-auto max-w-[640px] text-[16px] md:text-[18px] font-[400] text-[#64748B] leading-relaxed">
+                From barely-used engineering textbooks to late-night dorm essentials, explore the absolute best deals floating around SASTRA today.
               </p>
             </div>
-            <div className="mt-16">
+            <div className="w-full">
               <LandingProductCarousel />
             </div>
           </div>
         </section>
-        {/* How It Works Section - REDESIGNED */}
-        <section id="howitworks" className="bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 py-24">
-          <div className="container mx-auto px-4">
+
+        {/* How It Works Section */}
+        <section id="howitworks" className="bg-[#F8F9FC] px-[20px] lg:px-[80px] py-[96px]">
+          <div className="max-w-[1200px] w-full mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-4xl font-extrabold tracking-tight text-blue-600 mb-4">How CampusOlx Works</h2>
-              <p className="mx-auto max-w-2xl text-lg text-slate-600">
-                From listing to meeting, here's your complete journey on the safest campus marketplace
+              <h2 className="text-[32px] md:text-[40px] font-[600] text-[#0F172A] mb-4">Zero shipping. Zero strangers. Zero hassle.</h2>
+              <p className="mx-auto max-w-[640px] text-[16px] md:text-[18px] font-[400] text-[#64748B] leading-relaxed">
+                Experience the absolute fastest, most secure way to exchange items through our dead-simple, student-to-student four step process.
               </p>
             </div>
 
-            {/* Desktop: Grid Layout, Mobile: Vertical Timeline */}
-            <div className="max-w-7xl mx-auto">
-              {/* Desktop Grid (hidden on mobile) */}
-              <div className="hidden lg:grid grid-cols-2 gap-12 mb-16">
-                {/* Left Column */}
-                <div className="space-y-8">
-                  {/* Step 1: List Item */}
-                  <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-300 relative">
-                    <div className="absolute -top-4 -left-4 w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
-                      1
-                    </div>
-                    <div className="flex items-start gap-6">
-                      <div className="flex-shrink-0 w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center">
-                        <Camera className="w-8 h-8 text-blue-600" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold text-slate-900 mb-3">List Your Item</h3>
-                        <p className="text-slate-600 mb-4">Take a photo, set your price, and let our AI write the description. List in under 30 seconds!</p>
-                        <div className="bg-blue-50 px-4 py-3 rounded-lg border-l-4 border-blue-400">
-                          <p className="text-sm text-blue-800"><strong>Smart Feature:</strong> AI auto-categorizes and describes your item</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Step 3: Get Notified */}
-                  <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-300 relative">
-                    <div className="absolute -top-4 -left-4 w-12 h-12 bg-blue-700 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
-                      3
-                    </div>
-                    <div className="flex items-start gap-6">
-                      <div className="flex-shrink-0 w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center">
-                        <Bell className="w-8 h-8 text-blue-600" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold text-slate-900 mb-3">Get Instant Notifications</h3>
-                        <p className="text-slate-600 mb-4">Receive push notifications when buyers show interest or message you. Never miss a potential sale!</p>
-                        <div className="bg-blue-50 px-4 py-3 rounded-lg border-l-4 border-blue-400">
-                          <p className="text-sm text-blue-800"><strong>Stay Updated:</strong> Real-time alerts for messages, offers, and interest</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right Column */}
-                <div className="space-y-8">
-                  {/* Step 2: Buyers Connect */}
-                  <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-300 relative mt-12">
-                    <div className="absolute -top-4 -left-4 w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
-                      2
-                    </div>
-                    <div className="flex items-start gap-6">
-                      <div className="flex-shrink-0 w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center">
-                        <Users className="w-8 h-8 text-slate-600" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold text-slate-900 mb-3">Buyers Connect</h3>
-                        <p className="text-slate-600 mb-4">Students browse, find your item, and send a request. Only verified SASTRA students can contact you.</p>
-                        <div className="bg-slate-50 px-4 py-3 rounded-lg border-l-4 border-slate-400">
-                          <p className="text-sm text-slate-700"><strong>Safe & Secure:</strong> Verified student-only marketplace</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Step 4: Meet & Exchange */}
-                  <div className="bg-white p-8 rounded-2xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-300 relative">
-                    <div className="absolute -top-4 -left-4 w-12 h-12 bg-blue-700 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
-                      4
-                    </div>
-                    <div className="flex items-start gap-6">
-                      <div className="flex-shrink-0 w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center">
-                        <Handshake className="w-8 h-8 text-slate-600" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold text-slate-900 mb-3">Meet & Exchange</h3>
-                        <p className="text-slate-600 mb-4">Chat securely, fix the price, choose a campus meetup spot, and complete your transaction safely.</p>
-                        <div className="bg-slate-50 px-4 py-3 rounded-lg border-l-4 border-slate-400">
-                          <p className="text-sm text-slate-700"><strong>On Campus:</strong> Meet in public campus areas for safe exchanges</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Mobile Timeline (visible only on mobile) */}
-              <div className="lg:hidden space-y-8">
+            <div className="relative mt-8">
+              <div className="hidden lg:block absolute top-[40px] left-[12%] right-[12%] h-[1px] border-t border-dashed border-[#CBD5E1] z-0"></div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10">
                 {/* Step 1 */}
-                <div className="relative">
-                  <div className="bg-white p-6 rounded-2xl shadow-lg border border-slate-200 ml-8">
-                    <div className="absolute -left-6 top-6 w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold shadow-lg">
-                      1
-                    </div>
-                    <div className="flex items-center gap-4 mb-4">
-                      <Camera className="w-8 h-8 text-blue-600" />
-                      <h3 className="text-lg font-bold text-slate-900">List Your Item</h3>
-                    </div>
-                    <p className="text-slate-600 text-sm mb-3">Take a photo, set your price, and let our AI write the description.</p>
-                    <div className="bg-blue-50 px-3 py-2 rounded-lg text-xs text-blue-800">
-                      <strong>Smart Feature:</strong> AI auto-categorizes your item
-                    </div>
+                <div className="flex flex-col items-center text-center p-[24px] bg-white rounded-[16px] shadow-soft border border-transparent">
+                  <div className="w-[80px] h-[80px] rounded-full bg-[#F8F9FC] text-[#2563EB] flex items-center justify-center text-[28px] font-bold mb-6">
+                    1
                   </div>
-                  <div className="absolute left-0 top-20 w-0.5 h-16 bg-gradient-to-b from-blue-400 to-blue-600"></div>
+                  <h3 className="text-[20px] font-semibold text-[#0F172A] mb-3">List Your Item</h3>
+                  <p className="text-[16px] text-[#64748B] leading-relaxed">Take a photo, set your price, and let our AI write the description.</p>
                 </div>
-
                 {/* Step 2 */}
-                <div className="relative">
-                  <div className="bg-white p-6 rounded-2xl shadow-lg border border-slate-200 ml-8">
-                    <div className="absolute -left-6 top-6 w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold shadow-lg">
-                      2
-                    </div>
-                    <div className="flex items-center gap-4 mb-4">
-                      <Users className="w-8 h-8 text-slate-600" />
-                      <h3 className="text-lg font-bold text-slate-900">Buyers Connect</h3>
-                    </div>
-                    <p className="text-slate-600 text-sm mb-3">Verified SASTRA students browse and send requests for your item.</p>
-                    <div className="bg-slate-50 px-3 py-2 rounded-lg text-xs text-slate-700">
-                      <strong>Safe & Secure:</strong> Student-only marketplace
-                    </div>
+                <div className="flex flex-col items-center text-center p-[24px] bg-white rounded-[16px] shadow-soft border border-transparent">
+                  <div className="w-[80px] h-[80px] rounded-full bg-[#F8F9FC] text-[#2563EB] flex items-center justify-center text-[28px] font-bold mb-6">
+                    2
                   </div>
-                  <div className="absolute left-0 top-20 w-0.5 h-16 bg-gradient-to-b from-blue-600 to-blue-700"></div>
+                  <h3 className="text-[20px] font-semibold text-[#0F172A] mb-3">Buyers Connect</h3>
+                  <p className="text-[16px] text-[#64748B] leading-relaxed">Verified SASTRA students browse and send requests for your item securely.</p>
                 </div>
-
                 {/* Step 3 */}
-                <div className="relative">
-                  <div className="bg-white p-6 rounded-2xl shadow-lg border border-slate-200 ml-8">
-                    <div className="absolute -left-6 top-6 w-12 h-12 bg-blue-700 text-white rounded-full flex items-center justify-center font-bold shadow-lg">
-                      3
-                    </div>
-                    <div className="flex items-center gap-4 mb-4">
-                      <Bell className="w-8 h-8 text-blue-600" />
-                      <h3 className="text-lg font-bold text-slate-900">Get Notified</h3>
-                    </div>
-                    <p className="text-slate-600 text-sm mb-3">Receive instant push notifications for messages and offers.</p>
-                    <div className="bg-blue-50 px-3 py-2 rounded-lg text-xs text-blue-800">
-                      <strong>Stay Updated:</strong> Real-time alerts
-                    </div>
+                <div className="flex flex-col items-center text-center p-[24px] bg-white rounded-[16px] shadow-soft border border-transparent">
+                  <div className="w-[80px] h-[80px] rounded-full bg-[#F8F9FC] text-[#2563EB] flex items-center justify-center text-[28px] font-bold mb-6">
+                    3
                   </div>
-                  <div className="absolute left-0 top-20 w-0.5 h-16 bg-gradient-to-b from-blue-700 to-blue-600"></div>
+                  <h3 className="text-[20px] font-semibold text-[#0F172A] mb-3">Get Notified</h3>
+                  <p className="text-[16px] text-[#64748B] leading-relaxed">Receive instant push notifications for messages, offers, and interactions.</p>
                 </div>
-
                 {/* Step 4 */}
-                <div className="relative">
-                  <div className="bg-white p-6 rounded-2xl shadow-lg border border-slate-200 ml-8">
-                    <div className="absolute -left-6 top-6 w-12 h-12 bg-blue-700 text-white rounded-full flex items-center justify-center font-bold shadow-lg">
-                      4
-                    </div>
-                    <div className="flex items-center gap-4 mb-4">
-                      <Handshake className="w-8 h-8 text-slate-600" />
-                      <h3 className="text-lg font-bold text-slate-900">Meet & Exchange</h3>
-                    </div>
-                    <p className="text-slate-600 text-sm mb-3">Chat securely, fix price, and meet on campus for safe exchange.</p>
-                    <div className="bg-slate-50 px-3 py-2 rounded-lg text-xs text-slate-700">
-                      <strong>On Campus:</strong> Safe public meetups
-                    </div>
+                <div className="flex flex-col items-center text-center p-[24px] bg-white rounded-[16px] shadow-soft border border-transparent">
+                  <div className="w-[80px] h-[80px] rounded-full bg-[#F8F9FC] text-[#2563EB] flex items-center justify-center text-[28px] font-bold mb-6">
+                    4
                   </div>
+                  <h3 className="text-[20px] font-semibold text-[#0F172A] mb-3">Meet & Exchange</h3>
+                  <p className="text-[16px] text-[#64748B] leading-relaxed">Chat securely, fix price, and meet on campus for a safe public exchange.</p>
                 </div>
               </div>
-
-              {/* Call to Action */}
-              <div className="text-center mt-16">
-                <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-200 max-w-md mx-auto">
-                  <div className="mb-6">
-                    <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Zap className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">Ready to Start?</h3>
-                    <p className="text-slate-600 text-sm">Join thousands of SASTRA students buying and selling safely</p>
-                  </div>
-                  <Button asChild size="lg" className="bg-blue-600 text-white hover:bg-blue-700 w-full">
-                    <Link href="/home">
-                      Start Your Journey <ArrowRight className="ml-2 h-5 w-5" />
-                    </Link>
-                  </Button>
-                </div>
-              </div>
+            </div>
+            
+            <div className="text-center mt-16">
+              <Button asChild className="rounded-[16px] px-8 py-6 text-[16px] font-[600] bg-[#2563EB] text-white hover:bg-[#1D4ED8] transition-colors border-0">
+                 <Link href="/home">Get Started</Link>
+              </Button>
             </div>
           </div>
         </section>
 
-        {/* Safety Tips Section - NEW! */}
-        <section id="safety" className="bg-white py-20">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-extrabold text-blue-600 mb-4">🛡️ Stay Safe While Trading</h2>
-              <p className="text-slate-600 text-lg">Your safety is our top priority. Follow these guidelines for secure campus transactions.</p>
+        {/* Safety Tips Section */}
+        <section id="safety" className="bg-white px-[20px] lg:px-[80px] py-[96px]">
+          <div className="max-w-[1200px] w-full mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-[32px] md:text-[40px] font-[600] text-[#0F172A] mb-4">Built by students, secured by institutional trust</h2>
+              <p className="mx-auto max-w-[640px] text-[16px] md:text-[18px] font-[400] text-[#64748B] leading-relaxed">
+                We strictly enforce SASTRA-exclusive email verification, but maintaining a perfectly secure environment starts with smart, public trading habits.
+              </p>
             </div>
+            
             <div className="grid md:grid-cols-2 gap-8">
-              <div className="bg-green-50 p-6 rounded-xl border border-green-200">
-                <h3 className="text-xl font-bold text-green-800 mb-4 flex items-center">
+              <div className="bg-[#F8F9FC] p-[40px] rounded-[16px] border border-transparent shadow-soft">
+                <h3 className="text-[20px] font-[600] text-emerald-700 mb-6 flex items-center">
                   ✅ Safe Trading Tips
                 </h3>
-                <ul className="space-y-3 text-green-700">
-                  <li className="flex items-start"><span className="mr-2">•</span>Meet in public campus areas (library, cafeteria, main entrance)</li>
-                  <li className="flex items-start"><span className="mr-2">•</span>Verify student ID before transactions</li>
-                  <li className="flex items-start"><span className="mr-2">•</span>Inspect items thoroughly before payment</li>
-                  <li className="flex items-start"><span className="mr-2">•</span>Use secure payment methods (UPI, bank transfer)</li>
-                  <li className="flex items-start"><span className="mr-2">•</span>Trust your instincts - if something feels wrong, walk away</li>
+                <ul className="space-y-4 text-[#64748B] text-[16px]">
+                  <li className="flex items-start"><span className="mr-3 font-bold">•</span>Meet in public campus areas (library, cafeteria, main entrance)</li>
+                  <li className="flex items-start"><span className="mr-3 font-bold">•</span>Verify student ID before transactions</li>
+                  <li className="flex items-start"><span className="mr-3 font-bold">•</span>Inspect items thoroughly before payment</li>
+                  <li className="flex items-start"><span className="mr-3 font-bold">•</span>Use secure payment methods (UPI, bank transfer)</li>
                 </ul>
               </div>
-              <div className="bg-red-50 p-6 rounded-xl border border-red-200">
-                <h3 className="text-xl font-bold text-red-800 mb-4 flex items-center">
+              
+              <div className="bg-[#F8F9FC] p-[40px] rounded-[16px] border border-transparent shadow-soft">
+                <h3 className="text-[20px] font-[600] text-rose-700 mb-6 flex items-center">
                   ❌ Avoid These Red Flags
                 </h3>
-                <ul className="space-y-3 text-red-700">
-                  <li className="flex items-start"><span className="mr-2">•</span>Requests to meet in isolated or off-campus locations</li>
-                  <li className="flex items-start"><span className="mr-2">•</span>Sellers who won't show student ID</li>
-                  <li className="flex items-start"><span className="mr-2">•</span>Prices that seem too good to be true</li>
-                  <li className="flex items-start"><span className="mr-2">•</span>Pressure to pay immediately without inspection</li>
-                  <li className="flex items-start"><span className="mr-2">•</span>Cash-only transactions for expensive items</li>
+                <ul className="space-y-4 text-[#64748B] text-[16px]">
+                  <li className="flex items-start"><span className="mr-3 font-bold">•</span>Requests to meet in isolated or off-campus locations</li>
+                  <li className="flex items-start"><span className="mr-3 font-bold">•</span>Sellers who won't show student ID</li>
+                  <li className="flex items-start"><span className="mr-3 font-bold">•</span>Prices that seem too good to be true</li>
+                  <li className="flex items-start"><span className="mr-3 font-bold">•</span>Pressure to pay immediately without inspection</li>
                 </ul>
               </div>
             </div>
-            <div className="mt-12 grid md:grid-cols-2 gap-6">
-              <div className="text-center bg-blue-50 p-6 rounded-xl border border-blue-200">
-                <h3 className="text-xl font-bold text-blue-800 mb-3">🚨 Report Suspicious Activity</h3>
-                <p className="text-blue-700 mb-4">If you encounter any suspicious behavior or feel unsafe, contact us immediately.</p>
-                <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white">
-                  <Link href="mailto:campusolx.connect@gmail.com?subject=Safety%20Concern">Report Issue</Link>
-                </Button>
-              </div>
-              <div className="text-center bg-amber-50 p-6 rounded-xl border border-amber-200">
-                <h3 className="text-xl font-bold text-amber-800 mb-3">📋 Your Rights & Responsibilities</h3>
-                <p className="text-amber-700 mb-4">Know your rights as a student buyer/seller on our platform.</p>
-                <div className="flex gap-2 justify-center">
-                  <Button asChild variant="outline" className="text-xs">
-                    <Link href="/legal/privacy">Privacy Policy</Link>
-                  </Button>
-                  <Button asChild variant="outline" className="text-xs">
-                    <Link href="/legal/terms">Terms of Service</Link>
-                  </Button>
-                </div>
-              </div>
+            
+            <div className="mt-12 text-center">
+              <p className="text-[#64748B] mb-6 text-[16px]">If you encounter any suspicious behavior or feel unsafe, contact us immediately.</p>
+              <Button asChild className="rounded-[16px] px-6 py-5 text-[16px] font-[600] bg-white border border-[#E2E8F0] text-[#0F172A] hover:bg-[#F8F9FC]">
+                <Link href="mailto:campusolx.connect@gmail.com?subject=Safety%20Concern">Report Issue</Link>
+              </Button>
             </div>
           </div>
         </section>
 
-        {/* Feedback Carousel Section (moved just before CTA) */}
-        <section id="testimonials" className="bg-[#f5f7ff] py-12 sm:py-20">
-          <div className="container mx-auto px-2 sm:px-4">
-            <div className="text-center mb-6 sm:mb-8">
-              <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-blue-600">See what the CampusOlx community is saying</h2>
+        {/* Feedback Carousel Section */}
+        <section id="testimonials" className="bg-[#F8F9FC] px-[20px] lg:px-[80px] py-[96px]">
+          <div className="max-w-[1200px] w-full mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-[32px] md:text-[40px] font-[600] text-[#0F172A] mb-4">Real students. Real deals. Real savings.</h2>
+              <p className="mx-auto max-w-[640px] text-[16px] md:text-[18px] font-[400] text-[#64748B] leading-relaxed">
+                Don't just take our word for it—see how keeping commerce exclusively within our campus is profoundly changing how students buy and sell.
+              </p>
             </div>
             <FeedbackCarousel />
           </div>
         </section>
+
         {/* FAQ Section */}
-        <section id="faqs" className="bg-white py-20 border-t">
-          <div className="container mx-auto px-4 max-w-3xl">
-            <h2 className="text-3xl font-extrabold text-blue-600 mb-8 text-center">Frequently Asked Questions</h2>
+        <section id="faqs" className="bg-white px-[20px] lg:px-[80px] py-[96px]">
+          <div className="max-w-[800px] w-full mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-[32px] md:text-[40px] font-[600] text-[#0F172A] mb-4">Everything you need to trade with absolute confidence</h2>
+              <p className="mx-auto max-w-[640px] text-[16px] md:text-[18px] font-[400] text-[#64748B] leading-relaxed">
+                Got questions? We've gathered all the answers to help you navigate, sell, and buy within the campus securely and simply.
+              </p>
+            </div>
+            
             <div className="space-y-4">
               {/* FAQ 1 */}
-              <details className="group border rounded-lg p-4 transition-all">
-                <summary className="font-semibold text-lg cursor-pointer flex items-center justify-between">
+              <details className="group bg-white rounded-[16px] p-6 shadow-soft border border-transparent">
+                <summary className="font-[600] text-[18px] text-[#0F172A] cursor-pointer flex items-center justify-between">
                   <span>Can I sell items now and deliver them later?</span>
-                  <span className="ml-2 text-blue-500 group-open:rotate-90 transition-transform">▶</span>
+                  <span className="ml-2 text-[#2563EB] group-open:rotate-90 transition-transform">▶</span>
                 </summary>
-                <div className="mt-2 text-slate-700">Absolutely! You can list items anytime and choose to deliver them after exams, before leaving hostel, or whenever it’s convenient for you.</div>
+                <div className="mt-4 text-[16px] text-[#64748B] leading-relaxed">Absolutely! You can list items anytime and choose to deliver them after exams, before leaving hostel, or whenever it’s convenient for you.</div>
               </details>
               {/* FAQ 2 */}
-              <details className="group border rounded-lg p-4 transition-all">
-                <summary className="font-semibold text-lg cursor-pointer flex items-center justify-between">
+              <details className="group bg-white rounded-[16px] p-6 shadow-soft border border-transparent">
+                <summary className="font-[600] text-[18px] text-[#0F172A] cursor-pointer flex items-center justify-between">
                   <span>I’m a junior/fresher—can I use CampusOlx?</span>
-                  <span className="ml-2 text-blue-500 group-open:rotate-90 transition-transform">▶</span>
+                  <span className="ml-2 text-[#2563EB] group-open:rotate-90 transition-transform">▶</span>
                 </summary>
-                <div className="mt-2 text-slate-700">Definitely! This platform is made with you in mind. Find affordable essentials, get advice from seniors, and even share your own unused items.</div>
+                <div className="mt-4 text-[16px] text-[#64748B] leading-relaxed">Definitely! This platform is made with you in mind. Find affordable essentials, get advice from seniors, and even share your own unused items.</div>
               </details>
               {/* FAQ 3 */}
-              <details className="group border rounded-lg p-4 transition-all">
-                <summary className="font-semibold text-lg cursor-pointer flex items-center justify-between">
-                  <span>How do I get featured on the CampusOlx homepage?</span>
-                  <span className="ml-2 text-blue-500 group-open:rotate-90 transition-transform">▶</span>
-                </summary>
-                <div className="mt-2 text-slate-700">Share your experience or feedback with us through the “Share Your Experience” button in the footer. The best stories and reviews get featured for the whole campus to see!</div>
-              </details>
-              {/* FAQ 4 */}
-              <details className="group border rounded-lg p-4 transition-all">
-                <summary className="font-semibold text-lg cursor-pointer flex items-center justify-between">
-                  <span>How do I contact someone about a listing?</span>
-                  <span className="ml-2 text-blue-500 group-open:rotate-90 transition-transform">▶</span>
-                </summary>
-                <div className="mt-2 text-slate-700">Each listing has a “Contact Seller” or “Message” button. Start a conversation and arrange meetups right on campus.</div>
-              </details>
-              {/* FAQ 5 */}
-              <details className="group border rounded-lg p-4 transition-all">
-                <summary className="font-semibold text-lg cursor-pointer flex items-center justify-between">
-                  <span>What if I don’t find what I’m looking for?</span>
-                  <span className="ml-2 text-blue-500 group-open:rotate-90 transition-transform">▶</span>
-                </summary>
-                <div className="mt-2 text-slate-700">Let us know! You can post a “Wanted” item, and someone might just have exactly what you need.</div>
-              </details>
-              {/* FAQ - Does CampusOlx handle payments or money transactions? */}
-              <details className="group border rounded-lg p-4 transition-all">
-                <summary className="font-semibold text-lg cursor-pointer flex items-center justify-between">
+              <details className="group bg-white rounded-[16px] p-6 shadow-soft border border-transparent">
+                <summary className="font-[600] text-[18px] text-[#0F172A] cursor-pointer flex items-center justify-between">
                   <span>Does CampusOlx handle payments or money transactions?</span>
-                  <span className="ml-2 text-blue-500 group-open:rotate-90 transition-transform">▶</span>
+                  <span className="ml-2 text-[#2563EB] group-open:rotate-90 transition-transform">▶</span>
                 </summary>
-                <div className="mt-2 text-slate-700">No, CampusOlx does not process or handle any payments. All transactions and exchanges are done directly between students. You can connect, agree on a price, and arrange payment in person or through any method you’re comfortable with. CampusOlx is here to provide a safe platform to connect SASTRA students and make buying and selling on campus easy and trustworthy.</div>
-              </details>
-              {/* FAQ 6 - How does CampusOlx prevent fake or scam listings? */}
-              <details className="group border rounded-lg p-4 transition-all">
-                <summary className="font-semibold text-lg cursor-pointer flex items-center justify-between">
-                  <span>How does CampusOlx prevent fake or scam listings?</span>
-                  <span className="ml-2 text-blue-500 group-open:rotate-90 transition-transform">▶</span>
-                </summary>
-                <div className="mt-2 text-slate-700">We take your safety seriously. Every item listed on CampusOlx goes through an AI-powered review, and our admin team also checks for authenticity. If any listing is found to be fake or misleading, it is immediately removed and the user is permanently blocked from CampusOlx. This ensures our marketplace stays safe and trustworthy for everyone.</div>
-              </details>
-              {/* FAQ 7 - Why should I use CampusOlx instead of other platforms? */}
-              <details className="group border rounded-lg p-4 transition-all">
-                <summary className="font-semibold text-lg cursor-pointer flex items-center justify-between">
-                  <span>Why should I use CampusOlx?</span>
-                  <span className="ml-2 text-blue-500 group-open:rotate-90 transition-transform">▶</span>
-                </summary>
-                <div className="mt-2 text-slate-700">It’s built for SASTRA students, by a SASTRA student—no scams, no random strangers, and everything is right here on campus.</div>
+                <div className="mt-4 text-[16px] text-[#64748B] leading-relaxed">No, CampusOlx does not process or handle any payments. All transactions and exchanges are done directly between students. You can connect, agree on a price, and arrange payment in person or through any method you’re comfortable with.</div>
               </details>
             </div>
           </div>
         </section>
-
-        {/* About Us Section - Links to Personal Story */}
-        <section id="about" className="bg-slate-50 py-20">
-          <div className="container mx-auto px-4 max-w-4xl text-center">
-            <div className="mb-12">
-              <h2 className="text-3xl font-extrabold text-blue-600 mb-4">Meet the Founder</h2>
-              <p className="text-slate-600 text-lg">Built by a SASTRA student who saw a problem and decided to solve it</p>
+        
+        {/* CTA Banner section */}
+        <section className="bg-white px-[20px] lg:px-[80px] py-[96px]">
+          <div className="max-w-[1200px] w-full mx-auto text-center bg-[#2563EB] px-[20px] py-[80px] md:p-[80px] rounded-[32px] overflow-hidden relative">
+            <div className="relative z-10">
+              <h2 className="text-[40px] font-[600] text-white mb-4 leading-tight">
+                Turn your items into <br className="hidden md:block"/>
+                <span className="relative inline-block whitespace-nowrap">
+                  extra cash
+                  <svg className="absolute -bottom-1 md:-bottom-2 left-0 w-full text-white/50 h-[8px] md:h-[12px]" viewBox="0 0 100 12" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2.5 9.5C35 2 65 2 97.5 9.5" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round"/>
+                  </svg>
+                </span>{" "}
+                today.
+              </h2>
+              <p className="mx-auto max-w-[640px] text-[18px] md:text-[20px] text-blue-100 font-[500] mb-10 leading-relaxed">
+                Join 1000+ students trading textbooks, gadgets, and more<br className="hidden md:block"/> every single day.
+              </p>
+              <Button asChild className="rounded-[12px] px-10 py-7 text-[16px] font-[700] bg-white text-[#2563EB] hover:bg-slate-50 transition-colors border-0 mb-10">
+                <Link href="/login">
+                  Create Your Student Account
+                </Link>
+              </Button>
+              <div className="text-[11px] md:text-[13px] font-[700] text-blue-200 tracking-widest uppercase">
+                INSTITUTIONAL VERIFICATION REQUIRED • @SASTRA.AC.IN
+              </div>
             </div>
-            <FounderStoryCard />
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="text-center">
-                <div className="text-4xl mb-3">💰</div>
-                <h4 className="font-bold text-lg mb-2">Save Money</h4>
-                <p className="text-slate-600">Affordable campus essentials for every student</p>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl mb-3">🌱</div>
-                <h4 className="font-bold text-lg mb-2">Reduce Waste</h4>
-                <p className="text-slate-600">Give items a second life instead of throwing them away</p>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl mb-3">🤝</div>
-                <h4 className="font-bold text-lg mb-2">Build Community</h4>
-                <p className="text-slate-600">Connect with fellow SASTRA students safely</p>
-              </div>
-            </div>
-
-          </div>
-        </section>
-
-        {/* Call to Action Section */}
-        <section className="bg-blue-600">
-          <div className="container mx-auto px-4 py-16 text-center">
-            <h2 className="text-3xl font-bold text-white">Join the CampusOLX Community</h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-blue-100">
-              Ready to be part of SASTRA's most trusted marketplace? Start saving money, reduce waste, and connect with your campus community today.
-            </p>
-            <Button asChild size="lg" variant="secondary" className="mt-8 bg-white text-blue-600 hover:bg-slate-100">
-              <Link href="/home">
-                Get Started Now
-              </Link>
-            </Button>
           </div>
         </section>
       </main>

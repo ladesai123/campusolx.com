@@ -1,128 +1,233 @@
 'use client';
 import Link from 'next/link';
 import Logo from '@/components/shared/Logo';
-import { Instagram, Star, Share2 } from 'lucide-react';
+import { Instagram, Star, Share2, Globe, ChevronDown, ArrowRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
 const FeedbackModal = dynamic(() => import('@/components/shared/FeedbackModal'), { ssr: false });
 
-// This is a reusable Footer component that can be placed in your main layout.
+function MobileAccordion({ title, children }: { title: string, children: React.ReactNode }) {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div className="border-b border-[#E2E8F0] w-full">
+      <button 
+        onClick={() => setIsOpen(!isOpen)} 
+        className="flex w-full items-center justify-between py-[24px] text-[18px] md:text-[20px] font-[500] text-[#0F172A] hover:text-[#2563EB] transition-colors"
+      >
+        {title}
+        <ChevronDown className={`h-6 w-6 transition-transform duration-300 ${isOpen ? 'rotate-180 text-[#2563EB]' : 'text-[#64748B]'}`} />
+      </button>
+      <div 
+        className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-[400px] opacity-100 pb-[24px]' : 'max-h-0 opacity-0'}`}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export default function Footer() {
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  
-  // Use useSearchParams hook, not window.location.search directly in a hook
   const searchParams = useSearchParams();
   const feedbackParam = searchParams?.get('feedback');
   
   useEffect(() => {
     if (feedbackParam === '1') setShowFeedbackModal(true);
   }, [feedbackParam]);
-  
-  // useRouter is the correct way to handle navigation in Next.js 13+ App Router
-  // const router = useRouter(); // You can use this if you need to navigate/replace URL
+
+  const handleShare = () => {
+    const url = 'https://campusolx.com';
+    const message = `Hey! Found a cool way for SASTRA students to buy & sell stuff. Check out ${url} 🚀`;
+    if (navigator.share) {
+      navigator.share({ text: message, title: 'CampusOlx', url });
+    } else {
+      navigator.clipboard.writeText(message);
+      alert('Share message copied! You can now paste it in WhatsApp or anywhere.');
+    }
+  };
+
+  const menuSections = {
+    company: [
+      { label: 'About Us', href: '/about' },
+      { label: 'Careers', href: '/careers' },
+      { label: 'Blog', href: '/blog' },
+    ],
+    quickLinks: [
+      { label: 'Home', href: '/home' },
+      { label: 'Sell an Item', href: '/sell' },
+      { label: 'Your Profile', href: '/profile' },
+    ],
+    legal: [
+      { label: 'Terms of Service', href: '/legal/terms' },
+      { label: 'Privacy Policy', href: '/legal/privacy' },
+    ],
+    contact: [
+      { label: 'Email Us', href: 'mailto:campusolx.connect@gmail.com' },
+      { label: 'Instagram', href: 'https://instagram.com/campusolx', external: true },
+    ]
+  };
 
   return (
     <>
-      <footer className="mt-12 border-t bg-gray-100">
-        <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 gap-8 text-center md:grid-cols-4 md:text-left">
-            {/* Share CampusOlx with a friend */}
-            <div className="md:col-span-4 flex flex-col items-center gap-2 mb-4">
-              <button
-                type="button"
-           className="inline-block rounded bg-blue-600 px-4 py-2 text-white font-semibold shadow hover:bg-blue-700 transition-colors text-sm flex items-center gap-2 whitespace-nowrap"
-                title="Share CampusOlx with a friend"
-                onClick={() => {
-                  // NOTE: Change 'https://campusolx.com' to 'http://localhost:3000' for local testing!
-                  const url = 'https://campusolx.com'; // Change this line
-                  const message = `Hey! Found a cool way for SASTRA students to buy & sell stuff. Check out ${url} 🚀`;
-                  // Share logic remains the same
-                  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-                  if (navigator.userAgent.toLowerCase().includes('whatsapp')) {
-                    window.open(whatsappUrl, '_blank');
-                  } else if (/Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent)) {
-                    window.open(whatsappUrl, '_blank');
-                  } else if (navigator.share) {
-                    navigator.share({ text: message, title: 'CampusOlx', url });
-                  } else {
-                    navigator.clipboard.writeText(message);
-                    alert('Share message copied! You can now paste it in WhatsApp or anywhere.');
-                  }
-                }}
-              >
-                    <span>Share CampusOlx with a friend</span>
-                    <Share2 className="w-5 h-5 inline flex-shrink-0 ml-2" />
-              </button>
+      <footer className="bg-white pt-[64px] pb-[32px] md:pt-[96px] md:pb-[48px] border-t border-[#E2E8F0] relative z-10 w-full font-sans">
+        <div className="max-w-[1200px] mx-auto px-[20px] lg:px-[80px]">
+          
+          <div className="grid grid-cols-1 md:grid-cols-12 md:gap-16 lg:gap-24 mb-16 md:mb-24">
+            
+            {/* Left Column (Brand & Location) */}
+            <div className="md:col-span-4 lg:col-span-3 flex flex-col items-start mb-8 md:mb-0">
+              
+              <div className="flex w-full items-center justify-between md:mb-8">
+                {/* Logo matches top left in mobile and web */}
+                <div className="w-[120px] md:w-[150px]">
+                  <Logo size="lg" href="/" className="block" />
+                </div>
+                
+                {/* Mobile Button matched on top right */}
+                <button 
+                  onClick={handleShare}
+                  className="flex md:hidden items-center gap-2 rounded-[8px] border border-[#CBD5E1] px-4 py-2 text-[14px] font-[600] text-[#0F172A] hover:bg-[#F8F9FC] hover:border-[#94A3B8] transition-all"
+                >
+                  Share <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
 
+              {/* Globe Icon & Location Text */}
+              <div className="flex items-center gap-3 text-[#0F172A] font-[600] text-[16px] md:text-[18px] mt-6 md:mt-0 mb-8 md:mb-12">
+                <Globe className="h-5 w-5 md:h-6 md:w-6" />
+                <span>SASTRA University</span>
+              </div>
+              
+              {/* Desktop Button under Location */}
+              <button 
+                onClick={handleShare}
+                className="hidden md:flex items-center gap-2 rounded-[8px] border border-[#CBD5E1] px-6 py-2.5 text-[16px] font-[600] text-[#0F172A] hover:bg-[#F8F9FC] hover:border-[#94A3B8] transition-all"
+              >
+                Share CampusOlx <ArrowRight className="h-4 w-4" />
+              </button>
+              
             </div>
-            {/* Section 1: Brand Info */}
-            <div>
-              <Logo size="lg" href="/" className="block" />
-              <p className="mt-2 text-gray-500">The easiest way to buy and sell on campus.</p>
-            </div>
-            {/* Section 2: Quick Links */}
-            <div className="text-center md:text-left">
-              <h4 className="font-semibold text-gray-700">Quick Links</h4>
-              <ul className="mt-2 space-y-1 text-sm flex flex-col items-center md:items-start justify-center mx-auto">
-                <li><Link href="/home" className="text-gray-500 transition-colors hover:text-blue-600">Home</Link></li>
-                <li><Link href="/sell" className="text-gray-500 transition-colors hover:text-blue-600">Sell an Item</Link></li>
-                <li><Link href="/profile" className="text-gray-500 transition-colors hover:text-blue-600">Your Profile</Link></li>
-                <li>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      // Check if user is logged in
-                      const { createClient } = await import('@/lib/client');
-                      const supabase = createClient();
-                      const { data: { user } } = await supabase.auth.getUser();
-                      if (!user) {
-                        // Redirect to login with feedback=1
-                        window.location.href = `/login?feedback=1&redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
-                      } else {
-                        setShowFeedbackModal(true);
-                      }
-                    }}
-                    className="flex items-center gap-1 text-gray-500 transition-colors hover:text-yellow-600 hover:underline bg-transparent border-none p-0 cursor-pointer"
-                    title="Share Your Experience – Get Featured on Our Website!"
-                  >
-                    <Star className="w-4 h-4 text-yellow-500" />
-                    Share Your Experience
-                  </button>
-                </li>
-              </ul>
-            </div>
-            {/* Section 3: Legal */}
+
+            {/* Right Columns (Desktop Menu Grid) */}
+            <div className="hidden md:grid md:col-span-8 lg:col-span-9 grid-cols-4 gap-8">
               <div>
-                <h4 className="font-semibold text-gray-700">Legal</h4>
-                <ul className="mt-2 space-y-1 text-sm">
-                  <li><Link href="/legal/terms" className="text-gray-500 hover:text-blue-600">Terms of Service</Link></li>
-                  <li><Link href="/legal/privacy" className="text-gray-500 hover:text-blue-600">Privacy Policy</Link></li>
+                <h4 className="font-[600] text-[#0F172A] mb-8 text-[18px]">Company</h4>
+                <ul className="space-y-4 text-[#0F172A] text-[15px] font-[500]">
+                  {menuSections.company.map(link => (
+                    <li key={link.label}><Link href={link.href} className="hover:underline underline-offset-4">{link.label}</Link></li>
+                  ))}
                 </ul>
               </div>
-            {/* Section 4: Contact */}
-            <div>
-              <h4 className="font-semibold text-gray-700">Contact</h4>
-              <ul className="mt-2 space-y-1 text-sm">
-                <li>
-                  <a href="mailto:campusolx.connect@gmail.com" className="text-gray-500 hover:text-blue-600">Email Us</a>
-                </li>
-                <li>
-                  <a href="https://instagram.com/campusolx" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-gray-500 hover:text-blue-600">
-                    <Instagram className="inline-block h-4 w-4" /> Instagram
-                  </a>
-                </li>
-              </ul>
+
+              <div>
+                <h4 className="font-[600] text-[#0F172A] mb-8 text-[18px]">Quick Links</h4>
+                <ul className="space-y-4 text-[#0F172A] text-[15px] font-[500]">
+                  {menuSections.quickLinks.map(link => (
+                    <li key={link.label}><Link href={link.href} className="hover:underline underline-offset-4">{link.label}</Link></li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="font-[600] text-[#0F172A] mb-8 text-[18px]">Resources</h4>
+                <ul className="space-y-4 text-[#0F172A] text-[15px] font-[500]">
+                   <li>
+                    <button onClick={() => setShowFeedbackModal(true)} className="hover:underline underline-offset-4 text-left w-full">
+                      Submit Feedback
+                    </button>
+                  </li>
+                  <li>
+                    <Link href="/faq" className="hover:underline underline-offset-4 text-left w-full">
+                      Help Center
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="font-[600] text-[#0F172A] mb-8 text-[18px]">Contact</h4>
+                <ul className="space-y-4 text-[#0F172A] text-[15px] font-[500]">
+                  {menuSections.contact.map(link => (
+                    <li key={link.label}>
+                      <a 
+                        href={link.href} 
+                        target={link.external ? "_blank" : "_self"} 
+                        rel={link.external ? "noopener noreferrer" : ""} 
+                        className="hover:underline underline-offset-4"
+                      >
+                        {link.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* Mobile Accordion Menu */}
+            <div className="md:hidden flex flex-col w-full border-t border-[#E2E8F0]">
+              <MobileAccordion title="Company">
+                <ul className="space-y-4 text-[#0F172A] text-[16px] font-[500]">
+                  {menuSections.company.map(link => (
+                    <li key={link.label}><Link href={link.href}>{link.label}</Link></li>
+                  ))}
+                </ul>
+              </MobileAccordion>
+              
+              <MobileAccordion title="Quick Links">
+                <ul className="space-y-4 text-[#0F172A] text-[16px] font-[500]">
+                  {menuSections.quickLinks.map(link => (
+                    <li key={link.label}><Link href={link.href}>{link.label}</Link></li>
+                  ))}
+                </ul>
+              </MobileAccordion>
+
+              <MobileAccordion title="Resources">
+                <ul className="space-y-4 text-[#0F172A] text-[16px] font-[500]">
+                  <li>
+                    <button onClick={() => setShowFeedbackModal(true)} className="text-left w-full">
+                      Submit Feedback
+                    </button>
+                  </li>
+                  <li>
+                    <Link href="/faq" className="text-left w-full">
+                      Help Center
+                    </Link>
+                  </li>
+                </ul>
+              </MobileAccordion>
+
+              <MobileAccordion title="Contact">
+                <ul className="space-y-4 text-[#0F172A] text-[16px] font-[500]">
+                  {menuSections.contact.map(link => (
+                    <li key={link.label}>
+                      <a href={link.href} target={link.external ? "_blank" : "_self"} rel={link.external ? "noopener noreferrer" : ""}>
+                        {link.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </MobileAccordion>
+            </div>
+            
+          </div>
+
+          {/* Bottom Bar: Legal and Copyright */}
+          <div className="flex flex-col border-t border-[#E2E8F0] pt-[32px] md:pt-[48px] mt-[64px] md:mt-[96px] gap-4">
+            <div className="flex flex-wrap gap-4 md:gap-8 text-[13px] md:text-[14px] font-[500] text-[#64748B]">
+              <Link href="/legal/terms" className="hover:text-[#2563EB] transition-colors hover:underline underline-offset-4">Terms of Service</Link>
+              <Link href="/legal/privacy" className="hover:text-[#2563EB] transition-colors hover:underline underline-offset-4">Privacy Policy</Link>
+            </div>
+            
+            <div className="text-[13px] md:text-[14px] font-[400] text-[#94A3B8]">
+               &copy; {new Date().getFullYear()} CampusOlx. All rights reserved.
             </div>
           </div>
-          {/* Bottom Bar: Copyright */}
-          <div className="mt-8 border-t pt-4 text-center text-sm text-gray-500">
-            <p>&copy; {new Date().getFullYear()} <span className="font-semibold">Campus</span><span className="text-brand font-bold">Olx</span>. All rights reserved.</p>
-          </div>
+          
         </div>
       </footer>
       <FeedbackModal open={showFeedbackModal} onClose={() => setShowFeedbackModal(false)} />
     </>
   );
-} // <- Correct closing brace for the function
+}

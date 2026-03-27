@@ -33,12 +33,12 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     serverActions: {
-      bodySizeLimit: '5mb', 
+      bodySizeLimit: '5mb',
     },
   },
   // Fix Turbopack configuration warnings
   turbopack: {
-    root: 'C:\\Users\\LADE SAI TEJA\\OneDrive\\Desktop\\Campus-OLX\\campus-olx',
+    root: 'S:\\CampusOlx2.0\\campusolx.com',
   },
 };
 

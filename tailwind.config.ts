@@ -19,28 +19,28 @@ const config = {
     },
     extend: {
       fontFamily: {
-        sans: ["var(--font-geist-sans)"],
+        sans: ["'Plus Jakarta Sans'", "sans-serif"],
         nunito: ["var(--font-nunito)"], // Our custom font for the logo
       },
       colors: {
-        // Brand color scale. DEFAULT uses the design token so editing the
-        // CSS variable propagates everywhere, while fixed shades offer
-        // semantic range for hovers, borders, subtle backgrounds, etc.
         brand: {
-          DEFAULT: 'var(--brand-color)',
-          50: '#f5f5ff',
+          DEFAULT: '#2563EB', // Updated to inspiration primary blue
+          50: '#F8F9FC', // Light background tone
           100: '#ebebff',
-            // Light tints for subtle backgrounds / focus rings
           200: '#cccaff',
           300: '#aba8ff',
           400: '#7a72ff',
-          500: '#160ffc', // Core brand
-          600: '#140dda',
+          500: '#2563EB', 
+          600: '#1D4ED8',
           700: '#100aac',
-          800: '#0c077f',
+          800: '#0F172A', // Dark text
           900: '#070448',
           950: '#040226',
         },
+        muted: '#64748B',
+      },
+      boxShadow: {
+        'soft': '0 4px 24px rgba(0,0,0,0.06)',
       },
       keyframes: {
         "accordion-down": {

@@ -37,34 +37,26 @@ export default function FeedbackCarousel() {
   }, []);
 
   if (!feedbacks.length) return null;
+  const displayFeedbacks = feedbacks.slice(0, 3);
 
   return (
     <>
-      <div ref={sliderRef} className="keen-slider mt-4 sm:mt-8">
-        {feedbacks.map((fb) => (
-          <div key={fb.id} className="keen-slider__slide px-1 sm:px-4">
-            <div className="rounded-2xl bg-white shadow-xl p-4 sm:p-6 h-full flex flex-col justify-between border border-blue-200 transition-transform duration-300 hover:scale-105 w-[90vw] max-w-sm mx-auto">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg">
-                  {fb.name?.[0] || '?'}
-                </div>
-                <span className="text-blue-600 font-semibold text-base sm:text-lg">{fb.name}</span>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12 w-full">
+        {displayFeedbacks.map((fb) => (
+          <div key={fb.id} className="bg-white rounded-[16px] p-[24px] shadow-soft border border-transparent flex flex-col justify-between">
+            <div className="text-[#0F172A] text-[18px] mb-8 leading-relaxed italic">
+              "{fb.experience}"
+            </div>
+            <div className="flex items-center gap-4 mt-auto pt-6 border-t border-slate-100">
+              <div className="w-12 h-12 rounded-full bg-[#2563EB]/10 flex items-center justify-center text-[#2563EB] font-bold text-xl flex-shrink-0">
+                {fb.name?.[0] || '?'}
               </div>
-              <div className="text-slate-700 text-base sm:text-lg mb-4 italic">{fb.experience}</div>
-              <div className="text-xs text-slate-400 mt-auto">{fb.year}</div>
+              <div>
+                <div className="text-[#0F172A] font-bold text-lg leading-tight">{fb.name}</div>
+                <div className="text-[#64748B] text-sm mt-1">{fb.year}</div>
+              </div>
             </div>
           </div>
-        ))}
-      </div>
-      {/* Pagination dots */}
-      <div className="flex justify-center gap-2 mt-4">
-        {feedbacks.map((_, idx) => (
-          <button
-            key={idx}
-            className={`w-2.5 h-2.5 rounded-full transition-colors duration-200 ${currentSlide === idx ? 'bg-blue-600' : 'bg-blue-100'}`}
-            onClick={() => instanceRef.current?.moveToIdx(idx)}
-            aria-label={`Go to slide ${idx + 1}`}
-          />
         ))}
       </div>
     </>
