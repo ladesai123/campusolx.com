@@ -7,9 +7,8 @@ import LandingNavbar from '@/components/layout/LandingNavbar';
 export default function AboutPage() {
   return (
     <div className="flex flex-col min-h-screen bg-white text-slate-800">
-      <LandingNavbar />
       
-      <main className="flex-grow pt-[100px]">
+      <main className="flex-grow">
         {/* Hero / Header Section */}
         <section 
           className="relative bg-white px-[20px] lg:px-[80px] py-[60px] md:py-[100px] flex flex-col justify-center items-center overflow-hidden"
@@ -101,15 +100,6 @@ export default function AboutPage() {
           </div>
         </section>
       </main>
-
-      {/* Footer / Contact Link */}
-      <footer className="bg-[#F8F9FC] py-12 px-6 border-t border-slate-100">
-        <div className="max-w-[800px] mx-auto text-center">
-          <p className="text-slate-500 text-sm font-medium uppercase tracking-widest">
-            Made with <span className="text-[#2563EB]">💙</span> at SASTRA • 2025
-          </p>
-        </div>
-      </footer>
     </div>
   );
 }

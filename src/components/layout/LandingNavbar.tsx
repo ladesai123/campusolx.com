@@ -36,12 +36,12 @@ export default function LandingNavbar() {
 
   const menuItems = [
     { label: "Home", href: "/" },
-    { label: "Fresh On Campus", href: "#products" },
-    { label: "How it works", href: "#howitworks" },
-    { label: "Safety Tips", href: "#safety" },
-    { label: "Testimonials", href: "#testimonials" },
-    { label: "About Us", href: "#about" },
-    { label: "FAQs", href: "#faqs" },
+    { label: "Fresh On Campus", href: "/#products" },
+    { label: "How it works", href: "/#howitworks" },
+    { label: "Safety Tips", href: "/#safety" },
+    { label: "Testimonials", href: "/#testimonials" },
+    { label: "About Us", href: "/about" },
+    { label: "FAQs", href: "/#faqs" },
     { label: "Help & Support", href: "mailto:campusolx.connect@gmail.com" },
   ];
 

@@ -6,9 +6,7 @@ import LandingNavbar from '@/components/layout/LandingNavbar';
 export default function BlogComingSoon() {
   return (
     <div className="flex flex-col min-h-screen bg-white text-slate-800">
-      <LandingNavbar />
-
-      <main className="flex-grow flex flex-col items-center justify-center pt-[100px]">
+      <main className="flex-grow flex flex-col items-center justify-center">
         <section 
           className="relative w-full flex-grow flex flex-col justify-center items-center px-[20px] lg:px-[80px] overflow-hidden"
           style={{
@@ -42,13 +40,6 @@ export default function BlogComingSoon() {
           </div>
         </section>
       </main>
-      <footer className="bg-white py-12 px-6 border-t border-slate-50">
-        <div className="max-w-[800px] mx-auto text-center">
-          <p className="text-slate-500 text-sm font-medium uppercase tracking-widest">
-            Made with <span className="text-[#2563EB]">💙</span> at SASTRA • 2025
-          </p>
-        </div>
-      </footer>
     </div>
   );
 }

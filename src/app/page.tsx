@@ -215,7 +215,6 @@ export default function LandingPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-white text-slate-800">
-      <LandingNavbar />
       <main className="flex-grow">
         {/* Hero Section */}
         <section 
