@@ -1,0 +1,138 @@
+# ==============================================================================
+# robots.txt — campusolx.com
+# Last updated: 2026-04-22
+# SEO Strategy: Allow all public-facing content; block private, auth, API,
+# admin, and internal tooling routes to focus crawl budget on high-value pages.
+# ==============================================================================
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 1. PRIMARY DIRECTIVE — All well-behaved crawlers
+# ──────────────────────────────────────────────────────────────────────────────
+User-agent: *
+
+# Public pages — explicitly crawlable (allow takes precedence over disallow)
+Allow: /$
+Allow: /about$
+Allow: /blog$
+Allow: /blog/
+Allow: /careers$
+Allow: /why-campusolx$
+Allow: /legal/privacy$
+Allow: /legal/terms$
+
+# Product listing pages are the core of a marketplace — always crawlable
+Allow: /product/
+
+# Static assets needed for rendering (Core Web Vitals / Lighthouse)
+Allow: /assets/
+Allow: /icons/
+Allow: /logo.png
+Allow: /manifest.json
+
+# ── Block private app routes ───────────────────────────────────────────────────
+# Authenticated-only pages — no value for search engines
+Disallow: /home
+Disallow: /sell
+Disallow: /chat
+Disallow: /edit
+Disallow: /profile
+Disallow: /onboarding
+Disallow: /context
+Disallow: /login
+
+# Admin panel — must never be indexed
+Disallow: /admin
+
+# Auth flow pages — transient, no indexable content
+Disallow: /auth/
+
+# Internal / developer-only pages
+Disallow: /sso-test
+Disallow: /sso-test/
+
+# ── Block API routes (saves crawl budget) ─────────────────────────────────────
+Disallow: /api/
+
+# ── Block Next.js internal files ──────────────────────────────────────────────
+Disallow: /_next/
+Disallow: /_vercel/
+
+# ── Block Google Search Console verification file from crawl queue ────────────
+Disallow: /google*.html
+
+# ── Block query-string variants that create duplicate content ─────────────────
+Disallow: /*?*
+Allow: /product/*?*
+
+# ==============================================================================
+# 2. GOOGLEBOT — fine-tuned for Google Search
+# ==============================================================================
+User-agent: Googlebot
+
+# Allow everything Googlebot should see (inherits * rules above)
+Allow: /
+
+# Google image crawler — allow product images for Google Shopping / Image Search
+User-agent: Googlebot-Image
+Allow: /assets/
+Allow: /icons/
+Allow: /logo.png
+
+# ==============================================================================
+# 3. BINGBOT — Microsoft Bing
+# ==============================================================================
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 5
+
+# ==============================================================================
+# 4. AI CRAWLERS — Block training scrapers to protect content
+#    (does NOT affect SEO; these bots don't affect search rankings)
+# ==============================================================================
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+User-agent: cohere-ai
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+# ==============================================================================
+# 5. AGGRESSIVE / SPAM CRAWLERS — Block known bad actors
+# ==============================================================================
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+User-agent: DataForSeoBot
+Disallow: /
+
+# ==============================================================================
+# 6. SITEMAP — Required for fast, full indexing
+#    Make sure this file is actually generated and accessible!
+# ==============================================================================
+Sitemap: https://campusolx.com/sitemap.xml
