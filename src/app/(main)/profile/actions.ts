@@ -207,3 +207,28 @@ export async function deleteProduct(productId: number) {
   revalidatePath("/profile");
   revalidatePath("/chat");
 }
+
+// This action updates the user's campus.
+export async function updateCampus(newCampus: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("You must be logged in.");
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ university: newCampus })
+    .eq("id", user.id);
+
+  if (error) {
+    console.error("Error updating campus:", error);
+    throw error;
+  }
+
+  revalidatePath("/profile");
+  revalidatePath("/home");
+}

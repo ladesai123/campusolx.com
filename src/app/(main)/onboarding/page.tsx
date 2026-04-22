@@ -93,22 +93,19 @@ export default function OnboardingPage() {
               />
             </div>
 
-            {/* Campus Selection Field - Now a hidden input */}
-            <Input
-              type="hidden"
-              name="university"
-              value="SASTRA University, Thanjavur"
-            />
-
-            {/* Display the fixed university to the user */}
+            {/* Campus Selection Field */}
             <div className="grid w-full items-center gap-1.5">
-              <Label>Campus</Label>
-              <Input
-                type="text"
-                value="SASTRA University, Thanjavur"
-                disabled
-                className="bg-slate-100"
-              />
+              <Label htmlFor="university">Campus</Label>
+              <Select name="university" defaultValue="SASTRA University, Thanjavur" required>
+                <SelectTrigger id="university">
+                  <SelectValue placeholder="Select your campus" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="SASTRA University, Thanjavur">SASTRA University, Thanjavur</SelectItem>
+                  <SelectItem value="SASTRA University, Kumbakonam">SASTRA University, Kumbakonam</SelectItem>
+                  <SelectItem value="SASTRA University, Chennai">SASTRA University, Chennai</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Year Dropdown */}

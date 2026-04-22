@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/client";
-import { deleteProduct, toggleProductStatus } from "./actions";
+import { deleteProduct, toggleProductStatus, updateCampus } from "./actions";
 import type { Database } from "@/lib/database.types";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -23,6 +23,13 @@ import ShareButton from "@/components/shared/ShareButton";
 import SharePopup from "@/components/shared/SharePopup";
 import Image from "next/image";
 import Link from "next/link";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
@@ -43,6 +50,8 @@ export default function ProfileClient({ profile, userProducts }: ProfileClientPr
     const [showDeleteMsg, setShowDeleteMsg] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [statusUpdatingId, setStatusUpdatingId] = useState<number | null>(null);
+    const [isEditingCampus, setIsEditingCampus] = useState(false);
+    const [updatingCampus, setUpdatingCampus] = useState(false);
 
 
     async function handleLogout() {
@@ -77,6 +86,18 @@ export default function ProfileClient({ profile, userProducts }: ProfileClientPr
         router.refresh();
     }
 
+    async function handleCampusChange(newCampus: string) {
+        setUpdatingCampus(true);
+        try {
+            await updateCampus(newCampus);
+            setIsEditingCampus(false);
+        } catch (error) {
+            console.error("Failed to update campus", error);
+        } finally {
+            setUpdatingCampus(false);
+        }
+    }
+
     const googleName = profile?.name || "User";
     const googlePhoto = profile?.profile_picture_url || undefined;
 
@@ -104,9 +125,37 @@ export default function ProfileClient({ profile, userProducts }: ProfileClientPr
                         {googleName[0]?.toUpperCase() || <UserIcon className="h-10 w-10 text-slate-400" />}
                     </AvatarFallback>
                 </Avatar>
-                <div className="flex flex-col justify-center">
+                <div className="flex flex-col justify-center w-full">
                     <span className="text-2xl font-bold text-slate-900 leading-tight">{googleName}</span>
-                    <span className="text-base text-slate-500 mt-1">SASTRA University, Thanjavur</span>
+                    <div className="flex items-center gap-2 mt-2">
+                        {isEditingCampus ? (
+                            <div className="flex items-center gap-2">
+                                <Select 
+                                    defaultValue={profile?.university || "SASTRA University, Thanjavur"} 
+                                    onValueChange={handleCampusChange}
+                                    disabled={updatingCampus}
+                                >
+                                    <SelectTrigger className="w-[250px] h-8 text-sm">
+                                        <SelectValue placeholder="Select campus" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="SASTRA University, Thanjavur">SASTRA University, Thanjavur</SelectItem>
+                                        <SelectItem value="SASTRA University, Kumbakonam">SASTRA University, Kumbakonam</SelectItem>
+                                        <SelectItem value="SASTRA University, Chennai">SASTRA University, Chennai</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                {updatingCampus && <Loader2 className="h-4 w-4 animate-spin text-slate-500" />}
+                                <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => setIsEditingCampus(false)}>Cancel</Button>
+                            </div>
+                        ) : (
+                            <>
+                                <span className="text-base text-slate-500">{profile?.university || "SASTRA University, Thanjavur"}</span>
+                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setIsEditingCampus(true)}>
+                                    <Edit className="h-3 w-3 text-slate-400" />
+                                </Button>
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
             
