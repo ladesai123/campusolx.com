@@ -51,6 +51,7 @@ export default function OnboardingPage() {
       year,
       profile_picture_url: user.user_metadata?.avatar_url || "",
       email: user.email || "",
+      acquisition_source: 'google',  // Track that this user registered via Google OAuth
     });
     setLoading(false);
     if (error) {

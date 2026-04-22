@@ -196,6 +196,7 @@ export async function GET(request: Request) {
         university: 'SASTRA University, Thanjavur',
         profile_picture_url: null,
         email: normalizedEmail,  // e.g. "126156200@sastra.ac.in" derived from reg_no
+        acquisition_source: 'unify',  // Track that this user registered via Unify SSO
       })
 
     if (profileError) {
