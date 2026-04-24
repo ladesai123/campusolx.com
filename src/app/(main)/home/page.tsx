@@ -25,10 +25,15 @@ export default async function HomePage(props: {
     redirect("/login");
   }
 
-  // Build base query first.
+  // Fetch profile first to get the user's university
+  const profileRes = await supabase.from("profiles").select("*").eq("id", user.id).single();
+  const profile = profileRes.data as Profile | null;
+
+  // Build base query for products, filtering by the user's university using an inner join
   let productsQuery = supabase
     .from("products")
-    .select("*, profiles ( university )")
+    .select("*, profiles!inner ( university )")
+    .eq("profiles.university", profile?.university || "")
     .order("created_at", { ascending: false });
 
   // Safely normalize selected categories
@@ -46,15 +51,13 @@ export default async function HomePage(props: {
     productsQuery = productsQuery.in("category", normalizedCategories);
   }
 
-  // Parallel fetches: profile, filtered products, category list for counts.
-  const [profileRes, productsRes, categoryCountsRes] = await Promise.all([
-    supabase.from("profiles").select("*").eq("id", user.id).single(),
+  // Parallel fetches: filtered products, category list for counts (also filtered by university)
+  const [productsRes, categoryCountsRes] = await Promise.all([
     productsQuery,
-    supabase.from("products").select("category"),
+    supabase.from("products").select("category, profiles!inner ( university )").eq("profiles.university", profile?.university || ""),
   ]);
 
-  const profile = profileRes.data as Profile | null;
-  let products = (productsRes.data as ProductWithProfile[]) || [];
+  let products = (productsRes.data as unknown as ProductWithProfile[]) || [];
   // Filter out hidden products
   products = products.filter((p) => !p.is_hidden);
 

@@ -106,7 +106,7 @@ export default function ProfileClient({ profile, userProducts }: ProfileClientPr
                 </Avatar>
                 <div className="flex flex-col justify-center">
                     <span className="text-2xl font-bold text-slate-900 leading-tight">{googleName}</span>
-                    <span className="text-base text-slate-500 mt-1">SASTRA University, Thanjavur</span>
+                    <span className="text-base text-slate-500 mt-1">{profile?.university || "SASTRA University, Thanjavur"}</span>
                 </div>
             </div>
             

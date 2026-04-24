@@ -187,13 +187,20 @@ export async function GET(request: Request) {
     newUserId = created.user.id
     console.log('[SSO] New user created:', newUserId)
 
+    // Derive University from reg_no
+    const firstDigit = payload.reg_no.charAt(0);
+    let university = 'SASTRA University, Thanjavur';
+    if (firstDigit === '1') university = 'SASTRA University, Thanjavur';
+    else if (firstDigit === '2') university = 'SASTRA University, Kumbakonam';
+    else if (firstDigit === '3') university = 'SASTRA University, Chennai';
+
     // Insert profile — university full name, initials avatar shown by CampusOlx
     const { error: profileError } = await adminClient
       .from('profiles')
       .insert({
         id: newUserId,
         name: payload.name,
-        university: 'SASTRA University, Thanjavur',
+        university,
         profile_picture_url: null,
         email: normalizedEmail,  // e.g. "126156200@sastra.ac.in" derived from reg_no
         acquisition_source: 'unify',  // Track that this user registered via Unify SSO
@@ -218,6 +225,18 @@ export async function GET(request: Request) {
     // ── EXISTING USER — proceed directly to generateLink ──────────────────
     // We don't need the userId for anything here; generateLink only needs email.
     console.log('[SSO] Existing user detected for:', normalizedEmail)
+
+    // Ensure university is up-to-date even for existing users
+    const firstDigit = payload.reg_no.charAt(0);
+    let university = 'SASTRA University, Thanjavur';
+    if (firstDigit === '1') university = 'SASTRA University, Thanjavur';
+    else if (firstDigit === '2') university = 'SASTRA University, Kumbakonam';
+    else if (firstDigit === '3') university = 'SASTRA University, Chennai';
+
+    await adminClient
+      .from('profiles')
+      .update({ university })
+      .eq('email', normalizedEmail);
 
   } else {
     // Unexpected createUser error
