@@ -79,17 +79,36 @@ export async function GET(request: Request) {
     )
   }
 
-  // ✅ User is SASTRA → check onboarding
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('name, university')
-    .eq('id', user.id)
-    .single()
+  // ✅ User is SASTRA → Automate Profile Setup (Zero-Onboarding)
+  const regNoMatch = userEmail.match(/^(\d+)/);
+  const regNo = regNoMatch ? regNoMatch[1] : null;
 
-  if (!profile?.name || !profile?.university) {
-    return NextResponse.redirect(`${requestUrl.origin}/onboarding`)
+  // Derive University from reg_no first digit
+  let university = "SASTRA University, Thanjavur";
+  if (regNo) {
+    const firstDigit = regNo.charAt(0);
+    if (firstDigit === "1") university = "SASTRA University, Thanjavur";
+    else if (firstDigit === "2") university = "SASTRA University, Kumbakonam";
+    else if (firstDigit === "3") university = "SASTRA University, Chennai";
   }
 
-  // 🎉 Success → go to home
-  return NextResponse.redirect(`${requestUrl.origin}/home`)
+  // Silent Upsert: Create or update profile automatically
+  const { error: profileError } = await supabase.from("profiles").upsert({
+    id: user.id,
+    name: user.user_metadata?.full_name || userEmail.split("@")[0],
+    university: university,
+    profile_picture_url: user.user_metadata?.avatar_url || "",
+    email: userEmail,
+    acquisition_source: "google",
+    // We can add reg_no here if we add the column to DB later
+  });
+
+  if (profileError) {
+    console.error("Profile upsert error:", profileError.message);
+    // Even if profile fails, we might want to try redirecting to home 
+    // or a lightweight error page. For now, let's go to home.
+  }
+
+  // 🎉 Magic Success → go straight to home with zero clicks
+  return NextResponse.redirect(`${requestUrl.origin}/home`);
 }

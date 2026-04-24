@@ -77,10 +77,39 @@ export default async function ProfilePage() {
 
   // Await all promises at the same time
   const [
-    { data: profile },
+    profileRes,
     { data: userProducts },
     { data: connections, error: connError },
   ] = await Promise.all([profilePromise, userProductsPromise, connectionsPromise]);
+
+  let profile = profileRes.data as Profile | null;
+
+  // 🛡️ SELF-HEALING: If profile is missing (DB failure fallback)
+  if (!profile) {
+    const userEmail = user.email?.trim().toLowerCase() || "";
+    const regNoMatch = userEmail.match(/^(\d+)/);
+    const regNo = regNoMatch ? regNoMatch[1] : null;
+    
+    let university = "SASTRA University, Thanjavur"; // Default
+    if (regNo) {
+      const firstDigit = regNo.charAt(0);
+      if (firstDigit === "1") university = "SASTRA University, Thanjavur";
+      else if (firstDigit === "2") university = "SASTRA University, Kumbakonam";
+      else if (firstDigit === "3") university = "SASTRA University, Chennai";
+    }
+
+    // Attempt to create it on the fly
+    const { data: newProfile } = await supabase.from("profiles").upsert({
+      id: user.id,
+      name: user.user_metadata?.full_name || userEmail.split("@")[0],
+      university: university,
+      profile_picture_url: user.user_metadata?.avatar_url || "",
+      email: userEmail,
+      acquisition_source: "google_resilient",
+    }).select().single();
+    
+    profile = newProfile as Profile | null;
+  }
 
   if (connError) {
     console.error("Error fetching connections:", connError);
