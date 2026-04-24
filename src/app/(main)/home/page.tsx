@@ -79,7 +79,7 @@ export default async function HomePage(props: {
         {profile && (
           <div className="mb-8">
             <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">
-              Welcome back, {profile.name}!
+              Welcome, {profile.name}!
             </h1>
             <p className="text-sm text-gray-600">
               Here are the latest listings from students at{" "}
