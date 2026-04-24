@@ -257,6 +257,7 @@ export type Database = {
           profile_picture_url: string | null
           university: string | null
           acquisition_source: string | null
+          email: string | null
         }
         Insert: {
           id: string
@@ -266,6 +267,7 @@ export type Database = {
           profile_picture_url?: string | null
           university?: string | null
           acquisition_source?: string | null
+          email?: string | null
         }
         Update: {
           id?: string
@@ -275,6 +277,7 @@ export type Database = {
           profile_picture_url?: string | null
           university?: string | null
           acquisition_source?: string | null
+          email?: string | null
         }
         Relationships: []
       }

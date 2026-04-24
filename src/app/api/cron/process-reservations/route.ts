@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { type Database } from '@/lib/database.types';
 
 export async function GET(request: Request) {
   // 1. Verify the Cron Secret to prevent unauthorized access
@@ -12,7 +13,7 @@ export async function GET(request: Request) {
   // We use the Service Role key so we can bypass RLS and update any product.
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-  const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+  const supabaseAdmin = createClient<Database>(supabaseUrl, supabaseServiceKey);
 
   try {
     const today = new Date().toISOString();

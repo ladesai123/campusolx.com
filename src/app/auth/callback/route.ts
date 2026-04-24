@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
+import { type Database } from '@/lib/database.types'
 
 /**
  * Auth Callback Route
@@ -26,7 +27,7 @@ export async function GET(request: Request) {
   const cookieStore = await cookies()
 
   // ✅ Supabase client with cookie persistence
-  const supabase = createServerClient(
+  const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -100,13 +101,10 @@ export async function GET(request: Request) {
     profile_picture_url: user.user_metadata?.avatar_url || "",
     email: userEmail,
     acquisition_source: "google",
-    // We can add reg_no here if we add the column to DB later
   });
 
   if (profileError) {
     console.error("Profile upsert error:", profileError.message);
-    // Even if profile fails, we might want to try redirecting to home 
-    // or a lightweight error page. For now, let's go to home.
   }
 
   // 🎉 Magic Success → go straight to home with zero clicks

@@ -42,5 +42,6 @@ next-env.d.ts
 
 # SASTRA SSO Local Testing
 src/app/sastranet-sso-test/
+src/app/sso-test/
 src/app/api/sastranet-sso-test-token/
 src/app/api/sso-test-token/

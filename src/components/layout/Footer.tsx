@@ -14,6 +14,7 @@ function MobileAccordion({ title, children }: { title: string, children: React.R
     <div className="border-b border-[#E2E8F0] w-full">
       <button 
         onClick={() => setIsOpen(!isOpen)} 
+        suppressHydrationWarning
         className="flex w-full items-center justify-between py-[24px] text-[18px] md:text-[20px] font-[500] text-[#0F172A] hover:text-[#2563EB] transition-colors"
       >
         {title}
@@ -30,6 +31,11 @@ function MobileAccordion({ title, children }: { title: string, children: React.R
 
 export default function Footer() {
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [currentYear, setCurrentYear] = useState(2025); // Safe fallback
+  
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+  }, []);
   const searchParams = useSearchParams();
   const feedbackParam = searchParams?.get('feedback');
   
@@ -88,6 +94,7 @@ export default function Footer() {
                 {/* Mobile Button matched on top right */}
                 <button 
                   onClick={handleShare}
+                  suppressHydrationWarning
                   className="flex md:hidden items-center gap-2 rounded-[8px] border border-[#CBD5E1] px-4 py-2 text-[14px] font-[600] text-[#0F172A] hover:bg-[#F8F9FC] hover:border-[#94A3B8] transition-all"
                 >
                   Share <ArrowRight className="h-4 w-4" />
@@ -103,6 +110,7 @@ export default function Footer() {
               {/* Desktop Button under Location */}
               <button 
                 onClick={handleShare}
+                suppressHydrationWarning
                 className="hidden md:flex items-center gap-2 rounded-[8px] border border-[#CBD5E1] px-6 py-2.5 text-[16px] font-[600] text-[#0F172A] hover:bg-[#F8F9FC] hover:border-[#94A3B8] transition-all"
               >
                 Share CampusOlx <ArrowRight className="h-4 w-4" />
@@ -134,7 +142,11 @@ export default function Footer() {
                 <h4 className="font-[600] text-[#0F172A] mb-8 text-[18px]">Resources</h4>
                 <ul className="space-y-4 text-[#0F172A] text-[15px] font-[500]">
                    <li>
-                    <button onClick={() => setShowFeedbackModal(true)} className="hover:underline underline-offset-4 text-left w-full">
+                    <button 
+                      onClick={() => setShowFeedbackModal(true)} 
+                      suppressHydrationWarning
+                      className="hover:underline underline-offset-4 text-left w-full"
+                    >
                       Submit Feedback
                     </button>
                   </li>
@@ -186,7 +198,11 @@ export default function Footer() {
               <MobileAccordion title="Resources">
                 <ul className="space-y-4 text-[#0F172A] text-[16px] font-[500]">
                   <li>
-                    <button onClick={() => setShowFeedbackModal(true)} className="text-left w-full">
+                    <button 
+                      onClick={() => setShowFeedbackModal(true)} 
+                      suppressHydrationWarning
+                      className="text-left w-full"
+                    >
                       Submit Feedback
                     </button>
                   </li>
@@ -221,8 +237,11 @@ export default function Footer() {
             </div>
             
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="text-[13px] md:text-[14px] font-[400] text-[#94A3B8]">
-                 &copy; {new Date().getFullYear()} CampusOlx. All rights reserved.
+              <div 
+                className="text-[13px] md:text-[14px] font-[400] text-[#94A3B8]"
+                suppressHydrationWarning
+              >
+                 &copy; {currentYear} CampusOlx. All rights reserved.
               </div>
               <div className="text-[#94A3B8] text-[12px] font-[600] uppercase tracking-widest">
                 Made with <span className="text-[#2563EB]">💙</span> at SASTRA • 2025

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/server';
+import { type Database } from '@/lib/database.types';
 
 export async function POST() {
   try {
