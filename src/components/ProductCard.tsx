@@ -37,8 +37,16 @@ const calculateDiscount = (price: number | null, mrp: number | null) => {
 
 export function ProductCard({ product, showAdminActions = false, deleteAction }: ProductCardProps) {
   const discount = calculateDiscount(product.price, product.mrp);
-  const isReservable = product.status === 'pending_reservation' && !!product.available_from;
-  const isReserved = product.status === 'reserved';
+  // Virtualization: Instantly treat expired reservations as 'available'
+  const now = new Date();
+  const availableFromDate = product.available_from ? new Date(product.available_from) : null;
+  const hasReservationPassed = availableFromDate ? now >= availableFromDate : false;
+  const effectiveStatus = (product.status === 'pending_reservation' && hasReservationPassed) 
+    ? 'available' 
+    : product.status;
+
+  const isReservable = effectiveStatus === 'pending_reservation' && !!product.available_from;
+  const isReserved = effectiveStatus === 'reserved';
   const formattedPrice = typeof product.price === 'number'
     ? new Intl.NumberFormat('en-IN', {
         style: 'currency',
@@ -98,7 +106,7 @@ export function ProductCard({ product, showAdminActions = false, deleteAction }:
             </Badge>
           </div>
         )}
-        {(isReserved || product.status === 'sold') && (
+        {(isReserved || effectiveStatus === 'sold') && (
           <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
             <Badge
               className={`px-4 py-1 text-base font-bold tracking-wider ${isReserved ? 'bg-blue-600 text-white' : 'bg-red-600 text-white'}`}
@@ -107,7 +115,7 @@ export function ProductCard({ product, showAdminActions = false, deleteAction }:
             </Badge>
           </div>
         )}
-        {product.is_negotiable && typeof product.price === 'number' && product.price > 0 && product.status !== 'sold' && product.status !== 'reserved' && (
+        {product.is_negotiable && typeof product.price === 'number' && product.price > 0 && effectiveStatus !== 'sold' && effectiveStatus !== 'reserved' && (
           <div className="absolute bottom-2 left-2 z-10">
             <Badge className="bg-green-600 text-white shadow-md text-xs font-semibold px-2 py-1">
               Price Negotiable
@@ -136,10 +144,10 @@ export function ProductCard({ product, showAdminActions = false, deleteAction }:
         )}
         {showAdminActions && (
           <div className="flex w-full gap-2 mt-4 border-t pt-4">
-            <form action={toggleProductStatus.bind(null, product.id, product.status ?? 'available')} className="flex-1">
+            <form action={toggleProductStatus.bind(null, product.id, effectiveStatus ?? 'available')} className="flex-1">
               <SubmitButton variant="outline" size="sm" className="w-full">
-                {product.status === 'available' ? <Tag className="mr-2 h-4 w-4"/> : <Undo2 className="mr-2 h-4 w-4"/>}
-                {product.status === 'available' ? 'Mark Sold' : 'Relist'}
+                {effectiveStatus === 'available' ? <Tag className="mr-2 h-4 w-4"/> : <Undo2 className="mr-2 h-4 w-4"/>}
+                {effectiveStatus === 'available' ? 'Mark Sold' : 'Relist'}
               </SubmitButton>
             </form>
             <Button asChild size="sm" variant="ghost">

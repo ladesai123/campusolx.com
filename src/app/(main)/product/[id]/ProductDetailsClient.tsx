@@ -92,9 +92,18 @@ export default function ProductDetailsClient({
   }
 
   const discount = calculateDiscount(product.price || 0, product.mrp);
-    const isReservable = product.status === "pending_reservation";
-    const isOwner = user.id === product.seller_id;
-    const isNegotiable = product.is_negotiable && typeof product.price === 'number' && product.price > 0 && product.status !== 'sold' && product.status !== 'reserved';
+  
+  // Virtualization: Instantly treat expired reservations as 'available'
+  const now = new Date();
+  const availableFromDate = product.available_from ? new Date(product.available_from) : null;
+  const hasReservationPassed = availableFromDate ? now >= availableFromDate : false;
+  const effectiveStatus = (product.status === 'pending_reservation' && hasReservationPassed) 
+    ? 'available' 
+    : product.status;
+
+  const isReservable = effectiveStatus === "pending_reservation";
+  const isOwner = user.id === product.seller_id;
+  const isNegotiable = product.is_negotiable && typeof product.price === 'number' && product.price > 0 && effectiveStatus !== 'sold' && effectiveStatus !== 'reserved';
   const handleSendRequest = () => {
     startTransition(async () => {
       // Prepare form data for connectWithSeller
@@ -312,14 +321,14 @@ export default function ProductDetailsClient({
                       size="lg"
                       className="w-full flex items-center justify-center"
                       onClick={() => setShowBuyerTip(true)}
-                      disabled={isPending || product.status !== "available"}
+                      disabled={isPending || effectiveStatus !== "available"}
                     >
                       {isPending ? (
                         <SimpleSpinner size="sm" text="Sending Request..." />
                       ) : (
                         <>
                           <MessageSquare className="mr-2 h-5 w-5" />Connect with Seller
-                          {product.status && product.status !== "available" && ` (${product.status.toUpperCase()})`}
+                          {effectiveStatus && effectiveStatus !== "available" && ` (${effectiveStatus.toUpperCase()})`}
                         </>
                       )}
                     </Button>

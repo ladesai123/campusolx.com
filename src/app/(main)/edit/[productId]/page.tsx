@@ -2,7 +2,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/server";
 import EditProductForm from "./EditProductFormClient";
 
-export default async function EditProductPage({ params }: { params: { productId: string } }) {
+export default async function EditProductPage({ params }: { params: Promise<{ productId: string }> }) {
+  const { productId } = await params;
   const supabase = await createClient();
   const {
     data: { user },
@@ -13,7 +14,7 @@ export default async function EditProductPage({ params }: { params: { productId:
   const { data: product } = await supabase
     .from("products")
     .select("*")
-    .eq("id", parseInt(params.productId, 10))
+    .eq("id", parseInt(productId, 10))
     .single();
 
   // 2. Security check: If no product is found, or if the current user is not the seller,

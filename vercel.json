@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/process-reservations",
+      "schedule": "0 */4 * * *"
+    }
+  ]
+}

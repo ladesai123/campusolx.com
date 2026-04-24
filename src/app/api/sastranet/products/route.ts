@@ -32,10 +32,21 @@ export async function GET(request: Request) {
   }
 
   // Cleanly flatten the university field into each product object for easier use
+  const now = new Date();
+  
   const products = rawProducts.map((p: any) => {
     const { profiles, ...productData } = p;
+    
+    // Virtualization: Instantly treat expired reservations as 'available'
+    const availableFromDate = productData.available_from ? new Date(productData.available_from) : null;
+    const hasReservationPassed = availableFromDate ? now >= availableFromDate : false;
+    const effectiveStatus = (productData.status === 'pending_reservation' && hasReservationPassed) 
+      ? 'available' 
+      : productData.status;
+
     return {
       ...productData,
+      status: effectiveStatus,
       university: profiles?.university || null,
     };
   });
