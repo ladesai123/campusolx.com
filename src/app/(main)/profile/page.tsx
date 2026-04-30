@@ -14,6 +14,7 @@ export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 // This is a complete row from your 'products' table.
 export type Product = Database["public"]["Tables"]["products"]["Row"];
+import type { RequestWithProfile } from "@/lib/types";
 
 // This type represents the latest message preview for a chat.
 type MessagePreview = {
@@ -59,7 +60,7 @@ export default async function ProfilePage() {
     .eq("seller_id", user.id)
     .order("created_at", { ascending: false });
 
-  // 3. Fetch all connections the user is a part of (both as seller and requester)
+  // 3. Fetch all connections the user is a part of
   const connectionsPromise = supabase
     .from("connections")
     .select(
@@ -75,12 +76,33 @@ export default async function ProfilePage() {
     .or(`seller_id.eq.${user.id},requester_id.eq.${user.id}`)
     .order("created_at", { ascending: false });
 
+  // 4. Fetch saved products
+  const savedItemsPromise = supabase
+    .from("saved_items")
+    .select(`
+      product:products (
+        *,
+        profiles!inner(*)
+      )
+    `)
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+  // 5. Fetch user's requests
+  const userRequestsPromise = supabase
+    .from("requests")
+    .select("*, profiles!inner(id, name, university, profile_picture_url)")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
   // Await all promises at the same time
   const [
     profileRes,
     { data: userProducts },
     { data: connections, error: connError },
-  ] = await Promise.all([profilePromise, userProductsPromise, connectionsPromise]);
+    { data: savedItemsData },
+    { data: userRequestsRaw },
+  ] = await Promise.all([profilePromise, userProductsPromise, connectionsPromise, savedItemsPromise, userRequestsPromise]);
 
   let profile = profileRes.data as Profile | null;
 
@@ -164,11 +186,25 @@ export default async function ProfilePage() {
     });
   }
 
+  const savedProducts = (savedItemsData || [])
+    .map(s => {
+      // safely extract the product and its profile
+      const prod = Array.isArray(s.product) ? s.product[0] : s.product;
+      if (!prod) return null;
+      const prof = Array.isArray(prod.profiles) ? prod.profiles[0] : prod.profiles;
+      return { ...prod, profiles: prof };
+    })
+    .filter(Boolean);
+
+  const userRequests = (userRequestsRaw as unknown as RequestWithProfile[]) || [];
+
   // 7. Pass the clean, combined data to the client component for rendering.
   return (
     <ProfileClient
       profile={profile}
       userProducts={userProducts || []}
+      savedProducts={savedProducts as any[]}
+      userRequests={userRequests}
     />
   );
 }

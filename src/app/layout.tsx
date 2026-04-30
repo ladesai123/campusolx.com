@@ -72,7 +72,7 @@ export default async function RootLayout({
       <head>
         <meta name="theme-color" content="#ffffff" />
         <link rel="icon" href="/logo.png" type="image/png" />
-        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body
         className={`font-sans bg-white antialiased min-h-screen`}

@@ -19,8 +19,9 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, CalendarClock, MessageSquare, CheckCircle, Hourglass } from "lucide-react";
+import { ArrowLeft, CalendarClock, MessageSquare, CheckCircle, Hourglass, Heart } from "lucide-react";
 import { createConnectionAction } from "@/app/(main)/chat/actions";
+import { toggleSaveAction } from "@/app/(main)/home/actions";
 import NotificationPopup from "@/components/shared/NotificationPopup";
 import ShareButton from "@/components/shared/ShareButton";
 
@@ -49,6 +50,7 @@ interface ProductDetailsClientProps {
   user: User;
   product: Product | null;
   existingConnection: { id: number; status: string } | null;
+  initialIsSaved?: boolean;
 }
 
 // Helper functions (these can be moved to a utils file if you prefer)
@@ -73,11 +75,15 @@ export default function ProductDetailsClient({
   user,
   product,
   existingConnection,
+  initialIsSaved,
 }: ProductDetailsClientProps) {
   const router = useRouter();
   const [showReserveTip, setShowReserveTip] = useState(false);
   const [showBuyerTip, setShowBuyerTip] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
+  const [isSaved, setIsSaved] = useState(!!existingConnection /* override below */);
+  // Correctly initialize
+  useState(() => setIsSaved(!!initialIsSaved)); 
   const [isPending, startTransition] = useTransition();
 
   if (!product) {
@@ -139,10 +145,22 @@ export default function ProductDetailsClient({
     });
   };
 
-  // This function is triggered when the "Request to Reserve" button is clicked.
-  // Its only job is to show the educational popup.
   const handleRequestReservation = () => {
     setShowReserveTip(true);
+  };
+
+  const handleToggleSave = async () => {
+    if (!product) return;
+    const currentlySaved = isSaved;
+    // Optimistic toggle
+    setIsSaved(!currentlySaved);
+    try {
+      await toggleSaveAction(product.id, currentlySaved);
+    } catch (e) {
+      // Revert on error
+      setIsSaved(currentlySaved);
+      setNotification("❌ Failed to update favourites.");
+    }
   };
 
   return (
@@ -236,6 +254,20 @@ export default function ProductDetailsClient({
               height={600}
               className="h-full w-full object-cover"
             />
+            
+            {/* Heart / Save Button */}
+            {!isOwner && (
+              <button
+                onClick={handleToggleSave}
+                className="absolute top-3 left-3 z-10 bg-white/90 backdrop-blur-sm rounded-full shadow-sm p-2 flex items-center justify-center transition-transform hover:scale-110 active:scale-95"
+                title={isSaved ? "Remove from Favourites" : "Save to Favourites"}
+              >
+                <Heart 
+                  className={`h-5 w-5 transition-colors ${isSaved ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} 
+                />
+              </button>
+            )}
+
             <div className="absolute top-3 right-3 md:hidden">
               <ShareButton 
                 productId={product.id} 

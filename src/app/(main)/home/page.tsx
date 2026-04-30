@@ -1,139 +1,83 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/server";
-import { ProductCard } from "@/components/ProductCard";
-import { Profile, ProductWithProfile } from "@/lib/types";
-import CategoryFilter from "@/components/shared/CategoryFilter";
-import SimpleSpinner from "@/components/shared/SimpleSpinner";
-import React, { Suspense } from "react";
+import { Profile, ProductWithProfile, RequestWithProfile } from "@/lib/types";
+import HomeClient from "./HomeClient";
 
-/**
- * Home page (authenticated). Uses dynamic filtering via searchParams.
- * We intentionally defer reading searchParams until after the first awaited
- * call (Supabase user fetch) to satisfy Next.js guidance and avoid the
- * dynamic API usage warning.
- */
-export default async function HomePage(props: {
-  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
-  const searchParams = await props.searchParams;
+export default async function HomePage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/login");
-  }
+  if (!user) redirect("/login");
 
-  // Fetch profile first to get the user's university
+  // Fetch profile (with self-healing)
   const profileRes = await supabase.from("profiles").select("*").eq("id", user.id).single();
   let profile = profileRes.data as Profile | null;
 
-  // 🛡️ SELF-HEALING: If profile is missing (DB failure fallback)
   if (!profile) {
     const userEmail = user.email?.trim().toLowerCase() || "";
     const regNoMatch = userEmail.match(/^(\d+)/);
     const regNo = regNoMatch ? regNoMatch[1] : null;
-    
-    let university = "SASTRA University, Thanjavur"; // Default
+    let university = "SASTRA University, Thanjavur";
     if (regNo) {
       const firstDigit = regNo.charAt(0);
-      if (firstDigit === "1") university = "SASTRA University, Thanjavur";
-      else if (firstDigit === "2") university = "SASTRA University, Kumbakonam";
+      if (firstDigit === "2") university = "SASTRA University, Kumbakonam";
       else if (firstDigit === "3") university = "SASTRA University, Chennai";
     }
-
-    // Attempt to create it on the fly so the user isn't stuck
     const { data: newProfile } = await supabase.from("profiles").upsert({
       id: user.id,
       name: user.user_metadata?.full_name || userEmail.split("@")[0],
-      university: university,
+      university,
       profile_picture_url: user.user_metadata?.avatar_url || "",
       email: userEmail,
       acquisition_source: "google_resilient",
     }).select().single();
-    
     profile = newProfile as Profile | null;
   }
 
-  // Build base query for products, filtering by the user's university using an inner join
-  let productsQuery = supabase
-    .from("products")
-    .select("*, profiles!inner ( university )")
-    .eq("profiles.university", profile?.university || "")
-    .order("created_at", { ascending: false });
-
-  // Safely normalize selected categories
-  let normalizedCategories: string[] | undefined;
-  if (searchParams) {
-    const raw = searchParams["category"]; // could be string | string[] | undefined
-    if (Array.isArray(raw)) {
-      normalizedCategories = raw as string[];
-    } else if (typeof raw === "string" && raw.trim().length > 0) {
-      normalizedCategories = [raw];
-    }
-  }
-
-  if (normalizedCategories && normalizedCategories.length > 0) {
-    productsQuery = productsQuery.in("category", normalizedCategories);
-  }
-
-  // Parallel fetches: filtered products, category list for counts (also filtered by university)
-  const [productsRes, categoryCountsRes] = await Promise.all([
-    productsQuery,
-    supabase.from("products").select("category, profiles!inner ( university )").eq("profiles.university", profile?.university || ""),
+  // Fetch ALL products + profile count + saved items + active requests in parallel
+  const [
+    { data: rawProducts }, 
+    { count: studentCount }, 
+    { data: savedItemsData }, 
+    { data: rawRequests, error: reqError }
+  ] = await Promise.all([
+    supabase
+      .from('products')
+      .select('*, profiles!inner(id, name, university, profile_picture_url)')
+      .eq('profiles.university', profile?.university || '')
+      .order('created_at', { ascending: false }),
+    supabase.from('profiles').select('*', { count: 'exact', head: true }),
+    supabase.from('saved_items').select('product_id').eq('user_id', user.id),
+    supabase
+      .from('requests')
+      .select('*, profiles!inner(id, name, university, profile_picture_url)')
+      .eq('profiles.university', profile?.university || '')
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(8),
   ]);
 
-  let products = (productsRes.data as unknown as ProductWithProfile[]) || [];
-  // Filter out hidden products
-  products = products.filter((p) => !p.is_hidden);
+  let products = ((rawProducts as unknown as ProductWithProfile[]) || [])
+    .filter(p => !(p as any).is_hidden);
 
-  // Derive counts (only iterate once over small projected result set).
-  interface CategoryRow {
-    category: string | null;
+  const savedProductIds = new Set((savedItemsData || []).map(s => s.product_id));
+  
+  if (reqError) {
+    console.error("Error fetching requests:", reqError);
   }
-  const categoryCounts = ((categoryCountsRes.data || []) as CategoryRow[]).reduce(
-    (acc, row) => {
-      if (row.category) acc[row.category] = (acc[row.category] || 0) + 1;
-      return acc;
-    },
-    {} as Record<string, number>
-  );
+  
+  const activeRequests = (rawRequests as unknown as RequestWithProfile[]) || [];
 
   return (
-    <>
-      <main className="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
-        {profile && (
-          <div className="mb-8">
-            <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">
-              Welcome, {profile.name}!
-            </h1>
-            <p className="text-sm text-gray-600">
-              Here are the latest listings from students at{" "}
-              {profile.university || "your university"}.
-            </p>
-          </div>
-        )}
-        <CategoryFilter categoryCounts={categoryCounts} />
-
-        <Suspense fallback={<div className="min-h-[40vh] flex items-center justify-center"><SimpleSpinner size="lg" text="Loading products..." /></div>}>
-          {products.length > 0 ? (
-            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <h2 className="text-2xl font-semibold">No Products Found</h2>
-              <p className="mt-2 text-gray-600">
-                No listings match your current filter. Try selecting different
-                categories.
-              </p>
-            </div>
-          )}
-        </Suspense>
-      </main>
-    </>
+    <main>
+      <HomeClient
+        products={products}
+        university={profile?.university || 'SASTRA University'}
+        studentCount={studentCount ?? 0}
+        initialSavedIds={Array.from(savedProductIds)}
+        activeRequests={activeRequests}
+        currentUserId={user.id}
+      />
+    </main>
   );
 }

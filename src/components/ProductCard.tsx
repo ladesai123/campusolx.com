@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogCancel } from "@/components/ui/alert-dialog";
-import { Edit, Trash2, Tag, Undo2, CalendarClock, Share2 } from 'lucide-react';
+import { Edit, Trash2, Tag, Undo2, CalendarClock, Share2, Eye, Heart } from 'lucide-react';
 import { toggleProductStatus } from '@/app/(main)/profile/actions'; 
 import { SubmitButton } from '@/components/shared/SubmitButton'; 
 import type { ProductWithProfile } from '@/lib/types';
@@ -18,6 +18,8 @@ interface ProductCardProps {
   product: ProductWithProfile;
   showAdminActions?: boolean;
   deleteAction?: (id: number) => Promise<void>;
+  isSaved?: boolean;
+  onToggleSave?: () => void;
 }
 
 // Helper function to format the future availability date nicely (e.g., "Dec 20")
@@ -35,7 +37,7 @@ const calculateDiscount = (price: number | null, mrp: number | null) => {
   return Math.round(discount);
 };
 
-export function ProductCard({ product, showAdminActions = false, deleteAction }: ProductCardProps) {
+export function ProductCard({ product, showAdminActions = false, deleteAction, isSaved, onToggleSave }: ProductCardProps) {
   const discount = calculateDiscount(product.price, product.mrp);
   // Virtualization: Instantly treat expired reservations as 'available'
   const now = new Date();
@@ -98,6 +100,24 @@ export function ProductCard({ product, showAdminActions = false, deleteAction }:
             </div>
           </div>
         </a>
+        
+        {/* Save/Favourite button */}
+        {onToggleSave && (
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onToggleSave();
+            }}
+            className="absolute top-2 right-2 z-20 bg-white/90 backdrop-blur-sm rounded-full shadow-sm p-1.5 flex items-center justify-center transition-transform hover:scale-110 active:scale-95"
+            title={isSaved ? "Remove from Favourites" : "Save to Favourites"}
+          >
+            <Heart 
+              className={`h-4 w-4 transition-colors ${isSaved ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} 
+            />
+          </button>
+        )}
+
         {isReservable && (
           <div className="absolute top-2 left-2 max-w-[90vw] sm:max-w-xs">
             <Badge className="bg-yellow-400 text-black shadow text-xs font-semibold px-2 py-1 whitespace-normal break-words">
@@ -140,6 +160,16 @@ export function ProductCard({ product, showAdminActions = false, deleteAction }:
         {discount && (
           <p className="text-sm font-semibold text-green-600">
             ({discount}% off)
+          </p>
+        )}
+        {/* View count — subtle, only shown when > 0 */}
+        {typeof product.view_count === 'number' && product.view_count > 0 && (
+          <p className="flex items-center gap-1 text-[11px] text-gray-400 mt-1">
+            <Eye className="h-3 w-3" />
+            {product.view_count >= 1000
+              ? `${(product.view_count / 1000).toFixed(1)}k`
+              : product.view_count
+            } views
           </p>
         )}
         {showAdminActions && (

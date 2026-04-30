@@ -206,12 +206,16 @@ export default function SellPage() {
           </span>
         </div>
       )}
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
-        <Card className="w-full max-w-lg">
-          <CardHeader>
-            <CardTitle className="text-2xl font-semibold">List a New Item</CardTitle>
-            <CardDescription>Fill out the details below to sell your item on <BrandName inline />.</CardDescription>
-          </CardHeader>
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 py-8">
+        <div className="w-full max-w-lg">
+          <Link href="/home" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 mb-4 font-medium transition-colors">
+            <ArrowLeft className="h-4 w-4" /> Back to Marketplace
+          </Link>
+          <Card className="w-full">
+            <CardHeader>
+              <CardTitle className="text-2xl font-semibold">List a New Item</CardTitle>
+              <CardDescription>Fill out the details below to sell your item on <BrandName inline />.</CardDescription>
+            </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
               {/* All your form fields (image, title, price, availability, etc.) */}
@@ -530,6 +534,7 @@ export default function SellPage() {
             </form>
           </CardContent>
         </Card>
+        </div>
       </div>
     </>
   );

@@ -10,6 +10,17 @@ export type ProductWithProfile = Database["public"]["Tables"]["products"]["Row"]
   } | null;
   is_negotiable: boolean;
   whatsapp_number: string | null;
+  view_count: number;
+  bumped_at: string | null;
+};
+
+export type RequestWithProfile = Database["public"]["Tables"]["requests"]["Row"] & {
+  profiles: {
+    id: string;
+    name: string;
+    university: string | null;
+    profile_picture_url: string | null;
+  } | null;
 };
 // This file defines the shape of the data used throughout your application.
 
@@ -46,5 +57,7 @@ export type Product = {
     profile_picture_url: string | null;
   } | null;
   is_negotiable: boolean;
+  view_count?: number;
+  bumped_at?: string | null;
 };
 

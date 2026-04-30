@@ -103,11 +103,19 @@ export default async function ProductDetailsPage({ params }: { params: { id: str
     .eq("requester_id", user.id)
     .single();
 
+  const { data: savedItem } = await supabase
+    .from("saved_items")
+    .select("id")
+    .eq("product_id", parseInt(params.id, 10))
+    .eq("user_id", user.id)
+    .maybeSingle();
+
   return (
     <ProductDetailsClient
       user={user}
       product={transformedProduct}
       existingConnection={existingConnection}
+      initialIsSaved={!!savedItem}
     />
   );
 }

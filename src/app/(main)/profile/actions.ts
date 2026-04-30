@@ -207,3 +207,43 @@ export async function deleteProduct(productId: number) {
   revalidatePath("/profile");
   revalidatePath("/chat");
 }
+
+// This action bumps a product to the top of the feed (18hr cooldown)
+export async function bumpProductAction(productId: number) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { data: product } = await supabase
+    .from("products")
+    .select("bumped_at")
+    .eq("id", productId)
+    .eq("seller_id", user.id)
+    .single();
+
+  if (!product) throw new Error("Product not found");
+
+  const p = product as any;
+  if (p.bumped_at) {
+    const bumpedDate = new Date(p.bumped_at);
+    const now = new Date();
+    const hoursSinceBump = (now.getTime() - bumpedDate.getTime()) / (1000 * 60 * 60);
+    if (hoursSinceBump < 18) {
+      throw new Error(`Cannot bump yet. Try again in ${Math.ceil(18 - hoursSinceBump)} hours.`);
+    }
+  }
+
+  const { error } = await supabase
+    .from("products")
+    .update({ bumped_at: new Date().toISOString() } as any)
+    .eq("id", productId)
+    .eq("seller_id", user.id);
+
+  if (error) console.error("Error bumping product:", error);
+  revalidatePath("/profile");
+  revalidatePath("/home");
+  
+  return { success: !error };
+}
