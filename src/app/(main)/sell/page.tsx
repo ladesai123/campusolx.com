@@ -41,6 +41,7 @@ export default function SellPage() {
   const [price, setPrice] = useState('');
   const [mrp, setMrp] = useState('');
   const [priceError, setPriceError] = useState<string | null>(null);
+  const [whatsappNumber, setWhatsappNumber] = useState('');
   const router = useRouter();
 
   // --- All your existing functions (handleFileChange, generateTitleAndDescription, handleSubmit) remain the same ---
@@ -324,7 +325,7 @@ export default function SellPage() {
                     id="title"
                     name="title"
                     type="text"
-                    placeholder={aiError ? "Please write yourself..." : "AI will generate this..."}
+                    placeholder="e.g. HP Laptop 15s, OnePlus Buds Z2..."
                     required
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
@@ -346,7 +347,7 @@ export default function SellPage() {
                     {isAiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                   </Button>
                 </div>
-                <span className="text-xs text-gray-500 mt-1">Click <span className="inline-block align-middle"><Sparkles className="h-4 w-4 inline" /></span> to generate title, description, and category using AI.</span>
+
               </div>
 
               <div className="grid w-full items-center gap-1.5">
@@ -354,7 +355,7 @@ export default function SellPage() {
                 <Textarea
                   id="description"
                   name="description"
-                  placeholder={aiError ? "Please write yourself" : "AI will generate this..."}
+                  placeholder="Describe the condition — e.g. Like new, used for 6 months. Screen has no scratches. Charger included. Working perfectly fine."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                 />
@@ -428,6 +429,26 @@ export default function SellPage() {
             <p className="text-xs text-slate-500 mt-1">Defaulting to "Yes" is a good strategy to attract more buyers!</p>
           </div>
 
+
+              {/* Step 4.7: WhatsApp Contact Number */}
+              <div className="grid w-full items-center gap-2.5 rounded-lg border p-4">
+                <Label className="font-semibold" htmlFor="whatsapp_number">
+                  📱 Share your WhatsApp number?{' '}
+                  <span className="text-slate-400 font-normal text-xs">(Optional)</span>
+                </Label>
+                <Input
+                  id="whatsapp_number"
+                  name="whatsapp_number"
+                  type="tel"
+                  placeholder="e.g. 8978725681"
+                  value={whatsappNumber}
+                  onChange={(e) => setWhatsappNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  maxLength={10}
+                />
+                <p className="text-xs text-slate-500">
+                  Buyers can reach you directly on WhatsApp — no waiting on notifications. Keeping your number can help your item sell faster! 🚀 You can always edit or remove it from your listing later.
+                </p>
+              </div>
 
               {/* Step 5: Availability */}
               <div className="grid w-full items-center gap-2.5 rounded-lg border p-4">

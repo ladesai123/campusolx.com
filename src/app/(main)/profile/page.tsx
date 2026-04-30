@@ -27,7 +27,7 @@ export type ConnectionWithPreview = {
   id: number;
   status: string | null;
   created_at: string; // Keep this as string, we will provide a fallback
-  product: { id: number; title: string | null } | null;
+  product: { id: number; title: string | null; image_urls: string[] | null } | null;
   requester: Profile | null;
   seller: Profile | null;
   latestMessage: MessagePreview | null;
@@ -67,7 +67,7 @@ export default async function ProfilePage() {
       id,
       status,
       created_at,
-      product:products!inner(id, title),
+      product:products!inner(id, title, image_urls),
       requester:profiles!connections_requester_id_fkey(*),
       seller:profiles!connections_seller_id_fkey(*)
     `,

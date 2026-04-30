@@ -26,6 +26,10 @@ export async function sellItemAction(formData: FormData) {
   const availability = formData.get('availability') as string; // Will be 'now' or 'future'
   const availableDate = formData.get('available_date') as string; // The date string if 'future'
   const isNegotiable = formData.get('is_negotiable') === 'true'; // Convert radio value to boolean
+  // Sanitize: keep only digits, validate 10-digit Indian mobile number
+  const rawPhone = (formData.get('whatsapp_number') as string | null) ?? '';
+  const digitsOnly = rawPhone.replace(/\D/g, '');
+  const whatsappNumber = digitsOnly.length === 10 ? digitsOnly : null;
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -93,6 +97,7 @@ export async function sellItemAction(formData: FormData) {
     status: itemStatus,             // <-- Using our new dynamic status
     available_from: availableFromValue, // <-- Using our new date value
     is_negotiable: isNegotiable,     // <-- Save the negotiable status
+    whatsapp_number: whatsappNumber, // <-- Optional direct contact number
   }).select('id, title').single();
 
   if (insertError) {

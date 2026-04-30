@@ -36,6 +36,7 @@ export default function EditProductForm({ product }: { product: any }) {
   const [price, setPrice] = useState(product.price?.toString() || '');
   const [mrp, setMrp] = useState(product.mrp?.toString() || '');
   const [priceError, setPriceError] = useState<string | null>(null);
+  const [whatsappNumber, setWhatsappNumber] = useState(product.whatsapp_number || '');
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
 
@@ -209,6 +210,37 @@ export default function EditProductForm({ product }: { product: any }) {
                   <div className="flex items-center space-x-2"><RadioGroupItem value="true" id="negotiable-yes" /><Label htmlFor="negotiable-yes">Yes, negotiable</Label></div>
                   <div className="flex items-center space-x-2"><RadioGroupItem value="false" id="negotiable-no" /><Label htmlFor="negotiable-no">No, fixed price</Label></div>
               </RadioGroup>
+            </div>
+            {/* WhatsApp Number Field */}
+            <div className="grid w-full items-center gap-2.5 rounded-lg border p-4">
+              <Label className="font-semibold" htmlFor="whatsapp_number">
+                📱 WhatsApp Number{' '}
+                <span className="text-slate-400 font-normal text-xs">(Optional)</span>
+              </Label>
+              <div className="flex gap-2">
+                <Input
+                  id="whatsapp_number"
+                  name="whatsapp_number"
+                  type="tel"
+                  placeholder="e.g. 8978725681"
+                  value={whatsappNumber}
+                  onChange={(e) => setWhatsappNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  maxLength={10}
+                />
+                {whatsappNumber && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="shrink-0 text-red-500 hover:text-red-700 hover:border-red-300"
+                    onClick={() => setWhatsappNumber('')}
+                  >
+                    Remove
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-slate-500">
+                Buyers can reach you directly on WhatsApp. You can add, update, or remove this anytime.
+              </p>
             </div>
             <p className="text-xs text-slate-500">Note: Image editing is not yet supported.</p>
             <div className="flex justify-end gap-2 mt-2">

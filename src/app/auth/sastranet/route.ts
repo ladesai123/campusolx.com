@@ -29,229 +29,212 @@ function base64urlDecode(input: string): string {
   return Buffer.from(padded, 'base64').toString('utf8')
 }
 
+function deriveUniversity(regNo: string): string {
+  const firstDigit = regNo.charAt(0)
+  if (firstDigit === '2') return 'SASTRA University, Kumbakonam'
+  if (firstDigit === '3') return 'SASTRA University, Chennai'
+  return 'SASTRA University, Thanjavur'
+}
+
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
   const origin = requestUrl.origin
 
-  const token = requestUrl.searchParams.get('token')
-  if (!token) {
-    return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent('SSO link is missing. Please try again.')}`
-    )
-  }
-
-  const secret = process.env.SASTRANET_SSO_SECRET
-  if (!secret) {
-    console.error('[SSO] SASTRANET_SSO_SECRET is not configured')
-    return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent('SSO is not configured. Please contact support.')}`
-    )
-  }
-
-  const parts = token.split('.')
-  if (parts.length !== 3) {
-    return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent('Invalid SSO link. Please try again.')}`
-    )
-  }
-
-  const [headerB64, payloadB64, sigB64] = parts
-
-  const expectedSig = createHmac('sha256', secret)
-    .update(`${headerB64}.${payloadB64}`)
-    .digest('base64url')
-
-  let sigMatch = false
   try {
-    const expectedBuf = Buffer.from(expectedSig)
-    const receivedBuf = Buffer.from(sigB64)
-    if (expectedBuf.length === receivedBuf.length) {
-      sigMatch = timingSafeEqual(expectedBuf, receivedBuf)
+    // ─────────────────────────────────────────────────────────────
+    // STAGE 1 — Initial Validation
+    // ─────────────────────────────────────────────────────────────
+    const token = requestUrl.searchParams.get('token')
+    if (!token) {
+      return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent('SSO link is missing. Please try again.')}`)
     }
-  } catch {
-    sigMatch = false
-  }
 
-  if (!sigMatch) {
-    console.warn('[SSO] Signature mismatch')
-    return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent('Invalid SSO link. Please try again.')}`
+    const secret = process.env.SASTRANET_SSO_SECRET
+    if (!secret) {
+      console.error('[SSO] SASTRANET_SSO_SECRET is not configured')
+      return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent('SSO is not configured. Please contact support.')}`)
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // STAGE 2 — JWT Verification
+    // ─────────────────────────────────────────────────────────────
+    const parts = token.split('.')
+    if (parts.length !== 3) {
+      return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent('Invalid SSO link. Please try again.')}`)
+    }
+
+    const [headerB64, payloadB64, sigB64] = parts
+    const expectedSig = createHmac('sha256', secret)
+      .update(`${headerB64}.${payloadB64}`)
+      .digest('base64url')
+
+    let sigMatch = false
+    try {
+      const expectedBuf = Buffer.from(expectedSig)
+      const receivedBuf = Buffer.from(sigB64)
+      if (expectedBuf.length === receivedBuf.length) {
+        sigMatch = timingSafeEqual(expectedBuf, receivedBuf)
+      }
+    } catch {
+      sigMatch = false
+    }
+
+    if (!sigMatch) {
+      console.warn('[SSO] Signature mismatch')
+      return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent('Invalid SSO link. Please try again.')}`)
+    }
+
+    let payload: SastranetSSOPayload
+    try {
+      payload = JSON.parse(base64urlDecode(payloadB64)) as SastranetSSOPayload
+    } catch {
+      return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent('Invalid SSO link. Please try again.')}`)
+    }
+
+    const now = Math.floor(Date.now() / 1000)
+    if (!payload.exp || payload.exp < now) {
+      return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent('This link has expired. Please try again.')}`)
+    }
+
+    if (!payload.reg_no || !payload.name || !payload.jti) {
+      return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent('Invalid SSO link. Please try again.')}`)
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // STAGE 3 — Early Session Check (Resilience)
+    // ─────────────────────────────────────────────────────────────
+    const cookieStore = await cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() { return cookieStore.getAll() },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set({ name, value, ...options, maxAge: 30 * 24 * 60 * 60, path: '/', sameSite: 'lax', secure: process.env.NODE_ENV === 'production' })
+            })
+          },
+        },
+      }
     )
-  }
 
-  let payload: SastranetSSOPayload
-  try {
-    payload = JSON.parse(base64urlDecode(payloadB64)) as SastranetSSOPayload
-  } catch {
-    return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent('Invalid SSO link. Please try again.')}`
+    const { data: { user: activeUser } } = await supabase.auth.getUser()
+    if (activeUser) {
+      console.log('[SSO] User already has active session. Redirecting to /home.')
+      return NextResponse.redirect(new URL('/home', origin))
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // STAGE 4 — Admin Work (Lookup & Registration)
+    // ─────────────────────────────────────────────────────────────
+    const adminClient = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { cookies: { getAll: () => [], setAll: () => {} } }
     )
-  }
 
-  const now = Math.floor(Date.now() / 1000)
-  if (!payload.exp || payload.exp < now) {
-    return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent('This link has expired. Please try again.')}`
-    )
-  }
+    // JTI Replay Protection
+    const { data: existingJti } = await adminClient.from('sso_used_tokens').select('jti').eq('jti', payload.jti).maybeSingle()
+    if (existingJti) {
+      return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent('This link was already used. Please try again.')}`)
+    }
+    await adminClient.from('sso_used_tokens').insert({ jti: payload.jti })
 
-  if (!payload.reg_no || !payload.name || !payload.jti) {
-    return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent('Invalid SSO link. Please try again.')}`
-    )
-  }
+    // Derive identity (reg_no used ONLY for derivation)
+    const normalizedEmail = payload.email
+      ? payload.email.trim().toLowerCase()
+      : `${payload.reg_no.trim().toLowerCase()}@sastra.ac.in`
 
-  const adminClient = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { cookies: { getAll: () => [], setAll: () => {} } }
-  )
+    const university = deriveUniversity(payload.reg_no)
 
-  const { data: existingJti } = await adminClient
-    .from('sso_used_tokens')
-    .select('jti')
-    .eq('jti', payload.jti)
-    .maybeSingle()
+    let targetUserId: string
 
-  if (existingJti) {
-    return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent('This link was already used. Please try again.')}`
-    )
-  }
+    // Probe for user (Scalable method)
+    const { data: created, error: createError } = await adminClient.auth.admin.createUser({
+      email: normalizedEmail,
+      email_confirm: true,
+      user_metadata: { full_name: payload.name, avatar_url: payload.profile_picture_url || null, provider: 'sastranet_sso' },
+    })
 
-  const { error: jtiInsertError } = await adminClient
-    .from('sso_used_tokens')
-    .insert({ jti: payload.jti })
-
-  if (jtiInsertError) {
-    console.error('[SSO] Failed to record jti:', jtiInsertError.message)
-    return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent('SSO error. Please try again.')}`
-    )
-  }
-
-  const normalizedEmail = payload.email
-    ? payload.email.trim().toLowerCase()
-    : `${payload.reg_no.trim()}@sastra.ac.in`
-
-  let newUserId: string | undefined
-
-  const { data: created, error: createError } = await adminClient.auth.admin.createUser({
-    email: normalizedEmail,
-    email_confirm: true,
-    user_metadata: {
-      full_name: payload.name,
-      avatar_url: payload.profile_picture_url || null,
-      provider: 'sastranet_sso',
-    },
-  })
-
-  if (created?.user) {
-    newUserId = created.user.id
-    console.log('[SSO] New user created:', newUserId)
-
-    // Derive University from reg_no
-    const firstDigit = payload.reg_no.charAt(0);
-    let university = 'SASTRA University, Thanjavur';
-    if (firstDigit === '1') university = 'SASTRA University, Thanjavur';
-    else if (firstDigit === '2') university = 'SASTRA University, Kumbakonam';
-    else if (firstDigit === '3') university = 'SASTRA University, Chennai';
-
-    const { error: profileError } = await adminClient
-      .from('profiles')
-      .insert({
-        id: newUserId,
+    if (created?.user) {
+      targetUserId = created.user.id
+      console.log('[SSO] New user created:', targetUserId)
+      
+      const { error: profileError } = await adminClient.from('profiles').insert({
+        id: targetUserId,
         name: payload.name,
+        email: normalizedEmail,
         university,
         profile_picture_url: payload.profile_picture_url || null,
-        email: normalizedEmail,
         acquisition_source: 'sastranet',
       })
 
-    if (profileError) {
-      console.error('[SSO] Profile insert failed:', profileError.message)
-      await adminClient.auth.admin.deleteUser(newUserId)
-      return NextResponse.redirect(
-        `${origin}/login?error=${encodeURIComponent('Could not set up your profile. Please try again.')}`
-      )
+      if (profileError) {
+        console.error('[SSO] Profile insert failed:', profileError.message)
+        await adminClient.auth.admin.deleteUser(targetUserId)
+        return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent('Could not set up your profile. Please try again.')}`)
+      }
+    } else if (createError?.message?.toLowerCase().includes('already') || createError?.message?.toLowerCase().includes('exists')) {
+      // User exists — find them by email in the profiles table (Scalable)
+      const { data: existingProfile, error: profileFetchError } = await adminClient
+        .from('profiles')
+        .select('id')
+        .eq('email', normalizedEmail)
+        .maybeSingle()
+      
+      if (profileFetchError || !existingProfile) {
+        console.error('[SSO] User exists in Auth but no profile found or query failed:', profileFetchError?.message)
+        return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent('Account sync error. Please contact support.')}`)
+      }
+      targetUserId = existingProfile.id
+      console.log('[SSO] Existing user identified via profile lookup:', targetUserId)
+    } else {
+      console.error('[SSO] createUser failed:', createError?.message)
+      return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent('Could not create your account. Please contact support.')}`)
     }
-  } else if (
-    createError?.message?.toLowerCase().includes('already') ||
-    createError?.message?.toLowerCase().includes('registered') ||
-    createError?.message?.toLowerCase().includes('exists')
-  ) {
-    console.log('[SSO] Existing user detected for:', normalizedEmail)
 
-    // Ensure university is up-to-date even for existing users
-    const firstDigit = payload.reg_no.charAt(0);
-    let university = 'SASTRA University, Thanjavur';
-    if (firstDigit === '1') university = 'SASTRA University, Thanjavur';
-    else if (firstDigit === '2') university = 'SASTRA University, Kumbakonam';
-    else if (firstDigit === '3') university = 'SASTRA University, Chennai';
+    // ─────────────────────────────────────────────────────────────
+    // STAGE 5 — Session Creation (with Retry Resilience)
+    // ─────────────────────────────────────────────────────────────
+    const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
+      type: 'magiclink',
+      email: normalizedEmail,
+      options: { redirectTo: `${origin}/home` },
+    })
 
-    await adminClient
-      .from('profiles')
-      .update({ university })
-      .eq('email', normalizedEmail);
-  } else {
-    console.error('[SSO] createUser failed:', createError?.message)
-    return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent('Could not create your account. Please contact support.')}`
-    )
-  }
-
-  const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
-    type: 'magiclink',
-    email: normalizedEmail,
-    options: { redirectTo: `${origin}/home` },
-  })
-
-  if (linkError || !linkData?.properties?.hashed_token) {
-    console.error('[SSO] generateLink failed:', linkError?.message)
-    return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent('Could not generate login token. Please try again.')}`
-    )
-  }
-
-  const cookieStore = await cookies()
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set({
-              name,
-              value,
-              ...options,
-              maxAge: 30 * 24 * 60 * 60,
-              path: '/',
-              sameSite: 'lax',
-              secure: process.env.NODE_ENV === 'production',
-            })
-          })
-        },
-      },
+    if (linkError || !linkData?.properties?.hashed_token) {
+      console.error('[SSO] generateLink failed:', linkError?.message)
+      return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent('Could not generate login token. Please try again.')}`)
     }
-  )
 
-  const { error: otpError } = await supabase.auth.verifyOtp({
-    token_hash: linkData.properties.hashed_token,
-    type: 'magiclink',
-  })
+    let otpError;
+    const MAX_RETRIES = 2;
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      const { error } = await supabase.auth.verifyOtp({
+        token_hash: linkData.properties.hashed_token,
+        type: 'magiclink',
+      })
+      if (!error) {
+        console.log(`[SSO] Session established for: ${targetUserId} (Attempt ${attempt})`)
+        return NextResponse.redirect(new URL('/home', origin))
+      }
+      otpError = error;
+      console.warn(`[SSO] verifyOtp attempt ${attempt} failed:`, error.message)
+      if (attempt < MAX_RETRIES) await new Promise(resolve => setTimeout(resolve, 800))
+    }
 
-  if (otpError) {
-    console.error('[SSO] verifyOtp failed:', otpError.message)
-    return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent('Could not establish your session. Please try again.')}`
-    )
+    if (otpError) {
+      console.error('[SSO] All verifyOtp attempts failed:', otpError.message)
+      return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent('Could not establish your session. Please try again.')}`)
+    }
+
+    return NextResponse.redirect(new URL('/home', origin))
+
+  } catch (err: any) {
+    console.error('[SSO] Unhandled global error:', err)
+    return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent('An unexpected error occurred. Please try again.')}`)
   }
-
-  console.log('[SSO] Session established for:', newUserId ?? normalizedEmail)
-  return NextResponse.redirect(new URL('/home', origin))
 }
+
+

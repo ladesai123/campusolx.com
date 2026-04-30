@@ -27,6 +27,10 @@ export async function updateProductAction(formData: FormData) {
   }
 
   const isNegotiable = formData.get("is_negotiable") === "true";
+  // Sanitize: digits only, must be 10-digit; empty string clears the number
+  const rawPhone = (formData.get("whatsapp_number") as string | null) ?? '';
+  const digitsOnly = rawPhone.replace(/\D/g, '');
+  const whatsappNumber = digitsOnly.length === 10 ? digitsOnly : null;
 
   const supabase = await createClient();
   const {
@@ -48,6 +52,7 @@ export async function updateProductAction(formData: FormData) {
     status,
     available_from: availability === "future" ? available_from : null,
     is_negotiable: isNegotiable,
+    whatsapp_number: whatsappNumber,
   };
 
   const { error } = await supabase

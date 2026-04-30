@@ -9,6 +9,7 @@ export type ProductWithProfile = Database["public"]["Tables"]["products"]["Row"]
     profile_picture_url: string | null;
   } | null;
   is_negotiable: boolean;
+  whatsapp_number: string | null;
 };
 // This file defines the shape of the data used throughout your application.
 
