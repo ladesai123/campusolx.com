@@ -438,10 +438,12 @@ export default function SellPage() {
 
 
               {/* Step 4.7: WhatsApp Contact Number */}
-              <div className="grid w-full items-center gap-2.5 rounded-lg border p-4">
-                <Label className="font-semibold" htmlFor="whatsapp_number">
-                  📱 Share your WhatsApp number?{' '}
-                  <span className="text-slate-400 font-normal text-xs">(Optional)</span>
+              <div className="grid w-full items-center gap-2.5 rounded-lg border p-4 bg-slate-50/50">
+                <Label className="font-semibold flex items-center flex-wrap gap-2" htmlFor="whatsapp_number">
+                  📱 WhatsApp Contact
+                  <span className="text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full border border-green-200 uppercase tracking-tight animate-pulse flex items-center gap-1">
+                    ⚡ Fast Sale Mode
+                  </span>
                 </Label>
                 <Input
                   id="whatsapp_number"
@@ -451,9 +453,11 @@ export default function SellPage() {
                   value={whatsappNumber}
                   onChange={(e) => setWhatsappNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
                   maxLength={10}
+                  className="bg-white"
                 />
-                <p className="text-xs text-slate-500">
-                  Buyers can reach you directly on WhatsApp — no waiting on notifications. Keeping your number can help your item sell faster! 🚀 You can always edit or remove it from your listing later.
+                <p className="text-[11px] text-slate-600 leading-relaxed">
+                  <span className="font-semibold text-green-700">Recommended:</span> Items with WhatsApp sell <span className="font-bold underline text-green-700">10x faster</span>. 
+                  Buyers reach you instantly, and your number is only shown to verified students.
                 </p>
               </div>
 
