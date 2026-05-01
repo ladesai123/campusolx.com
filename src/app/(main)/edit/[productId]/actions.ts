@@ -11,7 +11,8 @@ export async function updateProductAction(formData: FormData) {
   const title = formData.get("title") as string;
   const description = formData.get("description") as string;
   const price = parseInt(formData.get("price") as string, 10);
-  const mrp = formData.get("mrp") ? parseInt(formData.get("mrp") as string, 10) : null;
+  const mrpStr = formData.get("mrp") as string;
+  const mrp = mrpStr ? parseInt(mrpStr, 10) : null;
   const category = formData.get("category") as string;
   const availability = formData.get("availability") as string | null;
   let available_from: string | null = null;
@@ -40,6 +41,11 @@ export async function updateProductAction(formData: FormData) {
   // Security check: Ensure a user is logged in.
   if (!user) {
     throw new Error("You must be authenticated to edit a product.");
+  }
+
+  // MRP VALIDATION: Ensure MRP is provided
+  if (!mrp || isNaN(mrp)) {
+    throw new Error("Original MRP is required.");
   }
 
   // 2. Perform the database update operation.

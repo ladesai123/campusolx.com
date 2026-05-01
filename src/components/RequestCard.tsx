@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Eye, Handshake } from 'lucide-react';
 import type { RequestWithProfile } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useRouter } from 'next/navigation';
+import AppLoader from '@/components/shared/AppLoader';
 
 interface RequestCardProps {
   request: RequestWithProfile;
@@ -11,6 +13,8 @@ interface RequestCardProps {
 
 export function RequestCard({ request, currentUserId, compact = false }: RequestCardProps) {
   const isOwner = currentUserId === request.user_id;
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const whatsappUrl = request.whatsapp_number
     ? `https://wa.me/91${request.whatsapp_number}?text=${encodeURIComponent(
@@ -18,8 +22,24 @@ export function RequestCard({ request, currentUserId, compact = false }: Request
       )}`
     : null;
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Prevent redirect if clicking the "I have this" button
+    if ((e.target as HTMLElement).closest('a')) return;
+    
+    setLoading(true);
+    router.push('/requests');
+  };
+
   return (
-    <div className={`bg-white rounded-xl border border-blue-100 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden flex flex-col h-full ${compact ? 'p-3' : 'p-4'}`}>
+    <div 
+      onClick={handleCardClick}
+      className={`bg-white rounded-xl border border-blue-100 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden flex flex-col h-full cursor-pointer ${compact ? 'p-3' : 'p-4'}`}
+    >
+      {loading && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/80">
+          <AppLoader />
+        </div>
+      )}
       <div className="absolute top-0 right-0 w-16 h-16 bg-blue-50 rounded-bl-full pointer-events-none" />
       
       <div className={`flex justify-between items-start ${compact ? 'mb-1.5' : 'mb-2'} relative z-10`}>

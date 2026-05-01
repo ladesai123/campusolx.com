@@ -18,7 +18,8 @@ export async function sellItemAction(formData: FormData) {
   const title = formData.get('title') as string;
   const description = formData.get('description') as string;
   const price = parseInt(formData.get('price') as string, 10);
-  const mrp = formData.get('mrp') ? parseInt(formData.get('mrp') as string, 10) : null;
+  const mrpStr = formData.get('mrp') as string;
+  const mrp = mrpStr ? parseInt(mrpStr, 10) : null;
   const category = formData.get('category') as string;
   const images = formData.getAll('images') as File[];
   
@@ -83,6 +84,11 @@ export async function sellItemAction(formData: FormData) {
   // --- IMAGE VALIDATION: Ensure at least one image was uploaded ---
   if (!imageUrls.length) {
     return { success: false, error: 'At least one image is required to list a product. Please upload a valid image.' };
+  }
+
+  // --- MRP VALIDATION: Ensure MRP is provided ---
+  if (!mrp || isNaN(mrp)) {
+    return { success: false, error: 'Original MRP is required.' };
   }
 
   // --- 4. UPGRADED: Insert product data with the new dynamic fields ---

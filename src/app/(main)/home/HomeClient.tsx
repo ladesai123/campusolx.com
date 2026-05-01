@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { ProductCard } from '@/components/ProductCard';
 import { RequestCard } from '@/components/RequestCard';
 import type { ProductWithProfile, RequestWithProfile } from '@/lib/types';
 import Link from 'next/link';
 import {
   MapPin, LayoutGrid, Laptop, BookOpen, BedDouble,
-  Bike, Shirt, FlaskConical, Trophy, Package, PlusCircle, ShoppingBag, ArrowRight,
+  Bike, Shirt, FlaskConical, Trophy, Package, PlusCircle, ShoppingBag, ArrowRight, Loader2,
 } from 'lucide-react';
 
 // ─── Category config — B&W Lucide icons ──────────────────────────────────────
@@ -49,6 +50,9 @@ export default function HomeClient({ products, university, studentCount, initial
   const [activeCategory, setActiveCategory] = useState('All');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [savedIds, setSavedIds] = useState<Set<number>>(() => new Set(initialSavedIds));
+  const [navigatingToRequests, setNavigatingToRequests] = useState(false);
+  const [navigatingToSell, setNavigatingToSell] = useState(false);
+  const router = useRouter();
   const loaderRef = useRef<HTMLDivElement>(null);
   
   // ── View count logic for products ──
@@ -227,13 +231,14 @@ export default function HomeClient({ products, university, studentCount, initial
           <p className="text-[17px] font-semibold text-white leading-snug mb-3">
             Got something to sell?<br />List it. Get paid.
           </p>
-          <Link
-            href="/sell"
-            className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-blue-700 shadow-sm transition hover:bg-blue-50 active:scale-95"
+          <button
+            onClick={(e) => { e.preventDefault(); setNavigatingToSell(true); router.push('/sell'); }}
+            disabled={navigatingToSell}
+            className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-blue-700 shadow-sm transition hover:bg-blue-50 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            <PlusCircle className="h-3.5 w-3.5" />
-            Sell Item
-          </Link>
+            {navigatingToSell ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <PlusCircle className="h-3.5 w-3.5" />}
+            {navigatingToSell ? 'Loading...' : 'Sell Item'}
+          </button>
         </div>
       </div>
 
@@ -247,9 +252,16 @@ export default function HomeClient({ products, university, studentCount, initial
               </h2>
               <p className="text-[11px] text-gray-500">Fellow students are looking for these</p>
             </div>
-            <Link href="/requests" className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-0.5">
-              See all <ArrowRight className="h-3 w-3" />
-            </Link>
+            <button 
+              onClick={(e) => { e.preventDefault(); setNavigatingToRequests(true); router.push('/requests'); }}
+              className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-0.5"
+            >
+              {navigatingToRequests ? (
+                <><Loader2 className="h-3 w-3 animate-spin" /> Loading</>
+              ) : (
+                <>See all <ArrowRight className="h-3 w-3" /></>
+              )}
+            </button>
           </div>
           
           {activeRequests && activeRequests.length > 0 ? (
@@ -265,23 +277,36 @@ export default function HomeClient({ products, university, studentCount, initial
                 </div>
               ))}
               {/* Final "Post a Request" CTA Card */}
-              <div className="w-[160px] snap-start flex-shrink-0 flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50/50 rounded-xl border border-dashed border-blue-200 hover:border-blue-300 hover:bg-blue-50/80 transition-all group">
-                <Link href="/requests" className="flex flex-col items-center justify-center h-full w-full p-4 text-center">
+              <div 
+                onClick={(e) => { e.preventDefault(); setNavigatingToRequests(true); router.push('/requests'); }}
+                className="w-[160px] snap-start flex-shrink-0 flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50/50 rounded-xl border border-dashed border-blue-200 hover:border-blue-300 hover:bg-blue-50/80 transition-all group cursor-pointer relative overflow-hidden"
+              >
+                <div className="flex flex-col items-center justify-center h-full w-full p-4 text-center">
                   <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                    <PlusCircle className="h-5 w-5 text-blue-600" />
+                    {navigatingToRequests ? (
+                      <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />
+                    ) : (
+                      <PlusCircle className="h-5 w-5 text-blue-600" />
+                    )}
                   </div>
                   <span className="text-[11px] font-medium text-gray-500 mb-1">Looking for something?</span>
-                  <span className="text-sm font-bold text-blue-700">Post a Request</span>
-                </Link>
+                  <span className="text-sm font-bold text-blue-700">
+                    {navigatingToRequests ? 'Loading...' : 'Post a Request'}
+                  </span>
+                </div>
               </div>
             </div>
           ) : (
             <div className="bg-white rounded-xl border border-blue-100 p-6 text-center">
               <p className="text-sm text-gray-600 mb-3">No one is looking for anything right now.</p>
-              <Link href="/requests" className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700">
-                <PlusCircle className="h-3.5 w-3.5" />
-                Post a Request
-              </Link>
+              <button 
+                onClick={(e) => { e.preventDefault(); setNavigatingToRequests(true); router.push('/requests'); }}
+                className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed"
+                disabled={navigatingToRequests}
+              >
+                {navigatingToRequests ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <PlusCircle className="h-3.5 w-3.5" />}
+                {navigatingToRequests ? 'Loading...' : 'Post a Request'}
+              </button>
             </div>
           )}
         </div>

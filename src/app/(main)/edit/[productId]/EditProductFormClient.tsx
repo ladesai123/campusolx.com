@@ -145,6 +145,7 @@ export default function EditProductForm({ product }: { product: any }) {
                   required
                   className={priceError ? 'border-red-500' : ''}
                 />
+                <p className="text-[10px] text-gray-500">A reasonable price sells faster!</p>
                 {priceError && (
                   <span className="text-xs text-red-500 flex items-center gap-1">
                     <AlertCircle className="w-3 h-3" />
@@ -153,14 +154,16 @@ export default function EditProductForm({ product }: { product: any }) {
                 )}
               </div>
               <div className="grid w-full items-center gap-1.5">
-                <Label htmlFor="mrp">MRP (Optional)</Label>
+                <Label htmlFor="mrp">Original MRP (₹)</Label>
                 <Input 
                   id="mrp" 
                   name="mrp" 
                   type="number" 
                   value={mrp}
                   onChange={handleMrpChange}
+                  required
                 />
+                <p className="text-[10px] text-gray-500">Buyers love seeing the discount they get!</p>
               </div>
             </div>
 
