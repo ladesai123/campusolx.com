@@ -30,10 +30,9 @@ export type ProductStatus = 'available' | 'sold' | 'pending_reservation' | 'rese
 // Defines the structure of a user's profile information.
 export type Profile = {
   id: string;
+  created_at: string | null;
   name: string;
   university: string;
-  // --- THIS IS THE FIX (Part 1) ---
-  // We are adding the profile picture URL to the main Profile type.
   profile_picture_url: string | null;
 };
 

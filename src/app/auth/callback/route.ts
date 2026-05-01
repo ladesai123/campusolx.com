@@ -100,6 +100,7 @@ export async function GET(request: Request) {
     university: university,
     profile_picture_url: user.user_metadata?.avatar_url || "",
     email: userEmail,
+    created_at: user.created_at,
     acquisition_source: "google",
   });
 

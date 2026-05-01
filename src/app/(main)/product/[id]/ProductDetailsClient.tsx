@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import SimpleSpinner from "@/components/shared/SimpleSpinner";
+import { ProductCard } from "@/components/ProductCard";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -51,6 +52,7 @@ interface ProductDetailsClientProps {
   product: Product | null;
   existingConnection: { id: number; status: string } | null;
   initialIsSaved?: boolean;
+  similarProducts?: any[]; // using any to avoid circular type issues or redefine
 }
 
 // Helper functions (these can be moved to a utils file if you prefer)
@@ -76,6 +78,7 @@ export default function ProductDetailsClient({
   product,
   existingConnection,
   initialIsSaved,
+  similarProducts = [],
 }: ProductDetailsClientProps) {
   const router = useRouter();
   const [showReserveTip, setShowReserveTip] = useState(false);
@@ -459,25 +462,24 @@ export default function ProductDetailsClient({
                 </div>
               )}
 
-              {/*
-              Seller Information
-              <div className="mt-6 flex items-center gap-4 rounded-lg border p-4">
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src={product.profiles?.profile_picture_url || ""} />
-                  <AvatarFallback>
-                    {product.profiles?.name?.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-semibold text-gray-800">{product.profiles?.name}</p>
-                  <p className="text-sm text-gray-500">{product.profiles?.university}</p>
-
-                </div>
-              </div>
-              */}
+              {/* Seller Information (Commented Out) */}
             </div>
           </div>
         </div>
+
+        {/* Similar Items Section */}
+        {similarProducts && similarProducts.length > 0 && (
+          <div className="mt-12 mb-8">
+            <h2 className="text-xl font-bold text-slate-900 mb-4 px-2">Similar Items You Might Like</h2>
+            <div className="flex overflow-x-auto pb-6 gap-4 snap-x hide-scrollbar px-2">
+              {similarProducts.map((simProduct) => (
+                <div key={simProduct.id} className="w-[280px] sm:w-[320px] snap-start flex-shrink-0">
+                  <ProductCard product={simProduct} />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

@@ -110,12 +110,26 @@ export default async function ProductDetailsPage({ params }: { params: { id: str
     .eq("user_id", user.id)
     .maybeSingle();
 
+  const { data: similarProductsData } = await supabase
+    .from("products")
+    .select(`*, profiles ( id, name, university, profile_picture_url )`)
+    .eq("category", transformedProduct.category || "")
+    .neq("id", transformedProduct.id)
+    .eq("status", "available")
+    .limit(4);
+
+  const similarProducts = (similarProductsData || []).map(p => ({
+    ...p,
+    profiles: Array.isArray(p.profiles) ? p.profiles[0] : p.profiles
+  })) as unknown as ProductWithProfile[];
+
   return (
     <ProductDetailsClient
       user={user}
       product={transformedProduct}
       existingConnection={existingConnection}
       initialIsSaved={!!savedItem}
+      similarProducts={similarProducts}
     />
   );
 }

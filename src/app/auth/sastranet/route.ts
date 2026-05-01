@@ -167,6 +167,7 @@ export async function GET(request: Request) {
         email: normalizedEmail,
         university,
         profile_picture_url: payload.profile_picture_url || null,
+        created_at: created.user.created_at,
         acquisition_source: 'sastranet',
       })
 

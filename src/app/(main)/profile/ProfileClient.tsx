@@ -137,6 +137,11 @@ export default function ProfileClient({ profile, userProducts, savedProducts, us
 
     const googleName = profile?.name || "User";
     const googlePhoto = profile?.profile_picture_url || undefined;
+    
+    // Calculate Seller Impact Stats
+    const totalViews = userProducts.reduce((sum, p) => sum + ((p as any).view_count || 0), 0);
+    const soldCount = userProducts.filter(p => p.status === 'sold').length;
+    const memberSince = profile?.created_at ? new Date(profile.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Apr 2026';
 
     return (
         <div className="w-full flex flex-col items-center px-2 py-8">
@@ -151,20 +156,38 @@ export default function ProfileClient({ profile, userProducts, savedProducts, us
                 </Button>
             </div>
             
-            {/* Profile card */}
-            <div className="w-full max-w-2xl bg-white rounded-2xl shadow-lg flex flex-row items-center gap-6 px-6 py-6 mb-10 border border-slate-100">
-                <Avatar className="h-20 w-20 shadow border-2 border-slate-200">
-                    <AvatarImage
-                        src={googlePhoto}
-                        alt={googleName}
-                    />
-                    <AvatarFallback>
-                        {googleName[0]?.toUpperCase() || <UserIcon className="h-10 w-10 text-slate-400" />}
-                    </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col justify-center">
-                    <span className="text-2xl font-bold text-slate-900 leading-tight">{googleName}</span>
-                    <span className="text-base text-slate-500 mt-1">{profile?.university || "SASTRA University, Thanjavur"}</span>
+            {/* Profile card with Seller Impact Stats */}
+            <div className="w-full max-w-2xl bg-white rounded-2xl shadow-lg flex flex-col sm:flex-row items-center gap-6 px-6 py-6 mb-10 border border-slate-100">
+                <div className="flex flex-row items-center gap-6 flex-1 w-full">
+                    <Avatar className="h-20 w-20 shadow border-2 border-slate-200">
+                        <AvatarImage
+                            src={googlePhoto}
+                            alt={googleName}
+                        />
+                        <AvatarFallback>
+                            {googleName[0]?.toUpperCase() || <UserIcon className="h-10 w-10 text-slate-400" />}
+                        </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col justify-center">
+                        <span className="text-2xl font-bold text-slate-900 leading-tight">{googleName}</span>
+                        <span className="text-sm text-slate-500 mt-1">{profile?.university || "SASTRA University, Thanjavur"}</span>
+                        <span className="text-xs font-semibold text-blue-600 mt-2 bg-blue-50 w-fit px-2 py-1 rounded-full border border-blue-100">
+                            Member since {memberSince}
+                        </span>
+                    </div>
+                </div>
+
+                {/* Stats */}
+                <div className="flex flex-row gap-6 sm:border-l sm:border-slate-100 sm:pl-6 pt-4 sm:pt-0 w-full sm:w-auto border-t border-slate-100 justify-around sm:justify-start">
+                    <div className="flex flex-col items-center">
+                        <span className="text-2xl font-extrabold text-slate-800">{totalViews}</span>
+                        <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">Total Views</span>
+                    </div>
+                    <div className="w-px bg-slate-100 hidden sm:block"></div>
+                    <div className="flex flex-col items-center">
+                        <span className="text-2xl font-extrabold text-slate-800">{soldCount}</span>
+                        <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">Items Sold</span>
+                    </div>
                 </div>
             </div>
             
