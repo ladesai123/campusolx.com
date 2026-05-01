@@ -31,10 +31,9 @@ function sortWeight(product: ProductWithProfile): number {
   const af = product.available_from ? new Date(product.available_from) : null;
   const effective = product.status === 'pending_reservation' && af && now >= af
     ? 'available' : product.status;
-  if (effective === 'available') return 0;
-  if (effective === 'pending_reservation') return 1;
-  if (effective === 'reserved') return 2;
-  return 3;
+  if (effective === 'available' || effective === 'pending_reservation') return 0;
+  if (effective === 'reserved') return 1;
+  return 2;
 }
 
 interface HomeClientProps {
