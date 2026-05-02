@@ -441,9 +441,6 @@ export default function SellPage() {
               <div className="grid w-full items-center gap-2.5 rounded-lg border p-4 bg-slate-50/50">
                 <Label className="font-semibold flex items-center flex-wrap gap-2" htmlFor="whatsapp_number">
                   📱 WhatsApp Contact
-                  <span className="text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full border border-green-200 uppercase tracking-tight animate-pulse flex items-center gap-1">
-                    ⚡ Fast Sale Mode
-                  </span>
                 </Label>
                 <Input
                   id="whatsapp_number"
