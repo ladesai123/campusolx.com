@@ -237,6 +237,8 @@ export default function ProductDetailsClient({
             imageUrl={product.image_urls?.[0] || null}
             message={`Check out "${product.title}" on CampusOlx – the marketplace for SASTRA students! {url}`}
             attachImage={false}
+            className="bg-white rounded-full shadow-sm p-2 flex items-center justify-center transition-all hover:scale-110 active:scale-95 text-gray-500 hover:text-blue-600"
+            compact={true}
           />
         </div>
         <Link
@@ -262,7 +264,7 @@ export default function ProductDetailsClient({
             {!isOwner && (
               <button
                 onClick={handleToggleSave}
-                className="absolute top-3 left-3 z-10 bg-white/90 backdrop-blur-sm rounded-full shadow-sm p-2 flex items-center justify-center transition-transform hover:scale-110 active:scale-95"
+                className="absolute top-3 left-3 z-10 bg-white rounded-full shadow-sm p-2 flex items-center justify-center transition-transform hover:scale-110 active:scale-95"
                 title={isSaved ? "Remove from Favourites" : "Save to Favourites"}
               >
                 <Heart 
@@ -278,6 +280,8 @@ export default function ProductDetailsClient({
                 imageUrl={product.image_urls?.[0] || null}
                 message={`Check out "${product.title}" on CampusOlx – the marketplace for SASTRA students! {url}`}
                 attachImage={false}
+                className="bg-white rounded-full shadow-sm p-2 flex items-center justify-center transition-all hover:scale-110 active:scale-95 text-gray-500 hover:text-blue-600"
+                compact={true}
               />
             </div>
           </div>
