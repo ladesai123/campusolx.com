@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogCancel } from "@/components/ui/alert-dialog";
-import { Edit, Trash2, Tag, Undo2, CalendarClock, Share2, Eye, Heart } from 'lucide-react';
+import { Edit, Trash2, Tag, Undo2, CalendarClock, Share2, Eye, Heart, Handshake } from 'lucide-react';
 import { toggleProductStatus } from '@/app/(main)/profile/actions'; 
 import { SubmitButton } from '@/components/shared/SubmitButton'; 
 import type { ProductWithProfile } from '@/lib/types';
@@ -86,92 +86,100 @@ export function ProductCard({ product, showAdminActions = false, deleteAction, i
               loading="lazy"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             />
-            {/* Share button: bottom right of image, always visible */}
-            <div className="absolute bottom-2 right-2 z-10 bg-white rounded-full shadow-sm p-0.5 flex items-center justify-center">
-              <ShareButton 
+        </div>
+      </a>
+
+      {/* Action Buttons Overlay */}
+      <div className="absolute inset-0 pointer-events-none">
+        {onToggleSave && (
+            <button
+                onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onToggleSave();
+                }}
+                className="absolute top-2 right-2 z-10 bg-white rounded-full shadow-sm p-2 flex items-center justify-center transition-all hover:scale-110 active:scale-95 group/heart pointer-events-auto"
+                title={isSaved ? "Remove from Favourites" : "Save to Favourites"}
+            >
+                <Heart 
+                    className={`h-3.5 w-3.5 transition-colors ${isSaved ? 'fill-red-500 text-red-500' : 'text-gray-500 group-hover/heart:text-red-400'}`} 
+                />
+            </button>
+        )}
+        
+        <div className="absolute bottom-2 right-2 z-10 pointer-events-auto">
+            <ShareButton 
                 productId={product.id} 
                 title={product.title} 
                 imageUrl={product.image_urls?.[0]} 
-                variant="outline" 
+                variant="ghost" 
                 size="icon"
+                className="bg-white rounded-full shadow-sm p-2 flex items-center justify-center transition-all hover:scale-110 active:scale-95 text-gray-500 hover:text-blue-600"
+                compact={true}
                 attachImage={false}
-                message={`Check out \"${product.title}\" on CampusOlx – the marketplace for SASTRA students! {url}`}
-              />
-            </div>
-          </div>
-        </a>
-        
-        {/* Save/Favourite button */}
-        {onToggleSave && (
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onToggleSave();
-            }}
-            className="absolute top-2 right-2 z-20 bg-white/90 backdrop-blur-sm rounded-full shadow-sm p-1.5 flex items-center justify-center transition-transform hover:scale-110 active:scale-95"
-            title={isSaved ? "Remove from Favourites" : "Save to Favourites"}
-          >
-            <Heart 
-              className={`h-4 w-4 transition-colors ${isSaved ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} 
             />
-          </button>
-        )}
+        </div>
 
         {isReservable && (
-          <div className="absolute top-2 left-2 max-w-[90vw] sm:max-w-xs">
-            <Badge className="bg-yellow-400 text-black shadow text-xs font-semibold px-2 py-1 whitespace-normal break-words">
-              <CalendarClock className="mr-1 h-3.5 w-3.5 inline-block align-text-bottom" />
-              Reserve: Available {formatDate(product.available_from)}
-            </Badge>
-          </div>
+            <div className="absolute top-2 left-2 max-w-[80%] z-[5]">
+                <Badge className="bg-amber-100 text-amber-700 border-amber-200 shadow-sm text-[10px] font-bold px-2 py-0.5">
+                    <CalendarClock className="mr-1 h-3 w-3 inline-block" />
+                    {formatDate(product.available_from)}
+                </Badge>
+            </div>
         )}
         {(isReserved || effectiveStatus === 'sold') && (
-          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-            <Badge
-              className={`px-4 py-1 text-base font-bold tracking-wider ${isReserved ? 'bg-blue-600 text-white' : 'bg-red-600 text-white'}`}
-            >
-              {isReserved ? 'RESERVED' : 'SOLD'}
-            </Badge>
-          </div>
-        )}
-        {product.is_negotiable && typeof product.price === 'number' && product.price > 0 && effectiveStatus !== 'sold' && effectiveStatus !== 'reserved' && (
-          <div className="absolute bottom-2 left-2 z-10">
-            <Badge className="bg-green-600 text-white shadow-md text-xs font-semibold px-2 py-1">
-              Price Negotiable
-            </Badge>
-          </div>
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center z-[5]">
+                <Badge
+                    className={`px-4 py-1.5 text-sm font-bold tracking-widest border-2 ${isReserved ? 'bg-blue-600/90 border-blue-400' : 'bg-rose-600/90 border-rose-400'} text-white rounded-full shadow-xl`}
+                >
+                    {isReserved ? 'RESERVED' : 'SOLD'}
+                </Badge>
+            </div>
         )}
       </div>
+    </div>
       <div className="p-3 flex-grow flex flex-col">
         <h3 className="flex-grow truncate font-semibold text-gray-800" title={product.title}>
           {product.title}
         </h3>
-        <div className="mt-2 flex flex-wrap items-baseline gap-x-2">
-          <p className="text-lg font-bold text-gray-900">
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <p className="text-lg font-bold text-gray-900 leading-none">
             {typeof product.price === 'number' && product.price > 0 ? formattedPrice : 'Free'}
           </p>
           {typeof product.mrp === 'number' && typeof product.price === 'number' && product.mrp > product.price && (
-            <p className="text-sm text-gray-500 line-through">
-              MRP: {product.mrp.toLocaleString('en-IN')}
+            <p className="text-xs text-gray-400 line-through">
+              {product.mrp.toLocaleString('en-IN')}
             </p>
           )}
+          {discount && (
+            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
+              {discount}% OFF
+            </span>
+          )}
         </div>
-        {discount && (
-          <p className="text-sm font-semibold text-green-600">
-            ({discount}% off)
-          </p>
-        )}
-        {/* View count — subtle, only shown when > 0 */}
-        {typeof product.view_count === 'number' && product.view_count > 0 && (
-          <p className="flex items-center gap-1 text-[11px] text-gray-400 mt-1">
-            <Eye className="h-3 w-3" />
-            {product.view_count >= 1000
-              ? `${(product.view_count / 1000).toFixed(1)}k`
-              : product.view_count
-            } views
-          </p>
-        )}
+
+        {/* Negotiable & Stats Row */}
+        <div className="mt-auto pt-3 flex items-center justify-between border-t border-gray-50">
+          <div className="flex flex-wrap gap-1">
+            {product.is_negotiable && typeof product.price === 'number' && product.price > 0 && effectiveStatus !== 'sold' && effectiveStatus !== 'reserved' && (
+              <span className="inline-flex items-center text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                <Handshake className="w-3 h-3 mr-1" />
+                Negotiable
+              </span>
+            )}
+          </div>
+          
+          {typeof product.view_count === 'number' && product.view_count > 0 && (
+            <div className="flex items-center gap-1 text-[10px] text-gray-400 font-medium">
+              <Eye className="h-3 w-3" />
+              {product.view_count >= 1000
+                ? `${(product.view_count / 1000).toFixed(1)}k`
+                : product.view_count
+              }
+            </div>
+          )}
+        </div>
         {showAdminActions && (
           <div className="flex w-full gap-2 mt-4 border-t pt-4">
             <form action={toggleProductStatus.bind(null, product.id, effectiveStatus ?? 'available')} className="flex-1">

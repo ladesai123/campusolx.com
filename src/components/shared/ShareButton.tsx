@@ -89,8 +89,8 @@ export default function ShareButton({ productId, title, imageUrl, variant = "gho
 
   return (
     <div className={`relative inline-flex ${className}`}>
-      <Button aria-label="Share this product" variant={variant} size={size} onClick={handleShare}>
-        <Share2 className="h-5 w-5" />
+      <Button aria-label="Share this product" variant={variant} size={size} onClick={handleShare} className="!h-auto !w-auto !p-0">
+        <Share2 className={compact ? "h-3.5 w-3.5" : "h-5 w-5"} />
         {!compact && <span className="ml-2">Share</span>}
       </Button>
       {copied && (

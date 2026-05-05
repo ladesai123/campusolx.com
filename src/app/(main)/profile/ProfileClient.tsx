@@ -177,7 +177,7 @@ export default function ProfileClient({ profile, userProducts, savedProducts, us
         <div className="min-h-screen bg-gray-50">
             {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
             {/* Top Bar */}
-            <div className="bg-white border-b border-gray-100 px-4 py-3 h-[52px] sticky top-0 z-10 flex items-center">
+            <div className="bg-white border-b border-gray-100 px-4 py-3 h-[52px] sticky top-0 z-40 flex items-center">
                 <Link href="/home" className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">
                     <ArrowLeft className="h-4 w-4" />
                     Back to Marketplace
