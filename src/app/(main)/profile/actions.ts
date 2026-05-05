@@ -247,3 +247,32 @@ export async function bumpProductAction(productId: number) {
   
   return { success: !error };
 }
+
+// This action updates a user's profile details.
+export async function updateProfileAction(formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const year = formData.get("year") as string | null;
+  const hostel_block = formData.get("hostel_block") as string | null;
+  const phone_number = formData.get("phone_number") as string | null;
+  const room_no = formData.get("room_no") as string | null;
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ 
+      year: year || null,
+      hostel_block: hostel_block || null,
+      phone_number: phone_number || null,
+      room_no: room_no || null
+    })
+    .eq("id", user.id);
+
+  if (error) throw new Error(error.message);
+  
+  revalidatePath("/profile");
+  return { success: true };
+}

@@ -53,6 +53,7 @@ export default async function HomePage() {
       .select('*, profiles!inner(id, name, university, profile_picture_url)')
       .eq('profiles.university', profile?.university || '')
       .eq('status', 'active')
+      .eq('is_hidden', false)
       .order('created_at', { ascending: false })
       .limit(8),
   ]);

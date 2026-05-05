@@ -31,6 +31,7 @@ export default async function RequestsPage() {
     .select("*, profiles!inner(id, name, university, profile_picture_url)")
     .eq("profiles.university", university)
     .eq("status", "active")
+    .eq("is_hidden", false)
     .order("created_at", { ascending: false });
 
   const activeRequests = (rawRequests as unknown as RequestWithProfile[]) || [];

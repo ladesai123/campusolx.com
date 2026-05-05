@@ -50,7 +50,7 @@ export async function deleteRequestAction(requestId: number) {
 
   const { error } = await supabase
     .from("requests")
-    .delete()
+    .update({ is_hidden: true } as any)
     .eq("id", requestId)
     .eq("user_id", user.id);
 

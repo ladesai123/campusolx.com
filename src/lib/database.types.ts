@@ -207,6 +207,7 @@ export type Database = {
           show_on_landing: boolean | null
           status: string | null
           title: string
+          view_count: number | null
         }
         Insert: {
           available_from?: string | null
@@ -222,6 +223,7 @@ export type Database = {
           show_on_landing?: boolean | null
           status?: string | null
           title: string
+          view_count?: number | null
         }
         Update: {
           available_from?: string | null
@@ -237,6 +239,7 @@ export type Database = {
           show_on_landing?: boolean | null
           status?: string | null
           title?: string
+          view_count?: number | null
         }
         Relationships: [
           {
@@ -259,6 +262,10 @@ export type Database = {
           university: string | null
           acquisition_source: string | null
           email: string | null
+          year: string | null
+          hostel_block: string | null
+          phone_number: string | null
+          room_no: string | null
         }
         Insert: {
           id: string
@@ -270,6 +277,10 @@ export type Database = {
           university?: string | null
           acquisition_source?: string | null
           email?: string | null
+          year?: string | null
+          hostel_block?: string | null
+          phone_number?: string | null
+          room_no?: string | null
         }
         Update: {
           id?: string
@@ -281,6 +292,10 @@ export type Database = {
           university?: string | null
           acquisition_source?: string | null
           email?: string | null
+          year?: string | null
+          hostel_block?: string | null
+          phone_number?: string | null
+          room_no?: string | null
         }
         Relationships: []
       }
@@ -295,6 +310,7 @@ export type Database = {
           view_count: number
           expires_at: string | null
           created_at: string | null
+          is_hidden: boolean
         }
         Insert: {
           id?: number
@@ -306,6 +322,7 @@ export type Database = {
           view_count?: number
           expires_at?: string | null
           created_at?: string | null
+          is_hidden?: boolean
         }
         Update: {
           id?: number
@@ -317,6 +334,7 @@ export type Database = {
           view_count?: number
           expires_at?: string | null
           created_at?: string | null
+          is_hidden?: boolean
         }
         Relationships: [
           {

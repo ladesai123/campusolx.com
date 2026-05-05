@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { ProductCard } from '@/components/ProductCard';
 import { RequestCard } from '@/components/RequestCard';
+import Toast from '@/components/shared/Toast';
 import type { ProductWithProfile, RequestWithProfile } from '@/lib/types';
 import Link from 'next/link';
 import {
@@ -51,6 +52,7 @@ export default function HomeClient({ products, university, studentCount, initial
   const [savedIds, setSavedIds] = useState<Set<number>>(() => new Set(initialSavedIds));
   const [navigatingToRequests, setNavigatingToRequests] = useState(false);
   const [navigatingToSell, setNavigatingToSell] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const router = useRouter();
   const loaderRef = useRef<HTMLDivElement>(null);
   
@@ -119,8 +121,10 @@ export default function HomeClient({ products, university, studentCount, initial
       // Dynamic import to avoid client-side error on server action import
       const { toggleSaveAction } = await import('./actions');
       await toggleSaveAction(productId, isSaved);
+      setToastMessage(isSaved ? "Removed from watchlist" : "Added to watchlist! ❤️");
     } catch (e) {
       // Revert on failure
+      setToastMessage("Failed to update watchlist");
       setSavedIds(prev => {
         const next = new Set(prev);
         if (isSaved) next.add(productId);
@@ -210,6 +214,7 @@ export default function HomeClient({ products, university, studentCount, initial
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
 
       {/* ── Location bar ── */}
       <div className="bg-white px-4 py-2 flex items-center gap-1.5 border-b">
