@@ -23,7 +23,7 @@ import {
 import { ArrowLeft, CalendarClock, MessageSquare, CheckCircle, Hourglass, Heart } from "lucide-react";
 import { createConnectionAction } from "@/app/(main)/chat/actions";
 import { toggleSaveAction } from "@/app/(main)/home/actions";
-import NotificationPopup from "@/components/shared/NotificationPopup";
+import Toast from "@/components/shared/Toast";
 import ShareButton from "@/components/shared/ShareButton";
 
 interface Product {
@@ -169,7 +169,11 @@ export default function ProductDetailsClient({
   return (
     <>
       {notification && (
-        <NotificationPopup message={notification} onClose={() => setNotification(null)} />
+        <Toast 
+          message={notification} 
+          type={notification.includes('❌') || notification.includes('failed') ? 'error' : 'success'}
+          onClose={() => setNotification(null)} 
+        />
       )}
 
       {/* --- The "Golden Rule" Popup for Buyers --- */}

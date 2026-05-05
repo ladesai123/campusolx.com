@@ -1,17 +1,8 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-// Simple toast component
-function SuccessToast({ show, message }: { show: boolean; message: string }) {
-  return (
-    <div
-      className={`fixed top-6 left-1/2 z-50 -translate-x-1/2 rounded bg-green-600 px-6 py-3 text-white shadow-lg transition-all duration-500 ${show ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}
-      style={{ minWidth: 220, textAlign: 'center' }}
-    >
-      {message}
-    </div>
-  );
-}
+import Toast from "@/components/shared/Toast";
+import { Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,8 +21,13 @@ import { updateProductAction } from "./actions";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export default function EditProductForm({ product }: { product: any }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const [availability, setAvailability] = useState(product.available_from ? "future" : "now");
   const [availableDate, setAvailableDate] = useState(product.available_from ? product.available_from.split("T")[0] : "");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [price, setPrice] = useState(product.price?.toString() || '');
   const [mrp, setMrp] = useState(product.mrp?.toString() || '');
@@ -82,25 +78,36 @@ export default function EditProductForm({ product }: { product: any }) {
     
     const form = e.currentTarget;
     const formData = new FormData(form);
+    
+    setIsSubmitting(true);
     // Use the server action
-    const res = await updateProductAction(formData);
-    setShowSuccess(true);
-    setTimeout(() => {
-      setShowSuccess(false);
-      router.push("/profile");
-    }, 3000);
+    try {
+      await updateProductAction(formData);
+      setShowSuccess(true);
+      setTimeout(() => {
+        router.push("/profile");
+      }, 2000);
+    } catch (error) {
+      console.error("Failed to update product:", error);
+      setIsSubmitting(false);
+    }
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
-      <SuccessToast show={showSuccess} message="Product updated successfully!" />
+      {showSuccess && (
+        <Toast 
+          message="Product updated successfully! ✨" 
+          onClose={() => setShowSuccess(false)} 
+        />
+      )}
       <Card className="w-full max-w-lg">
         <CardHeader>
           <CardTitle className="text-2xl font-semibold">Edit Your Listing</CardTitle>
           <CardDescription>Update the details of your item below.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-6">
+          <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-6" suppressHydrationWarning>
             <input type="hidden" name="productId" value={product.id} />
             <div className="grid w-full items-center gap-1.5">
               <Label htmlFor="title">Item Title</Label>
@@ -253,7 +260,16 @@ export default function EditProductForm({ product }: { product: any }) {
                   <ArrowLeft className="mr-2 h-4 w-4" /> Cancel
                 </Link>
               </Button>
-              <Button type="submit">Save Changes</Button>
+              <Button type="submit" disabled={isSubmitting} className="min-w-[120px]">
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
             </div>
           </form>
         </CardContent>

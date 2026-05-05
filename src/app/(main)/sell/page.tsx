@@ -217,7 +217,7 @@ export default function SellPage() {
               <CardDescription>Fill out the details below to sell your item on <BrandName inline />.</CardDescription>
             </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-6" suppressHydrationWarning>
               {/* All your form fields (image, title, price, availability, etc.) */}
               {/* Step 1: Image Upload */}
 
