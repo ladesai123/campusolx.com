@@ -415,7 +415,7 @@ export default function ProfileClient({ profile, userProducts, savedProducts, us
 
             {/* Delete Product Dialog */}
             <AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
-                <AlertDialogContent className="rounded-2xl mx-4">
+                <AlertDialogContent className="rounded-2xl w-[92vw] max-w-md">
                     <AlertDialogHeader>
                         <AlertDialogTitle>Delete Listing?</AlertDialogTitle>
                         <AlertDialogDescription>This will also permanently delete all related chats. This cannot be undone.</AlertDialogDescription>
@@ -431,7 +431,7 @@ export default function ProfileClient({ profile, userProducts, savedProducts, us
 
             {/* Analytics Modal */}
             <AlertDialog open={!!analyticsProduct} onOpenChange={(o) => !o && setAnalyticsProduct(null)}>
-                <AlertDialogContent className="rounded-2xl mx-4 sm:max-w-sm">
+                <AlertDialogContent className="rounded-2xl w-[92vw] max-w-sm p-6">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="flex items-center gap-2">
                             <TrendingUp className="h-5 w-5 text-purple-600" />
@@ -470,7 +470,7 @@ export default function ProfileClient({ profile, userProducts, savedProducts, us
 
             {/* Edit Request Modal */}
             <AlertDialog open={!!editingRequest} onOpenChange={(o) => !o && setEditingRequest(null)}>
-                <AlertDialogContent className="sm:max-w-[425px] w-[95vw] rounded-2xl p-6 mx-4">
+                <AlertDialogContent className="w-[92vw] max-w-[425px] rounded-2xl p-6">
                     <AlertDialogHeader>
                         <AlertDialogTitle>Edit Request</AlertDialogTitle>
                     </AlertDialogHeader>
@@ -502,7 +502,7 @@ export default function ProfileClient({ profile, userProducts, savedProducts, us
 
             {/* Edit Profile Modal */}
             <AlertDialog open={isEditingProfile} onOpenChange={setIsEditingProfile}>
-                <AlertDialogContent className="sm:max-w-[425px] w-[95vw] rounded-2xl p-6 mx-4 overflow-y-auto max-h-[90vh]">
+                <AlertDialogContent className="w-[92vw] max-w-[425px] rounded-2xl p-6 overflow-y-auto max-h-[90vh]">
                     <AlertDialogHeader>
                         <AlertDialogTitle>Edit Profile</AlertDialogTitle>
                         <AlertDialogDescription>Keep your details updated to help students find you.</AlertDialogDescription>
