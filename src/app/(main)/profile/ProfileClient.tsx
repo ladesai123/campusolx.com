@@ -56,6 +56,13 @@ export default function ProfileClient({ profile, userProducts, savedProducts, us
 
     const analyticsMap = new Map(productAnalytics.map(a => [a.product_id, a]));
 
+    const truncateTitle = (title: string, maxWords: number = 5) => {
+        if (!title) return "";
+        const words = title.split(/\s+/);
+        if (words.length <= maxWords) return title;
+        return words.slice(0, maxWords).join(' ') + '...';
+    };
+
     const googleName = profile?.name || "User";
     const googlePhoto = profile?.profile_picture_url || undefined;
     const memberSince = profile?.created_at
@@ -437,7 +444,9 @@ export default function ProfileClient({ profile, userProducts, savedProducts, us
                             <TrendingUp className="h-5 w-5 text-purple-600" />
                             Analytics
                         </AlertDialogTitle>
-                        <AlertDialogDescription className="truncate">{analyticsProduct?.title}</AlertDialogDescription>
+                        <AlertDialogDescription className="text-gray-500 text-xs">
+                            {truncateTitle(analyticsProduct?.title || "")}
+                        </AlertDialogDescription>
                     </AlertDialogHeader>
                     <div className="grid grid-cols-3 gap-2 py-2">
                         <div className="bg-purple-50 rounded-xl p-3 flex flex-col items-center">

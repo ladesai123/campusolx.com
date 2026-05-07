@@ -230,12 +230,12 @@ export default function LandingPage() {
 
           <div className="max-w-[1000px] w-full mx-auto relative z-10 flex flex-col items-center text-center">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#E0E7FF] border border-[#C7D2FE] mb-6">
-              <span className="relative flex h-2.5 w-2.5">
+              <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#2563EB] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#2563EB]"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#2563EB]"></span>
               </span>
               <span className="text-[14px] font-[600] text-[#2563EB]">
-                {userCount !== null ? userCount : '1000+'} active users buying & selling right now
+                Join {userCount !== null ? userCount.toLocaleString('en-IN') : "1000's of"} students buying & selling
               </span>
             </div>
             
@@ -471,7 +471,7 @@ export default function LandingPage() {
                 today.
               </h2>
               <p className="mx-auto max-w-[640px] text-[18px] md:text-[20px] text-blue-100 font-[500] mb-10 leading-relaxed">
-                Join 1000+ students trading textbooks, gadgets, and more<br className="hidden md:block"/> every single day.
+                Join {userCount !== null ? userCount.toLocaleString('en-IN') : "1000's of"} students buying & selling
               </p>
               <Button asChild className="rounded-[12px] px-10 py-7 text-[16px] font-[700] bg-white text-[#2563EB] hover:bg-slate-50 transition-colors border-0 mb-10">
                 <Link href="/login">

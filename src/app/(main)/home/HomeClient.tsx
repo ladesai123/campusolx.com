@@ -230,7 +230,7 @@ export default function HomeClient({ products, university, studentCount, initial
             <ShoppingBag className="h-28 w-28 text-white" strokeWidth={1} />
           </div>
           <p className="text-[11px] font-medium text-blue-200 mb-1 tracking-wide">
-            Trusted by {studentCount.toLocaleString('en-IN')} SASTRA students
+            Used by {studentCount.toLocaleString('en-IN')} SASTRA students
           </p>
           <p className="text-[17px] font-semibold text-white leading-snug mb-3">
             Got something to sell?<br />List it. Get paid.
