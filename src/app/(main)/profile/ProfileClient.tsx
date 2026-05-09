@@ -98,8 +98,8 @@ export default function ProfileClient({ profile, userProducts, savedProducts, us
 
     async function handleBump(productId: number) {
         setBumpingId(productId);
-        try { 
-            await bumpProductAction(productId); 
+        try {
+            await bumpProductAction(productId);
             setToastMessage("Listing bumped to top! 🚀");
         } catch (e: any) { alert(e.message); }
         setBumpingId(null);
@@ -356,9 +356,9 @@ export default function ProfileClient({ profile, userProducts, savedProducts, us
                             ) : (
                                 <div className="grid grid-cols-2 gap-3">
                                     {savedProducts.map((product) => (
-                                        <ProductCard 
-                                            key={product.id} 
-                                            product={product} 
+                                        <ProductCard
+                                            key={product.id}
+                                            product={product}
                                             isSaved={true}
                                             onToggleSave={() => handleToggleSave(product.id)}
                                         />

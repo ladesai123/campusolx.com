@@ -3,15 +3,8 @@
 import { createClient } from '@/lib/server';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { v2 as cloudinary } from 'cloudinary';
+import cloudinary from '@/lib/cloudinary';
 import { ProductStatus } from '@/lib/types'; // We import our specific status types for code safety
-
-// Configure Cloudinary with your server-side credentials. This is secure because it only runs on the server.
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
 export async function sellItemAction(formData: FormData) {
   // --- 1. Read all form data, including the new availability fields ---
@@ -64,9 +57,13 @@ export async function sellItemAction(formData: FormData) {
         });
         // @ts-ignore
         imageUrls.push(result.secure_url);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Cloudinary upload error:', error);
-        continue; // If one image fails, we continue with the others
+        // If it's a configuration error (like missing API key), we should abort the whole process
+        if (error?.message?.includes('Must supply api_key') || error?.message?.includes('Must supply api_secret')) {
+          return { success: false, error: 'Server misconfiguration: Cloudinary credentials are missing.' };
+        }
+        continue; // If it's just a random upload error for one image, we continue with the others
       }
     }
   }

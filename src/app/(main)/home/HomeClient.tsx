@@ -317,7 +317,7 @@ export default function HomeClient({ products, university, studentCount, initial
       </div>
 
       {/* ── Category pills (below banner and requests) ── */}
-      <div className="bg-white border-b sticky top-0 z-40">
+      <div className="bg-white border-b sticky top-[64px] z-40">
         <div className="relative">
           <div className="pointer-events-none absolute right-0 top-0 h-full w-10 bg-gradient-to-l from-white to-transparent z-10" />
           <div
