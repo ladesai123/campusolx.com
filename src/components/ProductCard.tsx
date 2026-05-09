@@ -85,6 +85,7 @@ export function ProductCard({ product, showAdminActions = false, deleteAction, i
               onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/placeholder.png'; }}
               loading="lazy"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              unoptimized
             />
         </div>
       </a>
