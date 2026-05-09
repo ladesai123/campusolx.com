@@ -24,6 +24,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { RequestCard } from "@/components/RequestCard";
 import Toast from "@/components/shared/Toast";
+import { getOptimizedCloudinaryUrl } from '@/lib/utils';
 
 type Product = Database["public"]["Tables"]["products"]["Row"];
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -282,7 +283,7 @@ export default function ProfileClient({ profile, userProducts, savedProducts, us
                                             <div key={product.id} className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm">
                                                 <div className="relative">
                                                     <Image
-                                                        src={product.image_urls?.[0] || 'https://placehold.co/200x160'}
+                                                        src={getOptimizedCloudinaryUrl(product.image_urls?.[0], 300)}
                                                         alt={product.title}
                                                         width={200} height={140}
                                                         className="w-full h-32 object-cover bg-gray-100"

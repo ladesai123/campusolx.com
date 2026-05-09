@@ -12,6 +12,7 @@ import type { ProductWithProfile } from '@/lib/types';
 import ShareButton from '@/components/shared/ShareButton';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { getOptimizedCloudinaryUrl } from '@/lib/utils';
 import AppLoader from '@/components/shared/AppLoader';
 
 interface ProductCardProps {
@@ -77,7 +78,7 @@ export function ProductCard({ product, showAdminActions = false, deleteAction, i
         <a href={`/product/${product.id}`} className="block" onClick={handleProductClick} tabIndex={0} role="button">
           <div className="aspect-square w-full overflow-hidden relative flex items-end justify-end bg-slate-100">
             <Image
-              src={product.image_urls?.[0] && product.image_urls[0].length > 0 ? product.image_urls[0] : '/placeholder.png'}
+              src={getOptimizedCloudinaryUrl(product.image_urls?.[0], 500)}
               alt={`${product.title} - ${product.category || 'Product'} for sale`}
               width={400}
               height={400}
