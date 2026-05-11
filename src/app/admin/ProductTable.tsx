@@ -150,7 +150,7 @@ export default function ProductTable() {
             >
               <td className="p-2 border">
                 {product.image_urls && product.image_urls.length > 0 && product.image_urls[0] ? (
-                  <Image src={product.image_urls[0]} alt={product.title} width={48} height={48} className="rounded object-cover" />
+                  <Image src={product.image_urls[0]} alt={product.title} width={48} height={48} className="rounded object-cover" unoptimized />
                 ) : (
                   <div className="w-12 h-12 bg-slate-200 rounded flex items-center justify-center text-xs text-slate-400">No Image</div>
                 )}

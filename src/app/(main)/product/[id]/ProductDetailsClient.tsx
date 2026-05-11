@@ -25,6 +25,7 @@ import { createConnectionAction } from "@/app/(main)/chat/actions";
 import { toggleSaveAction } from "@/app/(main)/home/actions";
 import Toast from "@/components/shared/Toast";
 import ShareButton from "@/components/shared/ShareButton";
+import { getOptimizedCloudinaryUrl } from "@/lib/utils";
 
 interface Product {
   id: number;
@@ -255,13 +256,14 @@ export default function ProductDetailsClient({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
           {/* Image */}
-          <div className="aspect-square w-full overflow-hidden rounded-lg border relative">
+          <div className="aspect-square w-full overflow-hidden rounded-lg border relative bg-slate-100">
             <Image
-              src={product.image_urls?.[0] || 'https://placehold.co/600x600'}
+              src={getOptimizedCloudinaryUrl(product.image_urls?.[0], 1000)}
               alt={product.title}
               width={600}
               height={600}
               className="h-full w-full object-cover"
+              unoptimized
             />
             
             {/* Heart / Save Button */}
