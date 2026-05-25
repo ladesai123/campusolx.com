@@ -11,6 +11,7 @@ import MarketplaceStats from '@/components/landing/MarketplaceStats';
 import FounderStoryCard from '@/components/landing/FounderStory';
 import LandingProductCarousel from '@/components/landing/ProductCarousel';
 import FeedbackCarousel from '@/components/landing/TestimonialsSection';
+import MaintenanceModal from '@/components/shared/MaintenanceModal';
 
 // Helper Components
 function ValuePropCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string; }) {
@@ -65,14 +66,31 @@ export default function LandingPage() {
   // User count logic
   const [userCount, setUserCount] = useState<number | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [showMaintenance, setShowMaintenance] = useState(false);
   
   useEffect(() => {
     const fetchCount = async () => {
-      const supabase = createClient();
-      const { count } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
-      setUserCount(count || 0);
+      try {
+        const supabase = createClient();
+        const { count, error } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true });
+        
+        if (error) {
+          console.error('Failed to fetch user count:', error);
+          setShowMaintenance(true);
+          setUserCount(0);
+        } else {
+          setUserCount(count || 0);
+          if (count === 0) {
+            setShowMaintenance(true);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching user count:', err);
+        setShowMaintenance(true);
+        setUserCount(0);
+      }
     };
     fetchCount();
     
@@ -215,6 +233,7 @@ export default function LandingPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-white text-slate-800">
+      <MaintenanceModal open={showMaintenance} onOpenChange={setShowMaintenance} />
       <main className="flex-grow">
         {/* Hero Section */}
         <section 

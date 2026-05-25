@@ -11,6 +11,7 @@ import Logo from '@/components/shared/Logo';
 import BrandName from '@/components/shared/BrandName';
 import Link from 'next/link';
 import LegalModal from '@/components/shared/LegalModal';
+import MaintenanceModal from '@/components/shared/MaintenanceModal';
 
 /**
  * This is the login page. Its primary job is to trigger the Google OAuth flow.
@@ -20,14 +21,37 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [showLegal, setShowLegal] = useState<null | 'terms' | 'privacy'>(null);
   const [loading, setLoading] = useState(false);
+  const [isMaintenance, setIsMaintenance] = useState(false);
   const searchParams = useSearchParams();
 
   useEffect(() => {
     // This checks the URL for any error messages sent back from the callback route.
     const errorMessage = searchParams.get('error');
     if (errorMessage) {
-      setError(errorMessage);
+      if (errorMessage === 'maintenance') {
+        setIsMaintenance(true);
+        setError('CampusOlx is temporarily under maintenance due to database quota limits. Please wait for the quota to refill.');
+      } else {
+        setError(errorMessage);
+      }
     }
+
+    const checkSupabaseHealth = async () => {
+      try {
+        const supabase = createClient();
+        const { error: healthError } = await supabase
+          .from('profiles')
+          .select('id', { count: 'exact', head: true });
+        if (healthError) {
+          console.error('[Health Check] Supabase query failed:', healthError);
+          setIsMaintenance(true);
+        }
+      } catch (err) {
+        console.error('[Health Check] Supabase check threw error:', err);
+        setIsMaintenance(true);
+      }
+    };
+    checkSupabaseHealth();
   }, [searchParams]);
 
   const handleGoogleLogin = async () => {
@@ -71,6 +95,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
+      <MaintenanceModal open={isMaintenance} onOpenChange={setIsMaintenance} />
       <Card className="w-full max-w-sm relative">
         {/* Legal modal */}
         {showLegal && (

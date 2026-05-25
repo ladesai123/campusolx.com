@@ -135,11 +135,19 @@ export async function GET(request: Request) {
     )
 
     // JTI Replay Protection
-    const { data: existingJti } = await adminClient.from('sso_used_tokens').select('jti').eq('jti', payload.jti).maybeSingle()
+    const { data: existingJti, error: jtiError } = await adminClient.from('sso_used_tokens').select('jti').eq('jti', payload.jti).maybeSingle()
+    if (jtiError) {
+      console.error('[SSO] JTI lookup failed due to database limit:', jtiError)
+      return NextResponse.redirect(`${origin}/login?error=maintenance`)
+    }
     if (existingJti) {
       return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent('This link was already used. Please try again.')}`)
     }
-    await adminClient.from('sso_used_tokens').insert({ jti: payload.jti })
+    const { error: insertJtiError } = await adminClient.from('sso_used_tokens').insert({ jti: payload.jti })
+    if (insertJtiError) {
+      console.error('[SSO] JTI insert failed due to database limit:', insertJtiError)
+      return NextResponse.redirect(`${origin}/login?error=maintenance`)
+    }
 
     // Derive identity (reg_no used ONLY for derivation)
     const normalizedEmail = payload.email
@@ -174,7 +182,7 @@ export async function GET(request: Request) {
       if (profileError) {
         console.error('[SSO] Profile insert failed:', profileError.message)
         await adminClient.auth.admin.deleteUser(targetUserId)
-        return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent('Could not set up your profile. Please try again.')}`)
+        return NextResponse.redirect(`${origin}/login?error=maintenance`)
       }
     } else if (createError?.message?.toLowerCase().includes('already') || createError?.message?.toLowerCase().includes('exists')) {
       // User exists — find them by email in the profiles table (Scalable)
@@ -186,13 +194,13 @@ export async function GET(request: Request) {
       
       if (profileFetchError || !existingProfile) {
         console.error('[SSO] User exists in Auth but no profile found or query failed:', profileFetchError?.message)
-        return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent('Account sync error. Please contact support.')}`)
+        return NextResponse.redirect(`${origin}/login?error=maintenance`)
       }
       targetUserId = existingProfile.id
       console.log('[SSO] Existing user identified via profile lookup:', targetUserId)
     } else {
       console.error('[SSO] createUser failed:', createError?.message)
-      return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent('Could not create your account. Please contact support.')}`)
+      return NextResponse.redirect(`${origin}/login?error=maintenance`)
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -206,7 +214,7 @@ export async function GET(request: Request) {
 
     if (linkError || !linkData?.properties?.hashed_token) {
       console.error('[SSO] generateLink failed:', linkError?.message)
-      return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent('Could not generate login token. Please try again.')}`)
+      return NextResponse.redirect(`${origin}/login?error=maintenance`)
     }
 
     let otpError;
@@ -227,14 +235,14 @@ export async function GET(request: Request) {
 
     if (otpError) {
       console.error('[SSO] All verifyOtp attempts failed:', otpError.message)
-      return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent('Could not establish your session. Please try again.')}`)
+      return NextResponse.redirect(`${origin}/login?error=maintenance`)
     }
 
     return NextResponse.redirect(new URL('/home', origin))
 
   } catch (err: any) {
     console.error('[SSO] Unhandled global error:', err)
-    return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent('An unexpected error occurred. Please try again.')}`)
+    return NextResponse.redirect(`${origin}/login?error=maintenance`)
   }
 }
 

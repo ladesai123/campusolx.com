@@ -34,7 +34,7 @@ export default async function HomePage() {
     profile = newProfile as Profile | null;
   }
 
-  // Fetch ALL products + profile count + saved items + active requests in parallel
+  // Fetch initial batch of products + profile count + saved items + active requests in parallel
   const [
     { data: rawProducts }, 
     { count: studentCount }, 
@@ -43,14 +43,18 @@ export default async function HomePage() {
   ] = await Promise.all([
     supabase
       .from('products')
-      .select('*, profiles!inner(id, name, university, profile_picture_url)')
+      .select('id, title, price, mrp, category, image_urls, status, available_from, is_negotiable, bumped_at, created_at, view_count, seller_id, is_hidden, profiles!inner(id, name, university, profile_picture_url)')
       .eq('profiles.university', profile?.university || '')
-      .order('created_at', { ascending: false }),
+      .eq('is_hidden', false)
+      .order('status', { ascending: true })
+      .order('bumped_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
+      .range(0, 23),
     supabase.from('profiles').select('*', { count: 'exact', head: true }),
     supabase.from('saved_items').select('product_id').eq('user_id', user.id),
     supabase
       .from('requests')
-      .select('*, profiles!inner(id, name, university, profile_picture_url)')
+      .select('id, title, max_budget, view_count, whatsapp_number, user_id, status, is_hidden, profiles!inner(id, name, university, profile_picture_url)')
       .eq('profiles.university', profile?.university || '')
       .eq('status', 'active')
       .eq('is_hidden', false)
@@ -58,8 +62,7 @@ export default async function HomePage() {
       .limit(8),
   ]);
 
-  let products = ((rawProducts as unknown as ProductWithProfile[]) || [])
-    .filter(p => !(p as any).is_hidden);
+  let products = (rawProducts as unknown as ProductWithProfile[]) || [];
 
   const savedProductIds = new Set((savedItemsData || []).map(s => s.product_id));
   

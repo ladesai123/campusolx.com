@@ -48,13 +48,25 @@ interface HomeClientProps {
 
 export default function HomeClient({ products, university, studentCount, initialSavedIds, activeRequests, currentUserId }: HomeClientProps) {
   const [activeCategory, setActiveCategory] = useState('All');
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [savedIds, setSavedIds] = useState<Set<number>>(() => new Set(initialSavedIds));
   const [navigatingToRequests, setNavigatingToRequests] = useState(false);
   const [navigatingToSell, setNavigatingToSell] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const router = useRouter();
   const loaderRef = useRef<HTMLDivElement>(null);
+
+  // Paginated feed state
+  const [loadedProducts, setLoadedProducts] = useState<ProductWithProfile[]>(products);
+  const [offset, setOffset] = useState(products.length);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(products.length >= PAGE_SIZE);
+
+  // Sync state if products prop changes (e.g., on server-side mutations or router refresh)
+  useEffect(() => {
+    setLoadedProducts(products);
+    setOffset(products.length);
+    setHasMore(products.length >= PAGE_SIZE);
+  }, [products]);
   
   // ── View count logic for products ──
   const viewedRef = useRef<Set<number>>(new Set());
@@ -76,8 +88,89 @@ export default function HomeClient({ products, university, studentCount, initial
     else requestCardRefs.current.delete(id);
   }, []);
 
+  // ── Batch Telemetry refs & flush logic ──
+  const pendingProductViews = useRef<Set<number>>(new Set());
+  const pendingRequestViews = useRef<Set<number>>(new Set());
+
+  // Load session storage viewed items on mount
+  useEffect(() => {
+    try {
+      const sp = sessionStorage.getItem('viewed_products');
+      if (sp) {
+        JSON.parse(sp).forEach((id: number) => viewedRef.current.add(id));
+      }
+      const sr = sessionStorage.getItem('viewed_requests');
+      if (sr) {
+        JSON.parse(sr).forEach((id: number) => requestViewedRef.current.add(id));
+      }
+    } catch (e) {
+      /* silent fallback */
+    }
+  }, []);
+
+  const flushViews = useCallback(async () => {
+    if (pendingProductViews.current.size === 0 && pendingRequestViews.current.size === 0) {
+      return;
+    }
+    const productIds = Array.from(pendingProductViews.current);
+    const requestIds = Array.from(pendingRequestViews.current);
+    
+    // Clear immediately to prevent race conditions during async request
+    pendingProductViews.current.clear();
+    pendingRequestViews.current.clear();
+
+    try {
+      await fetch('/api/view-count/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productIds, requestIds }),
+        keepalive: true,
+      });
+    } catch (err) {
+      // Re-add on failure so they are retried
+      productIds.forEach(id => pendingProductViews.current.add(id));
+      requestIds.forEach(id => pendingRequestViews.current.add(id));
+      console.error('Failed to flush batch view counts:', err);
+    }
+  }, []);
+
+  // Set up periodic flusher and beforeunload handler
+  useEffect(() => {
+    const interval = setInterval(flushViews, 10000); // Flush every 10s
+    
+    const handleBeforeUnload = () => {
+      if (pendingProductViews.current.size > 0 || pendingRequestViews.current.size > 0) {
+        const payload = JSON.stringify({
+          productIds: Array.from(pendingProductViews.current),
+          requestIds: Array.from(pendingRequestViews.current),
+        });
+        
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon('/api/view-count/batch', new Blob([payload], { type: 'application/json' }));
+        } else {
+          fetch('/api/view-count/batch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: payload,
+            keepalive: true,
+          });
+        }
+        pendingProductViews.current.clear();
+        pendingRequestViews.current.clear();
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      flushViews();
+    };
+  }, [flushViews]);
+
   // ── Sort: available first, sold last ──────────────────────────────────────
-  const sorted = [...products].sort((a, b) => {
+  const sorted = [...loadedProducts].sort((a, b) => {
     const wa = sortWeight(a), wb = sortWeight(b);
     if (wa !== wb) return wa - wb;
     const aTime = new Date((a as any).bumped_at || a.created_at || 0).getTime();
@@ -89,21 +182,72 @@ export default function HomeClient({ products, university, studentCount, initial
     ? sorted
     : sorted.filter(p => p.category === activeCategory);
 
-  const visible = filtered.slice(0, visibleCount);
-  const hasMore = visibleCount < filtered.length;
+  const visible = filtered;
 
-  // ── Infinite scroll ───────────────────────────────────────────────────────
+  // ── Infinite scroll (Paginated) ──────────────────────────────────────────
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    try {
+      const res = await fetch(`/api/products?university=${encodeURIComponent(university)}&offset=${offset}&limit=${PAGE_SIZE}&category=${encodeURIComponent(activeCategory)}`);
+      const data = await res.json();
+      if (data.products && data.products.length > 0) {
+        setLoadedProducts(prev => {
+          // Deduplicate items to prevent double listing
+          const existingIds = new Set(prev.map(p => p.id));
+          const newProducts = data.products.filter((p: any) => !existingIds.has(p.id));
+          return [...prev, ...newProducts];
+        });
+        setOffset(prev => prev + data.products.length);
+        setHasMore(data.products.length >= PAGE_SIZE);
+      } else {
+        setHasMore(false);
+      }
+    } catch (e) {
+      console.error("Error loading more products:", e);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [offset, hasMore, loadingMore, university, activeCategory]);
+
   useEffect(() => {
-    if (!hasMore) return;
+    if (!hasMore || loadingMore) return;
     const obs = new IntersectionObserver(
-      e => { if (e[0].isIntersecting) setVisibleCount(n => n + PAGE_SIZE); },
+      e => { if (e[0].isIntersecting) loadMore(); },
       { rootMargin: '300px' }
     );
     if (loaderRef.current) obs.observe(loaderRef.current);
     return () => obs.disconnect();
-  }, [hasMore]);
+  }, [hasMore, loadingMore, loadMore]);
 
-  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [activeCategory]);
+  // Handle category switch resets
+  useEffect(() => {
+    let active = true;
+    const resetAndLoad = async () => {
+      setLoadingMore(true);
+      try {
+        const res = await fetch(`/api/products?university=${encodeURIComponent(university)}&offset=0&limit=${PAGE_SIZE}&category=${encodeURIComponent(activeCategory)}`);
+        const data = await res.json();
+        if (active && data.products) {
+          setLoadedProducts(data.products);
+          setOffset(data.products.length);
+          setHasMore(data.products.length >= PAGE_SIZE);
+        }
+      } catch (e) {
+        console.error("Error fetching category products:", e);
+      } finally {
+        if (active) setLoadingMore(false);
+      }
+    };
+
+    // If 'All' and loadedProducts matches the initial prop products, skip redundant fetch
+    if (activeCategory === 'All' && loadedProducts.length === products.length && offset === products.length) {
+      return;
+    }
+
+    resetAndLoad();
+    return () => { active = false; };
+  }, [activeCategory]);
 
   // ── Handle Save toggle ────────────────────────────────────────────────────
   const handleToggleSave = useCallback(async (productId: number) => {
@@ -145,13 +289,10 @@ export default function HomeClient({ products, university, studentCount, initial
             const t = setTimeout(async () => {
               if (!viewedRef.current.has(id)) {
                 viewedRef.current.add(id);
+                pendingProductViews.current.add(id);
                 try {
-                  await fetch('/api/view-count', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ productId: id }),
-                  });
-                } catch { /* silent */ }
+                  sessionStorage.setItem('viewed_products', JSON.stringify(Array.from(viewedRef.current)));
+                } catch {}
               }
               timers.current.delete(id);
             }, 1500);
@@ -183,11 +324,10 @@ export default function HomeClient({ products, university, studentCount, initial
             if (!requestViewedRef.current.has(id) && !requestTimers.current.has(id)) {
               const timer = setTimeout(() => {
                 requestViewedRef.current.add(id);
-                fetch('/api/view-count-request', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ requestId: id })
-                }).catch(console.error);
+                pendingRequestViews.current.add(id);
+                try {
+                  sessionStorage.setItem('viewed_requests', JSON.stringify(Array.from(requestViewedRef.current)));
+                } catch {}
               }, 1500); // 1.5s view threshold
               requestTimers.current.set(id, timer);
             }
