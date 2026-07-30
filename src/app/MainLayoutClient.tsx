@@ -7,6 +7,7 @@ import Navbar from '@/components/layout/Navbar';
 import LandingNavbar from '@/components/layout/LandingNavbar';
 import Footer from '@/components/layout/Footer';
 import AppLoader from '@/components/shared/AppLoader';
+import AnnouncementBanner from '@/components/layout/AnnouncementBanner';
 import { NotificationProvider } from '@/app/(main)/context/NotificationContext';
 import { User } from '@supabase/supabase-js';
 
@@ -32,6 +33,7 @@ export default function MainLayoutClient({
 
   return (
     <NotificationProvider user={user}>
+      {!isLoginPage && <AnnouncementBanner />}
       {showLandingNavbar && <LandingNavbar />}
       {showAuthNavbar && <Navbar />}
       <main>
