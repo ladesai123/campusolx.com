@@ -45,49 +45,16 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     
-    // Validate database connection
-    const { data: healthCheck, error: healthError } = await supabase
-      .from('products')
-      .select('id')
-      .limit(1);
-      
-    if (healthError) {
-      console.error('Database health check failed:', healthError);
-      return NextResponse.json(
-        { 
-          error: 'Database unavailable',
-          latestProductId: 50,
-          activeListings: 25,
-          lastSaleTime: '4h',
-          lastSaleItem: 'Study Materials'
-        }, 
-        { status: 503, headers }
-      );
-    }
-    
-    // Get the latest product ID (highest ID number)
-    const { data: latestProduct, error: latestError } = await supabase
-      .from('products')
-      .select('id')
-      .order('id', { ascending: false })
-      .limit(1)
-      .single();
-
-    // Get count of active (non-hidden) listings
-    const { count: activeListings, error: countError } = await supabase
-      .from('products')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_hidden', false)
-      .neq('status', 'sold'); // Exclude sold items
-
-    // Get a recent product for "last activity" info (since we may not track sales)
-    const { data: recentProduct, error: recentError } = await supabase
-      .from('products')
-      .select('title, created_at')
-      .eq('is_hidden', false)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+    // 🚀 Parallel Execution: Run stats queries concurrently instead of sequential waterfalls
+    const [
+      { data: latestProduct },
+      { count: activeListings },
+      { data: recentProduct }
+    ] = await Promise.all([
+      supabase.from('products').select('id').order('id', { ascending: false }).limit(1).single(),
+      supabase.from('products').select('*', { count: 'exact', head: true }).eq('is_hidden', false).neq('status', 'sold'),
+      supabase.from('products').select('title, created_at').eq('is_hidden', false).order('created_at', { ascending: false }).limit(1).single()
+    ]);
 
     // Calculate time since last listing
     let lastSaleTime = '6h';
@@ -122,7 +89,7 @@ export async function GET(request: NextRequest) {
       lastSaleItem: lastSaleItem || 'Recent Item'
     };
 
-    return NextResponse.json(stats);
+    return NextResponse.json(stats, { headers });
     
   } catch (error) {
     console.error('Error fetching marketplace stats:', error);

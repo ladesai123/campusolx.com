@@ -8,6 +8,21 @@ export async function middleware(request: NextRequest) {
     },
   });
 
+  // 🚀 Performance Optimization: Only perform auth network check on protected user routes.
+  // Public pages (/), public API routes (/api/*), auth callbacks, and static assets bypass this.
+  const pathname = request.nextUrl.pathname;
+  const isProtectedRoute = 
+    pathname.startsWith('/home') ||
+    pathname.startsWith('/profile') ||
+    pathname.startsWith('/sell') ||
+    pathname.startsWith('/chat') ||
+    pathname.startsWith('/edit') ||
+    pathname.startsWith('/admin');
+
+  if (!isProtectedRoute) {
+    return response;
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
