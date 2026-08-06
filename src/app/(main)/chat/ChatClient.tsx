@@ -179,12 +179,26 @@ function ConversationCard({
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { chatStore } from '@/lib/feedStore';
+
 export default function ChatClient({ connections, user, unreadCounts }: ChatClientProps) {
   const [declineDialogOpen, setDeclineDialogOpen] = useState<number | null>(null);
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [loadingChatId, setLoadingChatId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const userId = user.id;
+  const cached = chatStore.getConnectionsCache(userId);
+  const [currentConnections, setCurrentConnections] = useState<ConnectionWithPreview[]>(() => cached ? cached.connections : connections);
+
+  useEffect(() => {
+    chatStore.setConnectionsCache(userId, currentConnections);
+  }, [userId, currentConnections]);
+
+  useEffect(() => {
+    setCurrentConnections(connections);
+  }, [connections]);
 
   const notificationCtx = useContext(NotificationContext);
 
@@ -205,10 +219,10 @@ export default function ChatClient({ connections, user, unreadCounts }: ChatClie
     });
 
   const sellingConversations = sortByRecentActivity(
-    connections.filter((c: ConnectionWithPreview) => c.seller?.id === user.id)
+    currentConnections.filter((c: ConnectionWithPreview) => c.seller?.id === user.id)
   );
   const buyingConversations = sortByRecentActivity(
-    connections.filter((c: ConnectionWithPreview) => c.requester?.id === user.id)
+    currentConnections.filter((c: ConnectionWithPreview) => c.requester?.id === user.id)
   );
   const allConversations = sortByRecentActivity([...sellingConversations, ...buyingConversations]);
 

@@ -27,6 +27,7 @@ import { useChatScroll } from "@/hooks/use-chat-scroll";
 import { NotificationContext } from '../../context/NotificationContext';
 import type { Profile, MessageWithSender } from "./page";
 import SimpleSpinner from "@/components/shared/SimpleSpinner"; 
+import { chatStore } from "@/lib/feedStore";
 // ------------------------
 
 // --- Types ---
@@ -83,7 +84,9 @@ export default function ChatClient({
   const [pendingAction, setPendingAction] = useState<'accept'|'decline'|null>(null);
   const [isAccepting, setIsAccepting] = useState(false);
   const supabase = useMemo(() => createClient(), []);
-  const [messages, setMessages] = useState(initialMessages);
+  const connectionId = String(connection.id);
+  const cachedRoom = chatStore.getRoomCache(connectionId);
+  const [messages, setMessages] = useState<MessageWithSender[]>(() => cachedRoom ? cachedRoom.messages : initialMessages);
   const [otherUserStatus, setOtherUserStatus] = useState<'online' | 'offline'>('offline');
   const [lastActive, setLastActive] = useState<string | null>(null);
   const [isOtherTyping, setIsOtherTyping] = useState(false);
@@ -135,6 +138,7 @@ export default function ChatClient({
           .eq("id", payload.new.id)
           .single();
         if (newMessage) {
+          chatStore.appendMessage(connectionId, newMessage);
           setMessages((prev) => {
             if (prev.find((m) => m.id === newMessage.id)) return prev;
             return [...prev, newMessage as MessageWithSender];

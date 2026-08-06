@@ -25,6 +25,7 @@ import Link from "next/link";
 import { RequestCard } from "@/components/RequestCard";
 import Toast from "@/components/shared/Toast";
 import { getOptimizedCloudinaryUrl } from '@/lib/utils';
+import { profileStore, feedStore } from "@/lib/feedStore";
 
 type Product = Database["public"]["Tables"]["products"]["Row"];
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -39,7 +40,24 @@ interface ProfileClientProps {
 
 export default function ProfileClient({ profile, userProducts, savedProducts, userRequests, productAnalytics = [] }: ProfileClientProps) {
     const router = useRouter();
+    const userId = profile?.id || 'guest';
+    const cachedProfile = profileStore.getCache(userId);
+
     const [activeTab, setActiveTab] = useState<'listings' | 'saved' | 'requests'>('listings');
+    const [currentUserProducts, setCurrentUserProducts] = useState<Product[]>(() => cachedProfile ? cachedProfile.userProducts : userProducts);
+    const [currentSavedProducts, setCurrentSavedProducts] = useState<ProductWithProfile[]>(() => cachedProfile ? cachedProfile.savedProducts : savedProducts);
+    const [currentUserRequests, setCurrentUserRequests] = useState<RequestWithProfile[]>(() => cachedProfile ? cachedProfile.userRequests : userRequests);
+
+    // 🚀 Sync state into profileStore cache whenever updated
+    React.useEffect(() => {
+        profileStore.setCache(userId, {
+            profile,
+            userProducts: currentUserProducts,
+            savedProducts: currentSavedProducts,
+            userRequests: currentUserRequests,
+            productAnalytics,
+        });
+    }, [userId, profile, currentUserProducts, currentSavedProducts, currentUserRequests, productAnalytics]);
     const [loggingOut, setLoggingOut] = useState(false);
     const [deleteId, setDeleteId] = useState<number | null>(null);
     const [deleting, setDeleting] = useState(false);
@@ -83,8 +101,8 @@ export default function ProfileClient({ profile, userProducts, savedProducts, us
         ? new Date(profile.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
         : 'Apr 2026';
 
-    const activeCount = userProducts.filter(p => p.status === 'available' || p.status === 'pending_reservation' || p.status === 'reserved').length;
-    const soldCount = userProducts.filter(p => p.status === 'sold').length;
+    const activeCount = currentUserProducts.filter(p => p.status === 'available' || p.status === 'pending_reservation' || p.status === 'reserved').length;
+    const soldCount = currentUserProducts.filter(p => p.status === 'sold').length;
 
     async function handleLogout() {
         setLoggingOut(true);
@@ -95,19 +113,23 @@ export default function ProfileClient({ profile, userProducts, savedProducts, us
 
     async function handleDeleteProduct(productId: number) {
         setDeleting(true);
+        // 🚀 Optimistic update in 0ms across all stores
+        setCurrentUserProducts(prev => prev.filter(p => p.id !== productId));
+        profileStore.removeUserProduct(userId, productId);
+        feedStore.removeProduct(productId);
         await deleteProduct(productId);
         setDeleting(false);
         setDeleteId(null);
         setToastMessage("Listing deleted successfully");
-        router.refresh();
     }
 
     async function handleStatusChange(productId: number, newStatus: string) {
         setStatusUpdatingId(productId);
+        setCurrentUserProducts(prev => prev.map(p => p.id === productId ? { ...p, status: newStatus } : p));
+        profileStore.updateProductStatus(userId, productId, newStatus);
         await toggleProductStatus(productId, newStatus);
         setStatusUpdatingId(null);
-        setToastMessage(newStatus === 'sold' ? "Listing marked as sold" : "Listing relisted successfully");
-        router.refresh();
+        setToastMessage(`Listing status updated to ${newStatus}`);
     }
 
     async function handleBump(productId: number) {
@@ -189,9 +211,9 @@ export default function ProfileClient({ profile, userProducts, savedProducts, us
     const analyticsForProduct = analyticsProduct ? analyticsMap.get(analyticsProduct.id) : null;
 
     const tabs = [
-        { key: 'listings' as const, label: 'My Listings', icon: Package, count: userProducts.length },
-        { key: 'saved' as const, label: 'Watchlist', icon: Heart, count: savedProducts.length },
-        { key: 'requests' as const, label: 'Requests', icon: FileSearch, count: userRequests.length },
+        { key: 'listings' as const, label: 'My Listings', icon: Package, count: currentUserProducts.length },
+        { key: 'saved' as const, label: 'Watchlist', icon: Heart, count: currentSavedProducts.length },
+        { key: 'requests' as const, label: 'Requests', icon: FileSearch, count: currentUserRequests.length },
     ];
 
     return (
@@ -308,7 +330,7 @@ export default function ProfileClient({ profile, userProducts, savedProducts, us
                     {/* Listings Tab */}
                     {activeTab === 'listings' && (
                         <div className="p-3">
-                            {userProducts.length === 0 ? (
+                            {currentUserProducts.length === 0 ? (
                                 <div className="text-center py-12 text-gray-400">
                                     <Package className="h-10 w-10 mx-auto mb-2 opacity-30" />
                                     <p className="text-sm">No listings yet.</p>
@@ -318,7 +340,7 @@ export default function ProfileClient({ profile, userProducts, savedProducts, us
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-2 gap-3">
-                                    {userProducts.map(product => {
+                                    {currentUserProducts.map(product => {
                                         const badge = getStatusBadge(product.status);
                                         const bumpedAtStr = (product as any).bumped_at;
                                         const bumpedDate = bumpedAtStr ? new Date(bumpedAtStr) : null;
@@ -396,7 +418,7 @@ export default function ProfileClient({ profile, userProducts, savedProducts, us
                     {/* Saved Tab */}
                     {activeTab === 'saved' && (
                         <div className="p-3">
-                            {savedProducts.length === 0 ? (
+                            {currentSavedProducts.length === 0 ? (
                                 <div className="text-center py-12 text-gray-400">
                                     <Heart className="h-10 w-10 mx-auto mb-2 opacity-30" />
                                     <p className="text-sm">No saved items yet.</p>
@@ -406,7 +428,7 @@ export default function ProfileClient({ profile, userProducts, savedProducts, us
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-2 gap-3">
-                                    {savedProducts.map((product) => (
+                                    {currentSavedProducts.map((product) => (
                                         <ProductCard
                                             key={product.id}
                                             product={product}
@@ -422,7 +444,7 @@ export default function ProfileClient({ profile, userProducts, savedProducts, us
                     {/* Requests Tab */}
                     {activeTab === 'requests' && (
                         <div className="p-3">
-                            {userRequests.length === 0 ? (
+                            {currentUserRequests.length === 0 ? (
                                 <div className="text-center py-12 text-gray-400">
                                     <FileSearch className="h-10 w-10 mx-auto mb-2 opacity-30" />
                                     <p className="text-sm">No requests posted yet.</p>
@@ -432,7 +454,7 @@ export default function ProfileClient({ profile, userProducts, savedProducts, us
                                 </div>
                             ) : (
                                 <div className="flex flex-col gap-3">
-                                    {userRequests.map(request => (
+                                    {currentUserRequests.map(request => (
                                         <div key={request.id} className="relative">
                                             <RequestCard request={request} currentUserId={profile?.id} />
                                             <div className="flex gap-2 mt-2">
