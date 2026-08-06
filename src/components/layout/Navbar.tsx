@@ -9,12 +9,21 @@ import Logo from '@/components/shared/Logo';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/client';
 
+import { useRouter } from 'next/navigation';
+
 export default function Navbar() {
   const { unreadCount } = useNotifications();
   const [profilePic, setProfilePic] = useState<string | null>(null);
   const [initials, setInitials] = useState<string>('');
+  const router = useRouter();
 
   useEffect(() => {
+    // 🚀 Prefetch core app routes in background for 0ms instant client transitions
+    router.prefetch('/home');
+    router.prefetch('/profile');
+    router.prefetch('/chat');
+    router.prefetch('/sell');
+
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
@@ -33,7 +42,7 @@ export default function Navbar() {
           }
         });
     });
-  }, []);
+  }, [router]);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md">
@@ -41,13 +50,13 @@ export default function Navbar() {
         <Logo size="lg" />
         <div className="flex items-center gap-2 sm:gap-4">
           <Button asChild size="sm" className="rounded-full">
-            <Link href="/sell">
+            <Link href="/sell" prefetch={true}>
               <PlusCircle className="h-5 w-5 md:mr-2" />
               <span className="hidden md:inline">Sell Item</span>
             </Link>
           </Button>
           <Button asChild variant="ghost" className="relative rounded-full p-2 h-9 w-9">
-            <Link href="/chat">
+            <Link href="/chat" prefetch={true}>
               <MessageCircle className="h-6 w-6 text-gray-600 transition-colors hover:text-brand" />
               {unreadCount > 0 && (
                 <span className="absolute top-0 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
@@ -58,7 +67,7 @@ export default function Navbar() {
           </Button>
 
           {/* Profile picture / initials avatar */}
-          <Link href="/profile" className="relative h-9 w-9 rounded-full overflow-hidden border-2 border-gray-200 hover:border-gray-400 transition-colors flex items-center justify-center bg-gray-100">
+          <Link href="/profile" prefetch={true} className="relative h-9 w-9 rounded-full overflow-hidden border-2 border-gray-200 hover:border-gray-400 transition-colors flex items-center justify-center bg-gray-100">
             {profilePic ? (
               <Image
                 src={profilePic}

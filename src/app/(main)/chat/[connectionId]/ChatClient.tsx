@@ -295,7 +295,7 @@ export default function ChatClient({
         {/* Header (not fixed) */}
         <header className="flex items-center gap-3 border-b bg-white p-3 shadow-sm">
           <Button asChild variant="ghost" size="icon">
-            <Link href="/chat">
+            <Link href="/chat" prefetch={true}>
               <ArrowLeft />
             </Link>
           </Button>

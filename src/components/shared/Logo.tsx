@@ -16,7 +16,7 @@ const sizeMap: Record<NonNullable<LogoProps['size']>, string> = {
 
 export default function Logo({ className, size = 'md', href = '/home' }: LogoProps) {
   return (
-    <Link href={href} className={clsx('font-nunito select-none whitespace-nowrap', sizeMap[size], className)}>
+    <Link href={href} prefetch={true} className={clsx('font-nunito select-none whitespace-nowrap', sizeMap[size], className)}>
       <span className="font-semibold text-slate-900">Campus</span>
       <span className="font-bold text-brand" style={{ color: 'var(--brand-color)' }}>Olx</span>
     </Link>
