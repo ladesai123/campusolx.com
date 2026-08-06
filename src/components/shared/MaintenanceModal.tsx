@@ -32,16 +32,18 @@ export default function MaintenanceModal({ open, onOpenChange }: MaintenanceModa
             </div>
           </AlertDialogHeader>
 
-          <AlertDialogDescription className="text-[15px] text-[#64748B] leading-relaxed space-y-3">
-            <p>
-              CampusOlx is temporarily running in maintenance mode. Our database free-tier limits have been reached due to high activity.
-            </p>
-            <p>
-              We are waiting for the monthly quota refill, and the platform will be fully functional soon.
-            </p>
-            <p className="font-semibold text-[#0F172A]">
-              We promise our users this won't happen again! We are actively setting up permanent upgrades to avoid future quota bottlenecks.
-            </p>
+          <AlertDialogDescription className="text-[15px] text-[#64748B] leading-relaxed space-y-3" asChild>
+            <div>
+              <p>
+                CampusOlx is temporarily running in maintenance mode. Our database free-tier limits have been reached due to high activity.
+              </p>
+              <p>
+                We are waiting for the monthly quota refill, and the platform will be fully functional soon.
+              </p>
+              <p className="font-semibold text-[#0F172A]">
+                We promise our users this won't happen again! We are actively setting up permanent upgrades to avoid future quota bottlenecks.
+              </p>
+            </div>
           </AlertDialogDescription>
 
           <div className="w-full pt-4 border-t border-slate-100 flex flex-col gap-2">

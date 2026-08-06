@@ -15,6 +15,14 @@ import { type Database } from '@/lib/database.types'
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
+  const authError = requestUrl.searchParams.get('error_description') || requestUrl.searchParams.get('error')
+
+  if (authError) {
+    console.error('Supabase Auth Callback Error:', authError)
+    return NextResponse.redirect(
+      `${requestUrl.origin}/login?error=${encodeURIComponent(authError)}`
+    )
+  }
 
   if (!code) {
     // 🚨 No code → go back to login
@@ -48,7 +56,7 @@ export async function GET(request: Request) {
   const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
   if (exchangeError) {
     console.error('Session exchange error:', exchangeError.message)
-    return NextResponse.redirect(`${requestUrl.origin}/login?error=Authentication failed`)
+    return NextResponse.redirect(`${requestUrl.origin}/login?error=${encodeURIComponent(exchangeError.message)}`)
   }
 
   // 👤 Get the logged-in user

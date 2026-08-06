@@ -30,11 +30,22 @@ import SimpleSpinner from "@/components/shared/SimpleSpinner";
 // ------------------------
 
 // --- Types ---
+type ProductInfo = {
+  id: number;
+  title: string | null;
+  price: number | null;
+  image_urls: string[] | null;
+  whatsapp_number: string | null;
+  is_negotiable?: boolean | null;
+  status?: string | null;
+};
+
 type ConnectionWithProfiles = {
   id: number;
   seller: Profile | null;
   requester: Profile | null;
   status?: string;
+  product?: ProductInfo | null;
 };
 
 // --- Client-side Time Component ---
@@ -307,6 +318,61 @@ export default function ChatClient({
             </div>
           </div>
         </header>
+
+        {/* Product & WhatsApp Context Bar */}
+        {connection.product && (
+          <div className="bg-slate-50/90 border-b border-slate-200/80 px-3 py-2 flex items-center justify-between gap-2 shadow-inner">
+            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+              <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white">
+                <Image
+                  src={connection.product.image_urls?.[0] || "https://placehold.co/36x36"}
+                  alt={connection.product.title || "Product"}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold text-slate-900 truncate leading-tight">
+                  {connection.product.title}
+                </p>
+                <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+                  <span className="font-medium text-blue-600">
+                    {connection.product.price ? `₹${connection.product.price.toLocaleString('en-IN')}` : 'Free'}
+                  </span>
+                  {connection.product.is_negotiable && (
+                    <span className="text-[10px] bg-blue-50 text-blue-700 px-1 rounded border border-blue-100 font-medium">
+                      Negotiable
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Direct WhatsApp Action Button */}
+            {connection.product.whatsapp_number && (() => {
+              const phone = connection.product.whatsapp_number.replace(/\D/g, '');
+              if (!phone) return null;
+              const formattedPhone = phone.length === 10 ? `91${phone}` : phone;
+              const msg = `Hi! I'm interested in your listing for "${connection.product.title}" on CampusOLX. Is it still available? Here is our chat link: https://www.campusolx.com/product/${connection.product.id}`;
+              const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(msg)}`;
+
+              return (
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 bg-[#25D366] hover:bg-[#20bd5a] active:scale-95 text-white font-semibold text-xs px-3 py-1.5 rounded-full shadow-sm transition-all hover:shadow shrink-0"
+                  title="Chat directly on WhatsApp"
+                >
+                  <svg className="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24">
+                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                  </svg>
+                  <span>WhatsApp</span>
+                </a>
+              );
+            })()}
+          </div>
+        )}
 
         {/* Scrollable Messages */}
         <div ref={containerRef} className="space-y-4 overflow-y-auto p-4 pb-28 md:pb-24">

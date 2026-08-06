@@ -35,6 +35,7 @@ export default async function ChatPage(context: { params: { connectionId: string
     .select(
       `
       *,
+      product:products!connections_product_id_fkey(id, title, price, image_urls, whatsapp_number, is_negotiable, status),
       seller:profiles!connections_seller_id_fkey(*),
       requester:profiles!connections_requester_id_fkey(*)
     `,

@@ -20,7 +20,7 @@ export default async function ChatPage() {
       id,
       status,
       created_at,
-      product:products!inner(id, title, image_urls),
+      product:products!inner(id, title, image_urls, whatsapp_number),
       requester:profiles!connections_requester_id_fkey(*),
       seller:profiles!connections_seller_id_fkey(*)
     `)
