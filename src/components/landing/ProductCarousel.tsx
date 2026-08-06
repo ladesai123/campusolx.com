@@ -7,6 +7,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import 'keen-slider/keen-slider.min.css';
+import { getOptimizedCloudinaryUrl } from '@/lib/utils';
 
 function LandingProductCard({ product }: { product: any }) {
   const price = typeof product.price === 'number' ? product.price : 0;
@@ -39,7 +40,7 @@ function LandingProductCard({ product }: { product: any }) {
       <div className="relative h-[60%] w-full bg-[#F8F9FC] overflow-visible">
         <div className="relative h-full w-full overflow-hidden">
           <Image
-            src={product.image_urls?.[0] || '/placeholder.png'}
+            src={getOptimizedCloudinaryUrl(product.image_urls?.[0], 500)}
             alt={product.title}
             fill
             className={`object-cover transition-transform duration-500 group-hover:scale-105 ${isSoldOut ? 'grayscale opacity-70' : ''}`}
