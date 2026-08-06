@@ -1,3 +1,5 @@
+import { ChatSkeleton } from '@/components/shared/SkeletonLoaders';
+
 export default function Loading() {
-  return null;
+  return <ChatSkeleton />;
 }

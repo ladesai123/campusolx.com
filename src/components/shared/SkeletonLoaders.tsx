@@ -22,8 +22,45 @@ export function CategoryPillSkeleton() {
     );
 }
 
-export function BannerSkeleton() {
-    return (
-        <Skeleton className="w-full h-32 rounded-2xl" />
-    );
+export function ProfileSkeleton() {
+  return (
+    <div className="max-w-2xl mx-auto px-4 pt-5 space-y-4">
+      <div className="bg-white rounded-2xl p-5 border space-y-4 shadow-sm">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-16 w-16 rounded-full shrink-0" />
+          <div className="space-y-2 flex-1">
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-4 w-28" />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-2 py-3 bg-gray-50 rounded-xl">
+          <Skeleton className="h-8 w-16 mx-auto" />
+          <Skeleton className="h-8 w-16 mx-auto" />
+          <Skeleton className="h-8 w-16 mx-auto" />
+        </div>
+        <Skeleton className="h-11 w-full rounded-xl" />
+      </div>
+      <div className="grid grid-cols-2 gap-3 pt-2">
+        <ProductCardSkeleton />
+        <ProductCardSkeleton />
+      </div>
+    </div>
+  );
+}
+
+export function ChatSkeleton() {
+  return (
+    <div className="max-w-md mx-auto p-4 space-y-3">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <div key={i} className="flex items-center gap-3 p-3 bg-white rounded-xl border shadow-sm">
+          <Skeleton className="h-12 w-12 rounded-full shrink-0" />
+          <div className="space-y-2 flex-1">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-48" />
+          </div>
+          <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
+        </div>
+      ))}
+    </div>
+  );
 }
