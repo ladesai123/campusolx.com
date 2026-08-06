@@ -17,7 +17,7 @@ import {
     AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
     AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import { Loader2, Edit, Undo2, Tag, Trash2, User as UserIcon, ArrowUpCircle, BarChart2, TrendingUp, MessageSquare, Users, ChevronRight, Package, Heart, FileSearch, Eye, Info, ArrowLeft } from "lucide-react";
+import { Loader2, Edit, Undo2, Tag, Trash2, User as UserIcon, ArrowUpCircle, BarChart2, TrendingUp, MessageSquare, Users, ChevronRight, Package, Heart, FileSearch, Eye, Info, ArrowLeft, Camera, X } from "lucide-react";
 import SharePopup from "@/components/shared/SharePopup";
 import { Share2 } from "lucide-react";
 import Image from "next/image";
@@ -54,6 +54,19 @@ export default function ProfileClient({ profile, userProducts, savedProducts, us
     const [isSavingProfile, setIsSavingProfile] = useState(false);
     const [analyticsProduct, setAnalyticsProduct] = useState<Product | null>(null);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
+    const [showPhotoNotice, setShowPhotoNotice] = useState(false);
+
+    React.useEffect(() => {
+        const isDismissed = sessionStorage.getItem('co-profile-photo-notice-dismissed');
+        if (!isDismissed) {
+            setShowPhotoNotice(true);
+        }
+    }, []);
+
+    const handleDismissPhotoNotice = () => {
+        sessionStorage.setItem('co-profile-photo-notice-dismissed', 'true');
+        setShowPhotoNotice(false);
+    };
 
     const analyticsMap = new Map(productAnalytics.map(a => [a.product_id, a]));
 
@@ -193,6 +206,43 @@ export default function ProfileClient({ profile, userProducts, savedProducts, us
             </div>
 
             <div className="max-w-2xl mx-auto px-4 pt-5 pb-28">
+                {/* Dismissible Photo Notice Card */}
+                {showPhotoNotice && (
+                    <div className="bg-amber-50/90 border border-amber-200/90 rounded-2xl p-4 mb-4 shadow-sm relative transition-all animate-in fade-in duration-200">
+                        <button
+                            onClick={handleDismissPhotoNotice}
+                            className="absolute right-3 top-3 text-amber-500 hover:text-amber-800 p-1 rounded-full hover:bg-amber-100/80 transition-colors"
+                            aria-label="Close notice"
+                        >
+                            <X className="h-4 w-4" />
+                        </button>
+                        
+                        <div className="flex items-start gap-3 pr-6">
+                            <div className="p-2 rounded-xl bg-amber-100 text-amber-700 shrink-0 mt-0.5">
+                                <Camera className="h-5 w-5" />
+                            </div>
+                            <div className="space-y-1.5 text-xs sm:text-sm text-amber-950">
+                                <h4 className="font-bold text-amber-900 flex items-center gap-1.5 text-sm sm:text-base">
+                                    <span>📸 Action Required: Update Missing Product Photos</span>
+                                </h4>
+                                <p className="text-amber-800 leading-snug">
+                                    Following our database & storage upgrade, some older product photos may appear blank.
+                                </p>
+                                <p className="font-semibold text-amber-900 pt-1">
+                                    If one of your listings is missing its image:
+                                </p>
+                                <ul className="list-disc pl-4 space-y-1 text-amber-900 font-medium">
+                                    <li>Go to your <strong>Profile</strong> and delete the old product.</li>
+                                    <li>Click <strong>Sell</strong> to post the product again with new photos.</li>
+                                </ul>
+                                <p className="text-[11px] sm:text-xs text-amber-700/90 pt-1 italic">
+                                    We apologize for any inconvenience and appreciate your support!
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Profile Card */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-4">
                     <div className="flex items-center gap-4 mb-4">

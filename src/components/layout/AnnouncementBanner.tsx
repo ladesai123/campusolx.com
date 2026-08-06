@@ -28,8 +28,8 @@ export default function AnnouncementBanner() {
           <Camera className="h-3 w-3" />
           <span>Photo Update</span>
         </span>
-        <span className="text-slate-500 font-normal text-center">
-          Some older product photos aren't loading due to a storage update. If your listing has no photo, please delete it and upload a new one. Sorry for the inconvenience!
+        <span className="text-slate-600 font-normal text-center leading-normal">
+          Some older product images are not loading due to a recent storage upgrade. If your listed item is missing its photo, please delete that product and re-post it as a new listing with fresh photo. Thank you for helping keep CampusOLX up to date!
         </span>
       </div>
       <button
