@@ -12,6 +12,8 @@ import {
   Bike, Shirt, FlaskConical, Trophy, Package, PlusCircle, ShoppingBag, ArrowRight, Loader2,
 } from 'lucide-react';
 
+import { feedStore } from '@/lib/feedStore';
+
 // ─── Category config — B&W Lucide icons ──────────────────────────────────────
 const CATEGORIES = [
   { label: 'All',                      short: 'All',      Icon: LayoutGrid },
@@ -47,26 +49,51 @@ interface HomeClientProps {
 }
 
 export default function HomeClient({ products, university, studentCount, initialSavedIds, activeRequests, currentUserId }: HomeClientProps) {
-  const [activeCategory, setActiveCategory] = useState('All');
-  const [savedIds, setSavedIds] = useState<Set<number>>(() => new Set(initialSavedIds));
+  const cacheKey = `${university}_feed`;
+  const cachedFeed = feedStore.getCache(cacheKey);
+
+  const [activeCategory, setActiveCategory] = useState(() => cachedFeed?.activeCategory || 'All');
+  const [savedIds, setSavedIds] = useState<Set<number>>(() => new Set(cachedFeed ? cachedFeed.savedIds : initialSavedIds));
   const [navigatingToRequests, setNavigatingToRequests] = useState(false);
   const [navigatingToSell, setNavigatingToSell] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const router = useRouter();
   const loaderRef = useRef<HTMLDivElement>(null);
 
-  // Paginated feed state
-  const [loadedProducts, setLoadedProducts] = useState<ProductWithProfile[]>(products);
-  const [offset, setOffset] = useState(products.length);
+  // Paginated feed state — initialized from feedStore cache if available (0ms instant render)
+  const [loadedProducts, setLoadedProducts] = useState<ProductWithProfile[]>(() => cachedFeed ? cachedFeed.products : products);
+  const [offset, setOffset] = useState(() => cachedFeed ? cachedFeed.offset : products.length);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(products.length >= PAGE_SIZE);
+  const [hasMore, setHasMore] = useState(() => cachedFeed ? cachedFeed.hasMore : products.length >= PAGE_SIZE);
 
-  // Sync state if products prop changes (e.g., on server-side mutations or router refresh)
+  // 🚀 Instant Navigation & Scroll Restoration
   useEffect(() => {
-    setLoadedProducts(products);
-    setOffset(products.length);
-    setHasMore(products.length >= PAGE_SIZE);
-  }, [products]);
+    if (cachedFeed && cachedFeed.scrollPosition > 0) {
+      window.scrollTo({ top: cachedFeed.scrollPosition, behavior: 'instant' as ScrollBehavior });
+    }
+  }, []);
+
+  // 🚀 Sync state to feedStore whenever state changes
+  useEffect(() => {
+    feedStore.setCache(cacheKey, {
+      products: loadedProducts,
+      offset,
+      hasMore,
+      activeCategory,
+      savedIds: Array.from(savedIds),
+      activeRequests,
+      scrollPosition: window.scrollY,
+    });
+  }, [cacheKey, loadedProducts, offset, hasMore, activeCategory, savedIds, activeRequests]);
+
+  // 🚀 Track and save scroll position continuously
+  useEffect(() => {
+    const handleScroll = () => {
+      feedStore.saveScrollPosition(cacheKey, window.scrollY);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [cacheKey]);
   
   // ── View count logic for products ──
   const viewedRef = useRef<Set<number>>(new Set());
@@ -254,6 +281,7 @@ export default function HomeClient({ products, university, studentCount, initial
     const isSaved = savedIds.has(productId);
     
     // Optimistic update
+    feedStore.updateSavedId(productId, !isSaved);
     setSavedIds(prev => {
       const next = new Set(prev);
       if (isSaved) next.delete(productId);
