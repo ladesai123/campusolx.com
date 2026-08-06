@@ -267,8 +267,8 @@ export default function HomeClient({ products, university, studentCount, initial
       }
     };
 
-    // If 'All' and loadedProducts matches the initial prop products, skip redundant fetch
-    if (activeCategory === 'All' && loadedProducts.length === products.length && offset === products.length) {
+    // 🚀 Performance Fix: If category is 'All' and we already have cached/loaded products, skip redundant network fetch
+    if (activeCategory === 'All' && loadedProducts.length > 0) {
       return;
     }
 
