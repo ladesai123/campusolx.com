@@ -35,7 +35,14 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ products: products || [] });
+    return NextResponse.json(
+      { products: products || [] },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+        },
+      }
+    );
   } catch (error: any) {
     console.error('Server error in paginated products API:', error);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
