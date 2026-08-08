@@ -76,7 +76,7 @@ export default async function ProductDetailsPage({ params }: { params: { id: str
 
   const { data: product } = await supabase
     .from("products")
-    .select(`*, profiles ( id, name, university, profile_picture_url )`)
+    .select("id, title, description, price, mrp, category, image_urls, status, available_from, seller_id, created_at, profiles!inner(id, name, university, profile_picture_url)")
     .eq("id", parseInt(params.id, 10))
     .single();
 
@@ -85,7 +85,6 @@ export default async function ProductDetailsPage({ params }: { params: { id: str
   }
 
   // Tell Supabase to expect a single `ProductWithProfile` object.
-  // This is more type-safe than casting to `any`.
   const typedProduct = product as unknown as ProductWithProfile;
 
   // Ensure the `profiles` field is a single object, not an array.
@@ -110,26 +109,12 @@ export default async function ProductDetailsPage({ params }: { params: { id: str
     .eq("user_id", user.id)
     .maybeSingle();
 
-  const { data: similarProductsData } = await supabase
-    .from("products")
-    .select(`*, profiles ( id, name, university, profile_picture_url )`)
-    .eq("category", transformedProduct.category || "")
-    .neq("id", transformedProduct.id)
-    .eq("status", "available")
-    .limit(4);
-
-  const similarProducts = (similarProductsData || []).map(p => ({
-    ...p,
-    profiles: Array.isArray(p.profiles) ? p.profiles[0] : p.profiles
-  })) as unknown as ProductWithProfile[];
-
   return (
     <ProductDetailsClient
       user={user}
       product={transformedProduct}
       existingConnection={existingConnection}
       initialIsSaved={!!savedItem}
-      similarProducts={similarProducts}
     />
   );
 }

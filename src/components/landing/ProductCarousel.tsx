@@ -115,21 +115,11 @@ export default function LandingProductCarousel() {
   useEffect(() => {
     async function fetchLandingProducts() {
       try {
-        const supabase = createClient();
-        const { data: products, error } = await supabase
-          .from('products')
-          .select('*')
-          .eq('show_on_landing', true)
-          .eq('is_hidden', false)
-          .order('created_at', { ascending: false })
-          .limit(8);
-        
-        if (error) {
-          console.error('Error fetching landing products:', error);
-          return;
+        const res = await fetch('/api/products/landing');
+        const data = await res.json();
+        if (data.products) {
+          setProducts(data.products.slice(0, 8));
         }
-        
-        setProducts(products || []);
       } catch (error) {
         console.error('Error in fetchLandingProducts:', error);
       }

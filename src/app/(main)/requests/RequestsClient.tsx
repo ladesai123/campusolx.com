@@ -23,8 +23,9 @@ export default function RequestsClient({ requests, currentUserId, university }: 
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
-  // ── Intersection Observer for View Counts ──
+  // ── Batched Intersection Observer for View Counts ──
   const viewedRef = useRef<Set<number>>(new Set());
+  const pendingViewIds = useRef<Set<number>>(new Set());
   const timers = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
   const cardRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
@@ -33,10 +34,37 @@ export default function RequestsClient({ requests, currentUserId, university }: 
     else cardRefs.current.delete(id);
   }, []);
 
+  const flushViews = useCallback(async () => {
+    if (pendingViewIds.current.size === 0) return;
+    const requestIds = Array.from(pendingViewIds.current);
+    pendingViewIds.current.clear();
+
+    try {
+      await fetch('/api/view-count/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requestIds }),
+      });
+    } catch (e) {
+      console.error('[RequestsClient] Batch view count error:', e);
+    }
+  }, []);
+
   useEffect(() => {
+    const flushInterval = setInterval(flushViews, 30000);
+
+    const handleBeforeUnload = () => {
+      if (pendingViewIds.current.size > 0) {
+        const payload = JSON.stringify({ requestIds: Array.from(pendingViewIds.current) });
+        navigator.sendBeacon('/api/view-count/batch', new Blob([payload], { type: 'application/json' }));
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach(entry => {
+        entries.forEach((entry) => {
           const idStr = (entry.target as HTMLElement).dataset.requestId;
           if (!idStr) return;
           const id = parseInt(idStr, 10);
@@ -45,12 +73,7 @@ export default function RequestsClient({ requests, currentUserId, university }: 
             if (!viewedRef.current.has(id) && !timers.current.has(id)) {
               const timer = setTimeout(() => {
                 viewedRef.current.add(id);
-                // Fire and forget view count update
-                fetch('/api/view-count-request', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ requestId: id })
-                }).catch(console.error);
+                pendingViewIds.current.add(id);
               }, 1500);
               timers.current.set(id, timer);
             }
@@ -67,13 +90,17 @@ export default function RequestsClient({ requests, currentUserId, university }: 
     );
 
     const currentRefs = cardRefs.current;
-    currentRefs.forEach(ref => observer.observe(ref));
+    currentRefs.forEach((ref) => observer.observe(ref));
+
     return () => {
-      currentRefs.forEach(ref => observer.unobserve(ref));
+      currentRefs.forEach((ref) => observer.unobserve(ref));
       timers.current.forEach(clearTimeout);
       timers.current.clear();
+      clearInterval(flushInterval);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      flushViews();
     };
-  }, [requests]);
+  }, [requests, flushViews]);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

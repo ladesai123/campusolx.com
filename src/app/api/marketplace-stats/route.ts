@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
       { data: recentProduct }
     ] = await Promise.all([
       supabase.from('products').select('id').order('id', { ascending: false }).limit(1).single(),
-      supabase.from('products').select('*', { count: 'exact', head: true }).eq('is_hidden', false).neq('status', 'sold'),
+      supabase.from('products').select('id', { count: 'exact', head: true }).eq('is_hidden', false).neq('status', 'sold'),
       supabase.from('products').select('title, created_at').eq('is_hidden', false).order('created_at', { ascending: false }).limit(1).single()
     ]);
 

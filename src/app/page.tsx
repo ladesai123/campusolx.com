@@ -74,7 +74,7 @@ export default function LandingPage() {
         const supabase = createClient();
         const { count, error } = await supabase
           .from('profiles')
-          .select('*', { count: 'exact', head: true });
+          .select('id', { count: 'exact', head: true });
         
         if (error) {
           console.error('Failed to fetch user count:', error);

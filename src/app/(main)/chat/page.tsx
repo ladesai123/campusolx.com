@@ -21,8 +21,8 @@ export default async function ChatPage() {
       status,
       created_at,
       product:products!inner(id, title, image_urls, whatsapp_number),
-      requester:profiles!connections_requester_id_fkey(*),
-      seller:profiles!connections_seller_id_fkey(*)
+      requester:profiles!connections_requester_id_fkey(id, name, university, profile_picture_url),
+      seller:profiles!connections_seller_id_fkey(id, name, university, profile_picture_url)
     `)
     .or(`seller_id.eq.${user.id},requester_id.eq.${user.id}`)
     .order('created_at', { ascending: false });
@@ -30,26 +30,24 @@ export default async function ChatPage() {
   // Fetch latest messages for each connection
   let connectionsWithPreviews: ConnectionWithPreview[] = [];
   if (connections && connections.length > 0) {
-    const connectionIds = connections.map((c: any) => c.id);
-    const { data: messages } = await supabase
-      .from('messages')
-      .select('connection_id, content, created_at')
-      .in('connection_id', connectionIds)
-      .order('created_at', { ascending: false });
     const latestMessages = new Map<number, { content: string | null; created_at: string | null }>();
-    if (messages) {
-      for (const message of messages) {
-        if (!latestMessages.has(message.connection_id)) {
-          latestMessages.set(message.connection_id, {
-            content: message.content,
-            created_at: message.created_at,
-          });
+    await Promise.all(
+      connections.map(async (conn: any) => {
+        const { data: msg } = await supabase
+          .from('messages')
+          .select('content, created_at')
+          .eq('connection_id', conn.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (msg) {
+          latestMessages.set(conn.id, msg);
         }
-      }
-    }
+      })
+    );
+
     connectionsWithPreviews = connections.map((conn: any) => {
       const product = Array.isArray(conn.product) ? conn.product[0] : conn.product;
-      // Fix: always use the first element if array, else the object
       const requester = Array.isArray(conn.requester) ? conn.requester[0] : conn.requester;
       const seller = Array.isArray(conn.seller) ? conn.seller[0] : conn.seller;
       return {

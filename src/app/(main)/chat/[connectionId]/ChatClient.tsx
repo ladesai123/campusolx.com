@@ -134,7 +134,7 @@ export default function ChatClient({
       async (payload) => {
         const { data: newMessage } = await supabase
           .from("messages")
-          .select("*, sender:profiles(*)")
+          .select("id, connection_id, sender_id, content, created_at, sender:profiles(id, name, university, profile_picture_url)")
           .eq("id", payload.new.id)
           .single();
         if (newMessage) {

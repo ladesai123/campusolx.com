@@ -24,8 +24,9 @@ export async function GET(request: Request) {
 
   const { data: rawProducts, error } = await supabase
     .from('products')
-    .select('*, profiles(university)')
-    .order('created_at', { ascending: false });
+    .select('id, title, price, mrp, category, image_urls, status, available_from, is_negotiable, bumped_at, created_at, view_count, seller_id, is_hidden, profiles(university)')
+    .order('created_at', { ascending: false })
+    .limit(50);
 
   if (error) {
     console.error('[Sastranet API] Error fetching products:', error);

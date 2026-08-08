@@ -12,6 +12,8 @@ const BASE_URL = 'https://campusolx.com';
  * NOTE: Uses a plain anon Supabase client (no cookies) because sitemap.ts
  * runs outside of a request context and cannot use the cookie-based server client.
  */
+export const revalidate = 86400; // Cache sitemap at Next.js/CDN edge for 24 hours (eliminates crawler DB queries)
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // ── Static / marketing pages ───────────────────────────────────────────────
   const staticRoutes: MetadataRoute.Sitemap = [

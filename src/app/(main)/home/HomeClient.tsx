@@ -163,7 +163,7 @@ export default function HomeClient({ products, university, studentCount, initial
 
   // Set up periodic flusher and beforeunload handler
   useEffect(() => {
-    const interval = setInterval(flushViews, 10000); // Flush every 10s
+    const interval = setInterval(flushViews, 30000); // Flush every 30s to conserve network traffic
     
     const handleBeforeUnload = () => {
       if (pendingProductViews.current.size > 0 || pendingRequestViews.current.size > 0) {

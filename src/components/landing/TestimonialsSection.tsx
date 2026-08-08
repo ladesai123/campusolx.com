@@ -30,7 +30,8 @@ export default function FeedbackCarousel() {
         .from('feedback')
         .select('id,name,year,experience')
         .eq('status', 'approved')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(6);
       setFeedbacks(data || []);
     };
     fetchFeedbacks();

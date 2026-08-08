@@ -67,7 +67,7 @@ export default function ChatPane({ connection, initialMessages, user, onBack }: 
           // When a new message arrives, fetch it with the sender's profile
           const { data: newMessageWithProfile } = await supabase
             .from('messages')
-            .select(`*, sender:profiles!messages_sender_id_fkey(*)`)
+            .select(`id, connection_id, sender_id, content, created_at, sender:profiles!messages_sender_id_fkey(id, name, university, profile_picture_url)`)
             .eq('id', payload.new.id)
             .single();
           

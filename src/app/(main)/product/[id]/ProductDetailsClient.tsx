@@ -53,7 +53,6 @@ interface ProductDetailsClientProps {
   product: Product | null;
   existingConnection: { id: number; status: string } | null;
   initialIsSaved?: boolean;
-  similarProducts?: any[]; // using any to avoid circular type issues or redefine
 }
 
 // Helper functions (these can be moved to a utils file if you prefer)
@@ -79,7 +78,6 @@ export default function ProductDetailsClient({
   product,
   existingConnection,
   initialIsSaved,
-  similarProducts = [],
 }: ProductDetailsClientProps) {
   const router = useRouter();
   const [showReserveTip, setShowReserveTip] = useState(false);
@@ -476,20 +474,6 @@ export default function ProductDetailsClient({
             </div>
           </div>
         </div>
-
-        {/* Similar Items Section */}
-        {similarProducts && similarProducts.length > 0 && (
-          <div className="mt-12 mb-8">
-            <h2 className="text-xl font-bold text-slate-900 mb-4 px-2">Similar Items You Might Like</h2>
-            <div className="flex overflow-x-auto pb-6 gap-4 snap-x hide-scrollbar px-2">
-              {similarProducts.map((simProduct) => (
-                <div key={simProduct.id} className="w-[280px] sm:w-[320px] snap-start flex-shrink-0">
-                  <ProductCard product={simProduct} />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </>
   );

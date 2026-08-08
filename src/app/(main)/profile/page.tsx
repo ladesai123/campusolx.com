@@ -29,29 +29,33 @@ export default async function ProfilePage() {
 
   if (!user) redirect("/login");
 
-  const profilePromise = supabase.from("profiles").select("*").eq("id", user.id).single();
+  const profilePromise = supabase
+    .from("profiles")
+    .select("id, name, university, profile_picture_url, created_at, acquisition_source")
+    .eq("id", user.id)
+    .single();
 
   const userProductsPromise = supabase
     .from("products")
-    .select("*")
+    .select("id, title, price, mrp, category, image_urls, status, available_from, created_at, view_count, seller_id, is_hidden, description, show_on_landing")
     .eq("seller_id", user.id)
     .order("created_at", { ascending: false });
 
   const connectionsPromise = supabase
     .from("connections")
-    .select(`id, status, created_at, product:products!inner(id, title, image_urls), requester:profiles!connections_requester_id_fkey(*), seller:profiles!connections_seller_id_fkey(*)`)
+    .select(`id, status, created_at, product:products!inner(id, title, image_urls), requester:profiles!connections_requester_id_fkey(id, name, university, profile_picture_url), seller:profiles!connections_seller_id_fkey(id, name, university, profile_picture_url)`)
     .or(`seller_id.eq.${user.id},requester_id.eq.${user.id}`)
     .order("created_at", { ascending: false });
 
   const savedItemsPromise = supabase
     .from("saved_items")
-    .select(`product:products (*, profiles!inner(*))`)
+    .select(`product:products(id, title, price, mrp, category, image_urls, status, available_from, created_at, view_count, seller_id, is_hidden, profiles!inner(id, name, university, profile_picture_url))`)
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
   const userRequestsPromise = supabase
     .from("requests")
-    .select("*, profiles!inner(id, name, university, profile_picture_url)")
+    .select("id, title, max_budget, view_count, whatsapp_number, user_id, status, is_hidden, created_at, profiles!inner(id, name, university, profile_picture_url)")
     .eq("user_id", user.id)
     .eq("is_hidden", false)
     .order("created_at", { ascending: false });
@@ -102,48 +106,47 @@ export default async function ProfilePage() {
     profile = newProfile as Profile | null;
   }
 
-  // Build analytics per product
+  // Build analytics per product using head counts to avoid downloading message rows
   let productAnalytics: ProductAnalytics[] = [];
   if (productConnections && productConnections.length > 0) {
-    const connectionIds = productConnections.map(c => c.id);
-    const { data: messages } = await supabase
-      .from("messages")
-      .select("connection_id")
-      .in("connection_id", connectionIds);
-
-    const messageCountByConnection = new Map<number, number>();
-    (messages || []).forEach(m => {
-      messageCountByConnection.set(m.connection_id, (messageCountByConnection.get(m.connection_id) || 0) + 1);
-    });
+    const connectionCounts = await Promise.all(
+      productConnections.map(async (conn) => {
+        const { count } = await supabase
+          .from("messages")
+          .select("*", { count: "exact", head: true })
+          .eq("connection_id", conn.id);
+        return { connectionId: conn.id, productId: conn.product_id, messageCount: count || 0 };
+      })
+    );
 
     const analyticsMap = new Map<number, ProductAnalytics>();
-    productConnections.forEach(conn => {
-      const pid = conn.product_id;
-      const existing = analyticsMap.get(pid) || { product_id: pid, connections_count: 0, messages_count: 0 };
+    connectionCounts.forEach(({ productId, messageCount }) => {
+      const existing = analyticsMap.get(productId) || { product_id: productId, connections_count: 0, messages_count: 0 };
       existing.connections_count += 1;
-      existing.messages_count += (messageCountByConnection.get(conn.id) || 0);
-      analyticsMap.set(pid, existing);
+      existing.messages_count += messageCount;
+      analyticsMap.set(productId, existing);
     });
     productAnalytics = Array.from(analyticsMap.values());
   }
 
   let connectionsWithPreviews: ConnectionWithPreview[] = [];
   if (connections && connections.length > 0) {
-    const connectionIds = connections.map(c => c.id);
-    const { data: messages } = await supabase
-      .from("messages")
-      .select("connection_id, content, created_at")
-      .in("connection_id", connectionIds)
-      .order("created_at", { ascending: false });
-
     const latestMessages = new Map<number, { content: string | null; created_at: string | null }>();
-    if (messages) {
-      for (const message of messages) {
-        if (!latestMessages.has(message.connection_id)) {
-          latestMessages.set(message.connection_id, { content: message.content, created_at: message.created_at });
+    await Promise.all(
+      connections.map(async (conn) => {
+        const { data: msg } = await supabase
+          .from("messages")
+          .select("content, created_at")
+          .eq("connection_id", conn.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (msg) {
+          latestMessages.set(conn.id, msg);
         }
-      }
-    }
+      })
+    );
+
     connectionsWithPreviews = connections.map(conn => {
       const product = Array.isArray(conn.product) ? conn.product[0] : conn.product;
       const requester = Array.isArray(conn.requester) ? conn.requester[0] : conn.requester;

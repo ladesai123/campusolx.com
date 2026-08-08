@@ -10,7 +10,7 @@ export default async function HomePage() {
   if (!user) redirect("/login");
 
   // Fetch profile (with self-healing)
-  const profileRes = await supabase.from("profiles").select("*").eq("id", user.id).single();
+  const profileRes = await supabase.from("profiles").select("id, name, university, profile_picture_url").eq("id", user.id).single();
   let profile = profileRes.data as Profile | null;
 
   if (!profile) {

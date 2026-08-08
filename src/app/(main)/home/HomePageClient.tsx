@@ -24,26 +24,8 @@ export default function HomePageClient({ profile, initialProducts }: HomePageCli
   const router = useRouter();
 
   useEffect(() => {
-    // ✅ REMOVED DUPLICATE initOneSignal() - handled globally in OneSignalInit.tsx
-
-    // Supabase realtime listener (unchanged)
-    const channel = supabase
-      .channel('realtime products')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'products' },
-        (payload) => {
-          router.refresh(); 
-        }
-      )
-      .subscribe();
-
-    // ✅ OneSignal subscription is now handled by OneSignalHomePrompt component
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [supabase, router]);
+    // ✅ Realtime listener removed to reduce Supabase egress and prevent unnecessary router.refresh() re-fetches
+  }, []);
 
   return (
     <>

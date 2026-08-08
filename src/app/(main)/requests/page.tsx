@@ -25,14 +25,15 @@ export default async function RequestsPage() {
 
   const university = profile?.university || "";
 
-  // Fetch active requests for the university
+  // Fetch active requests for the university (limit 30)
   const { data: rawRequests } = await supabase
     .from("requests")
-    .select("*, profiles!inner(id, name, university, profile_picture_url)")
+    .select("id, title, max_budget, view_count, whatsapp_number, user_id, status, is_hidden, created_at, profiles!inner(id, name, university, profile_picture_url)")
     .eq("profiles.university", university)
     .eq("status", "active")
     .eq("is_hidden", false)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(30);
 
   const activeRequests = (rawRequests as unknown as RequestWithProfile[]) || [];
 

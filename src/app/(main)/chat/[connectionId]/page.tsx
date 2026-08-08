@@ -34,10 +34,10 @@ export default async function ChatPage(context: { params: { connectionId: string
     .from("connections")
     .select(
       `
-      *,
+      id, status, created_at, seller_id, requester_id, product_id,
       product:products!connections_product_id_fkey(id, title, price, image_urls, whatsapp_number, is_negotiable, status),
-      seller:profiles!connections_seller_id_fkey(*),
-      requester:profiles!connections_requester_id_fkey(*)
+      seller:profiles!connections_seller_id_fkey(id, name, university, profile_picture_url),
+      requester:profiles!connections_requester_id_fkey(id, name, university, profile_picture_url)
     `,
     )
     .eq("id", connectionId)
@@ -61,8 +61,8 @@ export default async function ChatPage(context: { params: { connectionId: string
     .from("messages")
     .select(
       `
-      *,
-      sender:profiles!messages_sender_id_fkey(*)
+      id, connection_id, sender_id, content, created_at,
+      sender:profiles!messages_sender_id_fkey(id, name, university, profile_picture_url)
     `,
     )
     .eq("connection_id", connectionId)
@@ -76,7 +76,7 @@ export default async function ChatPage(context: { params: { connectionId: string
   // 5. Fetch the current user's full profile
   const { data: userProfile } = await supabase
     .from("profiles")
-    .select("*")
+    .select("id, name, university, profile_picture_url")
     .eq("id", authUser.id)
     .single();
 
@@ -87,7 +87,7 @@ export default async function ChatPage(context: { params: { connectionId: string
       <ChatClient
         connection={connection as any}
         initialMessages={(serverMessages as MessageWithSender[]) || []}
-        user={userProfile}
+        user={userProfile as any}
       />
     </NotificationProvider>
   );
