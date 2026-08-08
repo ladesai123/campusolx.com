@@ -1,6 +1,5 @@
 import { MetadataRoute } from 'next';
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from '@/lib/database.types';
+import { getPublicCachedSupabase } from '@/lib/publicClient';
 
 const BASE_URL = 'https://campusolx.com';
 
@@ -65,11 +64,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let productRoutes: MetadataRoute.Sitemap = [];
 
   try {
-    // Plain anon client — no cookie handling needed for read-only public data
-    const supabase = createClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    );
+    const supabase = getPublicCachedSupabase();
 
     const { data: products } = await supabase
       .from('products')

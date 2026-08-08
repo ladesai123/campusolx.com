@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/server';
+import { getPublicCachedSupabase } from '@/lib/publicClient';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(req: NextRequest) {
@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Missing university parameter' }, { status: 400 });
     }
 
-    const supabase = await createClient();
+    const supabase = getPublicCachedSupabase();
 
     let query = supabase
       .from('products')

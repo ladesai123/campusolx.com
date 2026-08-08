@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/client';
+import { getPublicCachedSupabase } from '@/lib/publicClient';
 
 export async function GET() {
-	const supabase = createClient();
+	const supabase = getPublicCachedSupabase();
 	// Fetch products for landing page: show_on_landing = true (no status restriction)
 	const { data, error } = await supabase
 		.from('products')
