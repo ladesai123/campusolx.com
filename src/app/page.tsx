@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/client';
 import { Button } from "@/components/ui/button";
-import { LogIn, Leaf, Users, IndianRupee, MessageCircle, Handshake, Download, ArrowRight, Camera, CalendarClock, Tag, Share2, Bell, Zap, Loader2 } from 'lucide-react'; 
+import { LogIn, Leaf, Users, IndianRupee, MessageCircle, Handshake, Download, ArrowRight, Camera, CalendarClock, Tag, Share2, Bell, Zap, Loader2, ShieldCheck, Building2, Sparkles } from 'lucide-react'; 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import LandingNavbar from '@/components/layout/LandingNavbar';
@@ -12,6 +12,7 @@ import FounderStoryCard from '@/components/landing/FounderStory';
 import LandingProductCarousel from '@/components/landing/ProductCarousel';
 import FeedbackCarousel from '@/components/landing/TestimonialsSection';
 import MaintenanceModal from '@/components/shared/MaintenanceModal';
+import AnimatedCounter from '@/components/ui/AnimatedCounter';
 
 // Helper Components
 function ValuePropCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string; }) {
@@ -114,56 +115,19 @@ export default function LandingPage() {
     };
   }, []);
 
-  // Format the user count for display
-  let displayUserCount: React.ReactNode = (
-    <span className="inline-block align-middle" style={{ minWidth: '2.5em', letterSpacing: '0.2em' }}>
-      <span style={{
-        display: 'inline-block',
-        animation: 'dot-bounce 1s infinite',
-        fontSize: '1.2em',
-        animationDelay: '0s',
-      }}>.</span>
-      <span style={{
-        display: 'inline-block',
-        animation: 'dot-bounce 1s infinite',
-        fontSize: '1.2em',
-        animationDelay: '0.2s',
-      }}>.</span>
-      <span style={{
-        display: 'inline-block',
-        animation: 'dot-bounce 1s infinite',
-        fontSize: '1.2em',
-        animationDelay: '0.4s',
-      }}>.</span>
-      <style>{`
-        @keyframes dot-bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-0.5em); }
-        }
-      `}</style>
-    </span>
-  );
-  
-  if (userCount !== null && userCount > 0) {
-    displayUserCount = String(userCount);
-  }
-
   // --- PWA Install Logic ---
   const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
   const [showInstallButton, setShowInstallButton] = useState(false);
 
   useEffect(() => {
-    // Check if app is already installed
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
     const isInAppBrowser = (window.navigator as any).standalone; // iOS PWA
     
     if (isStandalone || isInAppBrowser) {
-      console.log('App is already installed');
       return; 
     }
 
     const handler = (e: Event) => {
-      console.log('PWA install prompt intercepted');
       setInstallPrompt(e);
       setShowInstallButton(true);
     };
@@ -172,7 +136,6 @@ export default function LandingPage() {
     
     const timer = setTimeout(() => {
       if (!installPrompt) {
-        console.log('No native install prompt, showing manual install button');
         setShowInstallButton(true);
       }
     }, 5000);
@@ -182,20 +145,6 @@ export default function LandingPage() {
       clearTimeout(timer);
     };
   }, []);
-
-  const handleInstallClick = () => {
-    if (installPrompt) {
-      (installPrompt as any).preventDefault();
-      (installPrompt as any).prompt();
-      
-      (installPrompt as any).userChoice.then((choiceResult: any) => {
-        console.log('PWA install choice:', choiceResult.outcome);
-        setInstallPrompt(null);
-      });
-    } else {
-      alert('To install CampusOlx:\n\n1. Click the browser menu (⋮)\n2. Select "Install CampusOlx"\n3. Or add to home screen\n\nNote: Installation is available on mobile browsers and some desktop browsers.');
-    }
-  };
 
   // Enhanced helper to handle login/enter marketplace with loading state
   const [authLoading, setAuthLoading] = useState(false);
@@ -248,29 +197,48 @@ export default function LandingPage() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,white_80%)] pointer-events-none"></div>
 
           <div className="max-w-[1000px] w-full mx-auto relative z-10 flex flex-col items-center text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#E0E7FF] border border-[#C7D2FE] mb-6">
+            {/* Live Counter Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#E0E7FF] border border-[#C7D2FE] mb-6 shadow-2xs">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#2563EB] opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[#2563EB]"></span>
               </span>
               <span className="text-[14px] font-[600] text-[#2563EB]">
-                Join {userCount !== null ? userCount.toLocaleString('en-IN') : "1000's of"} students buying & selling
+                Join <AnimatedCounter target={userCount && userCount > 0 ? userCount : 7007} duration={1200} suffix="+" /> Sastraites buying & selling
               </span>
             </div>
             
-            <h1 className="text-[48px] lg:text-[72px] leading-[1.1] font-[700] text-[#0F172A] mb-6 tracking-tight">
-              Your campus. <span className="text-[#2563EB]">Your marketplace.</span>
+            {/* Requested Hero Headline with Sastraites */}
+            <h1 className="text-[44px] sm:text-[56px] lg:text-[72px] leading-[1.08] font-[700] text-[#0F172A] mb-6 tracking-tight max-w-[920px]">
+              The Smartest Way <span className="text-[#2563EB]">Sastraites</span> Buy, Sell & Pass On Campus Essentials.
             </h1>
             
-            <p className="max-w-[640px] mx-auto text-[18px] md:text-[20px] text-[#64748B] font-[400] leading-relaxed mb-10">
+            {/* Exact Sub-headline */}
+            <p className="max-w-[660px] mx-auto text-[18px] md:text-[20px] text-[#64748B] font-[400] leading-relaxed mb-7">
               Buy, sell, and swap with students right on your campus — no strangers, no shipping, no hassle. Just your college community.
             </p>
+
+            {/* 3-Second Instant Trust Pills */}
+            <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 mb-9 text-xs sm:text-sm font-medium text-slate-700">
+              <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80 shadow-2xs">
+                <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                <span>100% @sastra.ac.in Verified</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-blue-50 text-blue-800 border border-blue-200/80 shadow-2xs">
+                <Building2 className="h-4 w-4 text-blue-600" />
+                <span>Hostel & Campus Handoffs</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-purple-50 text-purple-800 border border-purple-200/80 shadow-2xs">
+                <Sparkles className="h-4 w-4 text-purple-600" />
+                <span>0% Commission / Platform Fees</span>
+              </div>
+            </div>
             
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button asChild className="rounded-[16px] px-8 py-6 text-[16px] font-[600] bg-[#2563EB] text-white hover:bg-[#1D4ED8] transition-colors border-0">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
+              <Button asChild className="w-full sm:w-auto rounded-[16px] px-8 py-6 text-[16px] font-[600] bg-[#2563EB] text-white hover:bg-[#1D4ED8] transition-colors border-0">
                 <Link href="/home">Start Selling Today</Link>
               </Button>
-              <Button asChild variant="outline" className="rounded-[16px] px-8 py-6 text-[16px] font-[600] border border-[#E2E8F0] text-[#0F172A] hover:bg-[#F8F9FC] transition-colors bg-white">
+              <Button asChild variant="outline" className="w-full sm:w-auto rounded-[16px] px-8 py-6 text-[16px] font-[600] border border-[#E2E8F0] text-[#0F172A] hover:bg-[#F8F9FC] transition-colors bg-white">
                 <Link href="/home">Browse Listings</Link>
               </Button>
             </div>
@@ -490,7 +458,7 @@ export default function LandingPage() {
                 today.
               </h2>
               <p className="mx-auto max-w-[640px] text-[18px] md:text-[20px] text-blue-100 font-[500] mb-10 leading-relaxed">
-                Join {userCount !== null ? userCount.toLocaleString('en-IN') : "1000's of"} students buying & selling
+                Join <AnimatedCounter target={userCount && userCount > 0 ? userCount : 7007} duration={1400} suffix="+" /> Sastraites buying & selling
               </p>
               <Button asChild className="rounded-[12px] px-10 py-7 text-[16px] font-[700] bg-white text-[#2563EB] hover:bg-slate-50 transition-colors border-0 mb-10">
                 <Link href="/login">
